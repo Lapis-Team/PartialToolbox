@@ -1,0 +1,10 @@
+name = "PartialSetoid"
+version = "0.1.0"
+defaultTargets = ["partialsetoid"]
+
+[[lean_lib]]
+name = "PartialSetoid"
+
+[[lean_exe]]
+name = "partialsetoid"
+root = "Main"
