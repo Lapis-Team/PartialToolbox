@@ -7,4 +7,3 @@ class Symmetric (r : Relation α) where
   symm: ∀ {x y}, r x y -> r y x
 
 class abbrev PartialEquiv (r : Relation α) := Transitive r, Symmetric r
-/- class abbrev PartialEquiv (r : Relation α) := Transitive r, Std.Symm r -/
