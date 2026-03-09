@@ -58,7 +58,7 @@ namespace IsMorphism2
 end IsMorphism2
 
 open PartialSetoid in
-  instance [PartialSetoid α] [PartialSetoid β] : PartialSetoid (α -> β) where
+  instance arrowPS (psa: PartialSetoid α) (psb: PartialSetoid β) : PartialSetoid (α -> β) where
     r (f g) := ∀ {x y}, x ≈ y -> f x ≈ g y
     isPER := {
       symm := by
@@ -72,29 +72,28 @@ open PartialSetoid in
         apply trans (h1 k) (h2 d1)
   }
 
-/- open PartialSetoid in  -/
-/-   theorem th [PartialSetoid α] [PartialSetoid β] [PartialSetoid γ] -/
-/-     (f : α -> β -> γ) : IsMorphism f <-> IsMorphism2 f := Iff.intro -/
-/-       (by -/
-/-         intro h -/
-/-         constructor -/
-/-         intro x1 y1 x2 y2 h1 h2 -/
-/-         exact IsMorphism.respects f h1 h2) -/
-/-       (by -/
-/-         intro h -/
-/-         constructor -/
-/-         intro x y h1 y1 y2 h2 -/
-/-         exact IsMorphism2.respects f h1 h2) -/
+open PartialSetoid in
+   theorem morphismIsMorphism2 [psa: PartialSetoid α] [psb: PartialSetoid β] [psg: PartialSetoid γ]
+     (f : α -> β -> γ) : IsMorphism psa (arrowPS psb psg) f <-> IsMorphism2 psa psb psg f := Iff.intro
+       (by
+         intro h
+         constructor
+         intro x1 y1 x2 y2 h1 h2
+         exact IsMorphism.respects f h1 h2)
+       (by
+         intro h
+         constructor
+         intro x y h1 y1 y2 h2
+         exact IsMorphism2.respects f h1 h2)
 
 -- open IsMorphism in
---   theorem th2 [PartialSetoid α] [PartialSetoid β] [PartialSetoid γ]
---   (f : α -> β) (g : β -> γ) [IsMorphism f] [IsMorphism g] : IsMorphism (g ∘ f) := by
+--   theorem th2 [psa : PartialSetoid α] [PartialSetoid β] [PartialSetoid γ]
+--   (f : α -> β) (g : β -> γ) [IsMorphism  f] [IsMorphism g] : IsMorphism (g ∘ f) := by
 --     constructor
 --     intro x y h
 --     simp
 --     refine respects g ?_
 --     exact respects f h
-
 
 instance natZero : PartialSetoid Nat where
   r x y := x ≠ 0 ∧ x = y
@@ -117,12 +116,27 @@ instance natZeroRefl {x: Nat} (h : x ≠ 0) : IsProper PartialSetoid.r x where
 variable {p : Nat -> Prop} [IsMorphism natZero psprop p]
 variable {f : Nat -> Nat} [IsMorphism natZero natZero f]
 variable {g : Nat -> Nat -> Nat} [IsMorphism2 natZero natZero natZero g]
+variable {g1 : Nat -> Nat -> Nat -> Nat} [IsMorphism natZero (arrowPS natZero (arrowPS natZero natZero)) g1]
 
 instance foo : IsMorphism2 natZero natZero natZero HAdd.hAdd where
   _respects := by
     intro x1 y1 x2 y2 ⟨x1ne, eqx1y1⟩ ⟨x2ne, eqx2y2⟩
     constructor
     · grind
+    · grind
+
+instance mulIsMorphism2NatZero : IsMorphism2 natZero natZero natZero HMul.hMul where
+  _respects := by
+    intro x1 y1 x2 y2 ⟨x1ne, eqx1y1⟩ ⟨x2ne, eqx2y2⟩
+    constructor
+    · sorry
+    · grind
+
+instance mulIsMorphismNatZero : IsMorphism natZero (arrowPS natZero natZero) HMul.hMul where
+  _respects := by
+    intro x1 x2 ⟨x1ne, eqx1y1⟩ y1 y2 ⟨x2ne, eqx2y2⟩
+    constructor
+    · sorry
     · grind
 
 example : ∀ x y z: Nat, z ≠ 0 -> natZero.r x y -> p (x + (z + x)) -> p (y + (z + y)) := by
@@ -132,6 +146,26 @@ example : ∀ x y z: Nat, z ≠ 0 -> natZero.r x y -> p (x + (z + x)) -> p (y + 
       (IsMorphism2.respects _ h
         (IsMorphism2.respects  _ (IsProper.refl _ _) h)
       ))
+  apply hx
+  apply natZeroRefl hz
+
+example : ∀ x y z: Nat, z ≠ 0 -> natZero.r x y -> p (x * (z * x)) -> p (y * (z * y)) := by
+  intro x y z hz h hx
+  apply PartialSetoid.mp
+    (IsMorphism.respects (psa := natZero) _
+        -- (IsMorphism.respects (psa := natZero) (HMul.hMul z) (IsMorphism.respects (psb := arrowPS natZero natZero) (HMul.hMul) (IsProper.refl _ z)) h)
+        (IsMorphism.respects (psb := arrowPS _ _) _ h
+        ((IsMorphism.respects (psb := arrowPS _ _) _ (IsProper.refl _ _)) h))
+      )
+  apply hx
+  apply natZeroRefl hz
+
+
+example : ∀ x y z: Nat, z ≠ 0 -> natZero.r x y -> p (g1 z x x) -> p (g1 z y y) := by
+  intro x y z hz h hx
+  apply PartialSetoid.mp
+    (IsMorphism.respects (psa := natZero) _
+        ((IsMorphism.respects (psb := arrowPS _ (arrowPS _ _)) _ (IsProper.refl _ _)) h h))
   apply hx
   apply natZeroRefl hz
 
