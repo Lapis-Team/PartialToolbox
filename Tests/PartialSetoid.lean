@@ -11,22 +11,15 @@ instance natZero : PartialSetoid Nat where
 instance natZeroRefl {x: Nat} (h : x ≠ 0) : IsProper PartialSetoid.r x where
   _refl := by constructor <;> grind
 
--- instance natEven : PartialSetoid Nat where
---   r x y := x % 2 = 0 ∧ x = y
---   isPER := {
---     symm := by grind
---     trans := by grind
---   }
-
 -- Mettere arrowRelation al posto di arrowPS in modo da non dover usare poi (...).r
+instance natZeroAddIsMorph : IsMorphism natZero (arrowPS natZero natZero) HAdd.hAdd where
+  _respects := by
+    intro x1 y1 ⟨x1ne, eqx1y1⟩ x2 y2 ⟨x2ne, eqx2y2⟩
+    constructor
+    · grind
+    · grind
 
-variable {p : Nat -> Prop} [IsMorphism natZero psprop p]
-variable {f : Nat -> Nat} [IsMorphism natZero natZero f]
-variable {g : Nat -> Nat -> Nat} [IsMorphism2 natZero natZero natZero g]
-variable {g1 : Nat -> Nat -> Nat -> Nat} [IsMorphism natZero (arrowPS natZero (arrowPS natZero natZero)) g1]
-variable {g2 : Nat -> Nat -> Nat -> Nat} [IsProper (arrowPS natZero (arrowPS natZero (arrowPS natZero natZero))).r g2]
-
-instance foo : IsMorphism2 natZero natZero natZero HAdd.hAdd where
+instance natZeroAddIsMorph2 : IsMorphism2 natZero natZero natZero HAdd.hAdd where
   _respects := by
     intro x1 y1 x2 y2 ⟨x1ne, eqx1y1⟩ ⟨x2ne, eqx2y2⟩
     constructor
@@ -47,68 +40,13 @@ instance mulIsMorphismNatZero : IsMorphism natZero (arrowPS natZero natZero) HMu
     · sorry
     · grind
 
-example : ∀ x y z: Nat, z ≠ 0 -> natZero.r x y -> p (x + (z + x)) -> p (y + (z + y)) := by
-  intro x y z hz h hx
-  apply PartialSetoid.mp
-    (IsMorphism.respects _
-      (IsMorphism2.respects _ h
-        (IsMorphism2.respects  _ (IsProper.refl _ _) h)
-      ))
-  apply hx
-  apply natZeroRefl hz
 
-example : ∀ x y z: Nat, z ≠ 0 -> natZero.r x y -> p (x + (z + x)) -> p (y + (z + y)) := by
-  intro x y z hz h hx
-  grw h
-  -- · apply natZeroRefl hz
-  · sorry
-  · exact hx
-  -- apply PartialSetoid.mp
-  --   (IsMorphism.respects _
-  --     (IsMorphism2.respects _ h
-  --       (IsMorphism2.respects  _ (IsProper.refl _ _) h)
-  --     ))
-  -- apply hx
-  -- apply natZeroRefl hz
+variable {p : Nat -> Prop} [IsMorphism natZero psprop p]
+variable {g : Nat -> Nat -> Nat} [IsMorphism natZero (arrowPS natZero natZero) g]
+variable {g1 : Nat -> Nat -> Nat -> Nat} [IsMorphism natZero (arrowPS natZero (arrowPS natZero natZero)) g1]
+variable {g2 : Nat -> Nat -> Nat -> Nat} [IsProper (arrowPS natZero (arrowPS natZero (arrowPS natZero natZero))).r g2]
 
-example : ∀ x y z: Nat, z ≠ 0 -> natZero.r x y -> p (x * (z * x)) -> p (y * (z * y)) := by
-  intro x y z hz h hx
-  apply PartialSetoid.mp
-    (IsMorphism.respects (psa := natZero) _
-        -- (IsMorphism.respects (psa := natZero) (HMul.hMul z) (IsMorphism.respects (psb := arrowPS natZero natZero) (HMul.hMul) (IsProper.refl _ z)) h)
-        (IsMorphism.respects (psb := arrowPS _ _) _ h
-        ((IsMorphism.respects (psb := arrowPS _ _) _ (IsProper.refl _ _)) h))
-      )
-  apply hx
-  apply natZeroRefl hz
-
-
-example : ∀ x y z: Nat, z ≠ 0 -> natZero.r x y -> p (g1 z x x) -> p (g1 z y y) := by
-  intro x y z hz h hx
-  apply PartialSetoid.mp
-    (IsMorphism.respects (psa := natZero) _
-        ((IsMorphism.respects (psb := arrowPS _ (arrowPS _ _)) _ (IsProper.refl _ _)) h h))
-  apply hx
-  apply natZeroRefl hz
-
-example : ∀ x y z: Nat, z ≠ 0 -> natZero.r x y -> p (g2 z x x) -> p (g2 z y y) := by
-  intro x y z hz h hx
-  apply PartialSetoid.mp
-    (IsMorphism.respects (psa := natZero) _
-        ((IsProper.refl2 (arrowPS _ ( arrowPS _ (arrowPS _ _))) _ (IsProper.refl _ _)) h h))
-  apply hx
-  apply natZeroRefl hz
-
-example : ∀ x y z: Nat, z ≠ 0 -> natZero.r x y -> p (x + (z + x)) -> p (y + (z + y)) := by
-  intro x y z hz h hx
-  apply PartialSetoid.mp
-    (IsMorphism.respects p
-      (IsMorphism2.respects HAdd.hAdd h
-        (IsMorphism2.respects HAdd.hAdd (IsProper.refl natZero z) h)
-      ))
-  apply hx
-  apply natZeroRefl hz
-
+-- PER over simple predicates
 example : ∀ x y : Nat, natZero.r x y -> p x -> p y := by
   intro x y h1 h2
   apply PartialSetoid.mp (IsMorphism.respects p h1) _
@@ -124,11 +62,19 @@ example : ∀ x y : Nat, natZero.r x y -> p x -> p y := by
   grw h1
   exact h2
 
-theorem t1 : ∀ x y : Nat, natZero.r x y -> p (f x) -> p (f y) := by
+example : ∀ x y : Nat, x ≈ y -> p x -> p y := by
   intro x y h1 h2
   grw h1
   exact h2
 
+-- PER over unary function
+variable {f : Nat -> Nat} [IsMorphism natZero natZero f]
+example : ∀ x y : Nat, natZero.r x y -> p (f x) -> p (f y) := by
+  intro x y h1 h2
+  grw h1
+  exact h2
+
+-- PER over binary function
 example : ∀ x y : Nat, natZero.r x y -> p (g x x) -> p (g y y) := by
   intro x y h1 h2
   grw h1
@@ -140,5 +86,60 @@ example : ∀ x y z : Nat, z ≠ 0 -> natZero.r x y -> p (g x z) -> p (g y z) :=
   apply natZeroRefl hz
   apply h2
 
-def x := 1
-def y := 1
+-- PER over ternary function
+example : ∀ x y z: Nat, z ≠ 0 -> natZero.r x y -> p (g1 z x x) -> p (g1 z y y) := by
+  intro x y z hz h hx
+  apply PartialSetoid.mp
+    (IsMorphism.respects _
+        ((IsMorphism.respects (psb := arrowPS _ (arrowPS _ _)) _ (IsProper.refl _ _)) h h))
+  apply hx
+  apply natZeroRefl hz
+
+example : ∀ x y z: Nat, z ≠ 0 -> x ≈ y -> p (g1 z x x) -> p (g1 z y y) := by
+  intro x y z hz h hx
+  grw h
+  apply natZeroRefl hz
+  apply hx
+
+-- TODO: can move to `IsProper` instead of `IsMorphism`
+example : ∀ x y z: Nat, z ≠ 0 -> natZero.r x y -> p (g2 z x x) -> p (g2 z y y) := by
+  intro x y z hz h hx
+  apply PartialSetoid.mp
+    (IsMorphism.respects _
+        ((IsProper.refl2 (arrowPS _ ( arrowPS _ (arrowPS _ _))) _ (IsProper.refl _ _)) h h))
+  apply hx
+  apply natZeroRefl hz
+
+-- Sum
+example : ∀ x y z: Nat, z ≠ 0 -> natZero.r x y -> p (x + (z + x)) -> p (y + (z + y)) := by
+  intro x y z hz h hx
+  apply PartialSetoid.mp
+    (IsMorphism.respects _
+      (IsMorphism.respects (psb := arrowPS _ _) _ h
+        (IsMorphism.respects (psb := arrowPS _ _)  _ (IsProper.refl _ _) h)
+      ))
+  apply hx
+  apply natZeroRefl hz
+
+example : ∀ x y z: Nat, z ≠ 0 -> natZero.r x y -> p (x + (z + x)) -> p (y + (z + y)) := by
+  intro x y z hz h hx
+  grw h
+  · apply natZeroRefl hz
+  · exact hx
+
+-- Mult
+example : ∀ x y z: Nat, z ≠ 0 -> natZero.r x y -> p (x * (z * x)) -> p (y * (z * y)) := by
+  intro x y z hz h hx
+  apply PartialSetoid.mp
+    (IsMorphism.respects _
+        (IsMorphism.respects (psb := arrowPS _ _) _ h
+        ((IsMorphism.respects (psb := arrowPS _ _) _ (IsProper.refl _ _)) h))
+      )
+  apply hx
+  apply natZeroRefl hz
+
+example : ∀ x y z: Nat, z ≠ 0 -> natZero.r x y -> p (x * (z * x)) -> p (y * (z * y)) := by
+  intro x y z hz h hx
+  grw h
+  · apply natZeroRefl hz
+  · apply hx
