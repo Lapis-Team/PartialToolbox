@@ -1,4 +1,5 @@
 import Lean
+import PartialSetoid.Basic
 
 open Lean
 open Lean.Meta
@@ -16,39 +17,36 @@ def currentHyp {m: Type -> Type} [Monad m] (ctx: Lean.LocalContext) : m PUnit :=
 
 def grewriteAux (goal : Expr) (rhs : Expr) (h : TSyntax `term) : TacticM (TSyntax `term) := do
   if (<- isDefEq goal rhs) then return h
-  if (¬Expr.occurs rhs goal) then (
-    let hole : TSyntax `term := ⟨ mkHole (Syntax.missing) ⟩
-    return Syntax.mkApp (mkIdent `IsProper.refl) #[hole, hole]
-  )
+  else if (!Expr.occurs rhs goal) then `(term| IsProper.refl _ _)
   else match goal with
-    | Expr.app (.app _ arg1) arg2 =>
-      let hole : TSyntax `term := ⟨ mkHole (Syntax.missing) ⟩
-      return Syntax.mkApp (mkIdent `IsMorphism2.respects) #[hole, (<- grewriteAux arg1 rhs h), (<- grewriteAux arg2 rhs h)]
-    | Expr.app _ arg =>
-      let hole : TSyntax `term := ⟨ mkHole (Syntax.missing) ⟩
-      return Syntax.mkApp (mkIdent `IsMorphism.respects) #[hole,(<- grewriteAux arg rhs h)]
+    | .app (.app _ arg1) arg2 =>
+      let grw1 <- grewriteAux arg1 rhs h
+      let grw2 <- grewriteAux arg2 rhs h
+      `(term| IsMorphism2.respects _ $grw1 $grw2)
+    | .app _ arg =>
+      let grw <- grewriteAux arg rhs h
+      `(term| IsMorphism.respects _ $grw)
     | _ => throwError "TODO"
 
-    -- delaborate h to syntax
-  -- return
+def extractRhs : Expr -> TacticM Expr
+  | Expr.app _ arg => extractRhs arg
+  | e => return e
+
+def extractLhs : Expr -> TacticM Expr
+  | .app (.app _ lhs) _ => return lhs
+  | e => return e
+  -- | Expr.app (.app (.app (.app (.const `PartialSetoid.r _) _) _) _) y => return y
+  -- | _ => throwError "Not possible"
 
 def grewrite (per : Expr) : TacticM PUnit := withMainContext do
   let mvarId <- getMainGoal
   let goalType <- getMainTarget
-  let ctx <- getLCtx
-  -- let ctx := (<- mvarId.getDecl).lctx
-  let e <- inferType per
 
-  -- dbg_trace f!"{e}"
-  let Expr.app (.app (.app (.app (.const `PartialSetoid.r _) _) _) _) y := (<- inferType per) | throwError "PER is not a `PartialSetoid.r`"
-
-  let hole : TSyntax `term := ⟨ mkHole (Syntax.missing) ⟩
+  let rhs <- extractRhs (<- inferType per)
   let h1 <- delab per
-  let value := Syntax.mkApp (mkIdent `PartialSetoid.mp) #[
-    (<- grewriteAux goalType y h1),
-    hole
-  ]
-  let (e, gs) <- elabTermWithHoles value goalType `foo (allowNaturalHoles := true)
+  let x <- grewriteAux goalType rhs h1
+  let value <- `(term| PartialSetoid.mp $x _)
+  let (e, _) <- elabTermWithHoles value goalType `refined (allowNaturalHoles := true)
 
   let newGoals <- mvarId.apply e
 
