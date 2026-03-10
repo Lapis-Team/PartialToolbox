@@ -19,19 +19,19 @@ instance natZeroAddIsMorph : IsMorphism natZero (arrowPS natZero natZero) HAdd.h
     · grind
     · grind
 
-instance natZeroAddIsMorph2 : IsMorphism2 natZero natZero natZero HAdd.hAdd where
-  _respects := by
-    intro x1 y1 x2 y2 ⟨x1ne, eqx1y1⟩ ⟨x2ne, eqx2y2⟩
-    constructor
-    · grind
-    · grind
+-- instance natZeroAddIsMorph2 : IsMorphism2 natZero natZero natZero HAdd.hAdd where
+--   _respects := by
+--     intro x1 y1 x2 y2 ⟨x1ne, eqx1y1⟩ ⟨x2ne, eqx2y2⟩
+--     constructor
+--     · grind
+--     · grind
 
-instance mulIsMorphism2NatZero : IsMorphism2 natZero natZero natZero HMul.hMul where
-  _respects := by
-    intro x1 y1 x2 y2 ⟨x1ne, eqx1y1⟩ ⟨x2ne, eqx2y2⟩
-    constructor
-    · sorry
-    · grind
+-- instance mulIsMorphism2NatZero : IsMorphism2 natZero natZero natZero HMul.hMul where
+--   _respects := by
+--     intro x1 y1 x2 y2 ⟨x1ne, eqx1y1⟩ ⟨x2ne, eqx2y2⟩
+--     constructor
+--     · sorry
+--     · grind
 
 instance mulIsMorphismNatZero : IsMorphism natZero (arrowPS natZero natZero) HMul.hMul where
   _respects := by

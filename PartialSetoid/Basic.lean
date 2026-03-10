@@ -51,13 +51,6 @@ namespace IsMorphism
     (f : α -> β) [h : IsMorphism psa psb f] : ∀ {x y}, x ≈ y -> f x ≈ f y  := h._respects
 end IsMorphism
 
-class IsMorphism2 (psa : outParam (PartialSetoid α)) (psb : outParam (PartialSetoid β)) (psc : outParam (PartialSetoid γ)) (f : α -> β -> γ) where
-  _respects : ∀ {x1 y1 x2 y2}, x1 ≈ y1 -> x2 ≈ y2 -> f x1 x2 ≈ f y1 y2
-
-namespace IsMorphism2
-  theorem respects {psa :PartialSetoid α} {psb : PartialSetoid β} {psc : PartialSetoid γ} (f: α -> β -> γ) [h : IsMorphism2 psa psb psc f] : ∀ {x1 y1 x2 y2}, x1 ≈ y1 -> x2 ≈ y2 -> f x1 x2 ≈ f y1 y2 := h._respects
-end IsMorphism2
-
 open PartialSetoid in
   instance arrowPS (psa: PartialSetoid α) (psb: PartialSetoid β) : PartialSetoid (α -> β) where
     r (f g) := ∀ {x y}, x ≈ y -> f x ≈ g y
@@ -72,26 +65,3 @@ open PartialSetoid in
         have d1 : y ≈ y := by apply trans (symm k) k
         apply trans (h1 k) (h2 d1)
   }
-
-open PartialSetoid in
-   theorem morphismIsMorphism2 [psa: PartialSetoid α] [psb: PartialSetoid β] [psg: PartialSetoid γ]
-     (f : α -> β -> γ) : IsMorphism psa (arrowPS psb psg) f <-> IsMorphism2 psa psb psg f := Iff.intro
-       (by
-         intro h
-         constructor
-         intro x1 y1 x2 y2 h1 h2
-         exact IsMorphism.respects f h1 h2)
-       (by
-         intro h
-         constructor
-         intro x y h1 y1 y2 h2
-         exact IsMorphism2.respects f h1 h2)
-
--- open IsMorphism in
---   theorem th2 [psa : PartialSetoid α] [PartialSetoid β] [PartialSetoid γ]
---   (f : α -> β) (g : β -> γ) [IsMorphism  f] [IsMorphism g] : IsMorphism (g ∘ f) := by
---     constructor
---     intro x y h
---     simp
---     refine respects g ?_
---     exact respects f h
