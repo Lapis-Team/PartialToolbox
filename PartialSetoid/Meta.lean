@@ -1,49 +1,47 @@
 import Lean
 import PartialSetoid.Basic
 
-open Lean
-open Lean.Meta
-open Lean.MonadLCtx
-open Lean.Elab.Tactic
+open Lean Lean.Meta Lean.MonadLCtx Lean.Elab.Tactic Lean.PrettyPrinter
 
-open Lean.PrettyPrinter
+def hasInstance (head: Expr) : TacticM Bool := do
+  let headStx <- delab (head.setPPExplicit true)
+  let morphStx <- `(term| IsMorphism _ _ $headStx)
+  let synthesized? <- Meta.synthInstance? (<- elabTerm morphStx .none)
+  return synthesized?.isSome
 
-def currentHyp {m: Type -> Type} [Monad m] (ctx: Lean.LocalContext) : m PUnit := do
-  ctx.forM fun d => do
-    let decType := d.type
-    let decName := d.userName
-    dbg_trace f!"+ {decName}  : {decType}"
-  return
+mutual
+  partial def grewriteAux (goal : Expr) (rhs : Expr) (h : TSyntax `term) : TacticM (TSyntax `term) := do
+    if (<- isDefEq goal rhs) then return h
+    else if (!Expr.occurs rhs goal) then `(term| IsProper.refl _ _)
+    else grewriteAux' goal .nil rhs h
 
-def grewriteAux (goal : Expr) (rhs : Expr) (h : TSyntax `term) : TacticM (TSyntax `term) := do
-  if (<- isDefEq goal rhs) then return h
-  else if (!Expr.occurs rhs goal) then `(term| IsProper.refl _ _)
-  else match goal with
-    | .app (.app _ arg1) arg2 =>
-      let grw1 <- grewriteAux arg1 rhs h
-      let grw2 <- grewriteAux arg2 rhs h
-      `(term| IsMorphism2.respects _ $grw1 $grw2)
-    | .app _ arg =>
-      let grw <- grewriteAux arg rhs h
-      `(term| IsMorphism.respects _ $grw)
-    | _ => throwError "TODO"
+  partial def grewriteAux' (goal: Expr) (args: List Expr) (rhs: Expr) (h : TSyntax `term) : TacticM (TSyntax `term) := do
+    match goal with
+    | .app head arg =>
+      let newArgs := arg :: args
+      if (<- hasInstance head) then
+        let arrows <- args.foldlM
+          (fun acc _ => `(term| arrowPS _ $acc))
+          (<- `(term| _))
 
-def extractRhs : Expr -> TacticM Expr
-  | Expr.app _ arg => extractRhs arg
-  | e => return e
+        let grwArgs <- newArgs.toArray.mapM fun arg => grewriteAux arg rhs h
+        `(term| IsMorphism.respects (psb := $arrows) _ $grwArgs*)
+      else
+        grewriteAux' head newArgs rhs h
+    | _ =>
+      throwError "TODO"
+end
 
-def extractLhs : Expr -> TacticM Expr
-  | .app (.app _ lhs) _ => return lhs
-  | e => return e
-  -- | Expr.app (.app (.app (.app (.const `PartialSetoid.r _) _) _) _) y => return y
-  -- | _ => throwError "Not possible"
+def extractRhs? : Expr -> Option Expr
+  | .app _ rhs => rhs
+  | _ => .none
 
 def grewrite (per : Expr) : TacticM PUnit := withMainContext do
   let mvarId <- getMainGoal
   let goalType <- getMainTarget
 
-  let rhs <- extractRhs (<- inferType per)
-  let h1 <- delab per
+  let some rhs := extractRhs? (<- inferType per) | throwError "Cannot extract rhs from expression"
+  let h1 <- delab (per.setPPExplicit true)
   let x <- grewriteAux goalType rhs h1
   let value <- `(term| PartialSetoid.mp $x _)
   let (e, _) <- elabTermWithHoles value goalType `refined (allowNaturalHoles := true)
