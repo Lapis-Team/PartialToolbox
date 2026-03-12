@@ -9,7 +9,7 @@ instance found: Copy x y r r h x y h where
 class Reflexive (rel: α -> α -> Prop) where
   refl : rel x x
 
-class Proper (rel: α -> α -> Prop) (x: α) where
+class Proper (rel: outParam α -> α -> Prop) (x: α) where
  is_proper: rel x x
 
 instance [h: Reflexive rel] : Proper rel x where
@@ -46,50 +46,50 @@ set_option trace.Meta.synthInstance true
 
 example : ∀ x y : Nat, rNatZero x y -> p x -> p y := by
  intro x y h1 h2
- apply Iff.mp
- apply take h1
+ apply Iff.mp (take h1)
  apply h2
 
 example : ∀ x y : Nat, rNatZero x y -> p (f x) -> p (f y) := by
  intro x y h1 h2
- apply Iff.mp
- apply take h1
+ apply Iff.mp (take h1)
  apply h2
 
 example : ∀ x y : Nat, rNatZero x y -> p (f (f x)) -> p (f (f y)) := by
  intro x y h1 h2
- apply Iff.mp
- apply take h1
+ apply Iff.mp (take h1)
  apply h2
 
 example : ∀ x y : Nat, rNatEven x y -> p (f (f x)) -> p (f (f y)) := by
  intro x y h1 h2
- apply Iff.mp
- apply take h1
+ apply Iff.mp (take h1)
  apply h2
 
 example : ∀ x y : Nat, rNatEven (f x) (f y) -> p (f (f x)) -> p (f (f y)) := by
  intro x y h1 h2
- apply Iff.mp
- apply take h1
+ apply Iff.mp (take h1)
  apply h2
 
 example : Reflexive rNatZero -> 2=2 → p z -> p z := by
  intro k h1 h2
- apply Iff.mp
- apply take h1
+ apply Iff.mp (take h1)
  apply h2
 
 example : rNatZero z z -> 2=2 → p z -> p z := by
  intro k h1 h2
  have foo : Proper _ _:= ⟨k⟩
- apply Iff.mp
- apply take h1
+ apply Iff.mp (take h1)
  apply h2
 
-example : ∀ x y z : Nat, rNatZero z z -> rNatZero x y -> p (g (f z) x) -> p (g (f z) y) := by
+theorem u : ∀ x y z : Nat, rNatZero z z -> rNatZero x y -> p (g (f z) x) -> p (g (f z) y) := by
  intro x y z k h1 h2
  have foo : Proper _ _:= ⟨k⟩
- apply Iff.mp
- apply take h1
+ apply Iff.mp (take h1)
+ apply h2
+
+#print u
+
+example : ∀ x y z : Nat, rNatZero (f z) (f z) -> rNatZero x y -> p (g (f z) x) -> p (g (f z) y) := by
+ intro x y z k h1 h2
+ have foo : Proper _ _:= ⟨k⟩
+ apply Iff.mp (take h1)
  apply h2
