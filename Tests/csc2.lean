@@ -9,7 +9,7 @@ def take : [Copy r lhs rhs k] -> r lhs rhs := k
 class Reflexive (rel: α -> α -> Prop) where
   refl : rel x x
 
-class Proper (rel: outParam α -> α -> Prop) (x: α) where
+class Proper (rel: α -> α -> Prop) (x: α) where
  is_proper: rel x x
 
 instance [h: Reflexive rel] : Proper rel x where
