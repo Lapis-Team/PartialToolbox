@@ -41,6 +41,12 @@ axiom g : Nat -> Nat -> Nat
 axiom g₁: rNatZero x x' -> rNatZero y y' -> rNatZero (g x y) (g x' y')
 instance gm₁ [Copy _ _ _ k₁] [Copy _ _ _ k₂] : Copy _ _ _ (g₁ k₁ k₂) where
 
+axiom hmul₁ : rNatZero x x' -> rNatZero y y' -> rNatZero (x*y) (x'*y')
+instance hmulm₁ [Copy _ _ _ k₁] [Copy _ _ _ k₂] : Copy _ _ _ (hmul₁ k₁ k₂) where
+
+axiom hadd₁ : rNatZero x x' -> rNatZero y y' -> rNatZero (x+y) (x'+y')
+instance haddm₁ [Copy _ _ _ k₁] [Copy _ _ _ k₂] : Copy _ _ _ (hadd₁ k₁ k₂) where
+
 -- set_option trace.Meta.synthInstance true
 
 example : ∀ x y : Nat, rNatZero x y -> p x -> p y := by
@@ -86,6 +92,12 @@ example : ∀ x y z : Nat, rNatZero z z -> rNatZero x y -> p (g (f z) x) -> p (g
  apply h2
 
 example : ∀ x y z : Nat, rNatZero (f z) (f z) -> rNatZero x y -> p (g (f z) x) -> p (g (f z) y) := by
+ intro x y z k h1 h2
+ have foo : Proper _ _:= ⟨k⟩
+ grw h1
+ apply h2
+
+example : ∀ x y z : Nat, rNatZero z z -> rNatZero x y -> p ((x+z)* x) -> p ((y+z) * y) := by
  intro x y z k h1 h2
  have foo : Proper _ _:= ⟨k⟩
  grw h1
