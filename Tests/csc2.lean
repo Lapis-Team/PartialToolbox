@@ -58,7 +58,7 @@ axiom minus₂ : x ≤ y -> -x ≥ -y
 instance minusm₂ [Copy k]: Copy (minus₂ k) where
 
 set_option trace.Meta.synthInstance true
-set_option pp.explicit true
+-- set_option pp.explicit true
 
 example : ∀ x y : Nat, rNatZero x y -> p x -> p y := by
  intro x y h1 h2
@@ -108,11 +108,16 @@ example : ∀ x y z : Nat, rNatZero (f z) (f z) -> rNatZero x y -> p (g (f z) x)
  grw h1
  apply h2
 
-example : ∀ x y z : Nat, rNatZero z z -> rNatZero x y -> p ((x+z)* x) -> p ((y+z) * y) := by
+theorem u : ∀ x y z : Nat, rNatZero z z -> rNatZero x y -> p ((x+z)* x) -> p ((y+z) * y) := by
  intro x y z k h1 h2
- have foo : Proper _ _:= ⟨k⟩
+ --have foo : Proper _ _:= ⟨k⟩
+ have goo: ∀r, Proper r z := ?_
  grw h1
  apply h2
+
+#print u
+CSC: ora basta cercare goo nel proof term e sostituirlo con la
+rel giusta!
 
 example (x: Int): y ≤ y' -> x ≤ y -> x ≤ y' := by
  intro h1 h2
