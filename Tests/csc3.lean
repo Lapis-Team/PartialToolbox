@@ -17,7 +17,7 @@ instance [h: Reflexive rel] : Proper rel x where
 
 instance rr [k: Proper r z] : Copy k.is_proper where
 
-macro "grw" h:term ("fixing")? : tactic => `(tactic | have := put $h <;> apply Iff.mp take)
+macro "grw" h:term : tactic => `(tactic | have := put $h <;> apply Iff.mp take)
 
 -----------------
 
@@ -152,6 +152,13 @@ abbrev defined (x: Partial α) := Proper peq x
 theorem defined_not_none{x: Partial α} : defined x -> x ≠ .none
  | ⟨⟨k,_⟩⟩ => k
 
+theorem defined_is_some {x : Partial  α} : defined x -> ∃ y, x = .some y := by 
+  cases x
+  . intro a
+    have := defined_not_none a
+    grind
+  . grind
+
 theorem not_none_defined {x: Partial α} : x ≠ .none -> defined x := by
  intro h ; constructor ; constructor ; assumption ; eq_refl
 
@@ -183,11 +190,66 @@ theorem peq_trans : peq x y -> peq y z -> peq x z
 
 class Strict₂ (op : Partial α -> Partial β -> Partial γ) where
  is_strict₁ : defined (op x y) -> defined x
- is_strict₂ : defined (op x y) -> defined x
+ is_strict₂ : defined (op x y) -> defined y
 
-def plift2 (op : α -> β -> γ) : Partial α -> Partial β -> Partial γ
+def plift₂ (op : α -> β -> γ) : Partial α -> Partial β -> Partial γ
  | .some x, .some y => .some (op x y)
  | _, _ => .none
 
-instance : Add (Partial Nat) := ⟨plift2 Nat.add⟩
-instance : Mul (Partial Nat) := ⟨plift2 Nat.mul⟩
+def propPlift₂ (op : α -> β -> Prop) : Partial α -> Partial β -> Prop
+  | .some x, .some y => op x y
+  | _, _ => False
+
+ instance : Strict₂ (plift₂ op) where
+   is_strict₁ {x y}
+    | ⟨ ⟨ h₁ , h₂ ⟩ ⟩ => by 
+      cases x
+      . cases y <;> dsimp [plift₂] at h₁ <;> grind
+      . constructor ; constructor <;> grind
+   is_strict₂ {x y}
+    | ⟨ ⟨ h₁ , h₂ ⟩ ⟩ => by 
+      cases y
+      . cases x <;> dsimp [plift₂] at h₁ <;> grind
+      . constructor ; constructor <;> grind
+
+instance : LE (Partial  Nat) := ⟨ propPlift₂ Nat.le ⟩ 
+
+instance : Add (Partial Nat) := ⟨plift₂ Nat.add⟩
+instance : Mul (Partial Nat) := ⟨plift₂ HMul.hMul⟩
+instance : Div (Partial Nat) where
+    div 
+    | .some _, .some 0 => .none
+    | .some x, .some y => .some (x / y)
+    | _, _ => .none
+
+instance : Strict₂ (HDiv.hDiv (α := Partial Nat)) where
+  is_strict₁ {x y}
+    | ⟨ ⟨ h₁ , h₂ ⟩ ⟩ => 
+      match x with
+      | .some _ => by infer_instance
+
+  is_strict₂ {x y}
+    | ⟨ ⟨ h₁ , h₂ ⟩ ⟩ =>
+      match y with
+      | .some _ => by infer_instance
+      | .none => by dsimp [HDiv.hDiv, Div.div] at h₁ <;> grind
+
+theorem ex1 : ∀ x y : Partial Nat, defined x -> defined y -> y ≠ .some 0 -> (x / y) * y <= x := by
+  intro x y d₁ d₂ h
+  have ⟨ x', hx ⟩ := defined_is_some d₁ ; rw [hx]
+  have ⟨ y', hy ⟩ := defined_is_some d₂ ; rw [hy]
+  have ⟨ y'', hy' ⟩ : ∃ y'', y' = .succ y''  := sorry
+  rw [hy'] ; change x'.div (y''.succ) * (y''.succ) ≤ x' ; rw [<- hy']
+  refine (Nat.le_div_iff_mul_le ?_).mp ?_
+  . grind
+  . apply Nat.le_refl
+
+theorem ex2 : ∀ x y : Partial Nat, defined ((x / y) * y) -> (x / y) * y <= x := by
+  intro x y d₁ 
+  change (defined (plift₂ _ _ _)) at d₁
+  unfold HMul.hMul at d₁ ; have d₂ := Strict₂.is_strict₁ d₁
+  have d₃ := Strict₂.is_strict₁ d₂
+  have d₄ := Strict₂.is_strict₂ d₂
+  refine ex1 x y d₃ d₄ ?_
+
+
