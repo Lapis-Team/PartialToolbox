@@ -49,13 +49,16 @@ instance haddm₁ [Copy k₁] [Copy k₂] : Copy (hadd₁ k₁ k₂) where
 
 axiom le₁ {y': Int}: x ≥ x' -> y ≤ y' -> (x ≤ y ↔ x' ≤ y')
 instance lem₁ [Copy k₁] [Copy k₂]: Copy (le₁ k₁ k₂) where
+instance : @Reflexive Int LE.le where
+ refl := @Int.le_refl
 
 axiom minus₁ : x ≥ y -> -x ≤ -y
 instance minusm₁ [Copy k]: Copy (minus₁ k) where
 axiom minus₂ : x ≤ y -> -x ≥ -y
-instance minusm₂ [Copy k]: Copy (minus₁ k) where
+instance minusm₂ [Copy k]: Copy (minus₂ k) where
 
 set_option trace.Meta.synthInstance true
+set_option pp.explicit true
 
 example : ∀ x y : Nat, rNatZero x y -> p x -> p y := by
  intro x y h1 h2
@@ -119,12 +122,15 @@ example (x: Int): y ≤ y' -> x ≤ y -> x ≤ y' := by
 
 example (x: Int): x ≥ x' -> x ≤ y -> x' ≤ y := by
  intro h1 h2
- have foo : Proper LE.le _:= ⟨Int.le_refl y⟩
  grw h1
  apply h2
 
 example (x: Int): -x ≥ -x' -> -x ≤ y -> -x' ≤ y := by
  intro h1 h2
- have foo : Proper LE.le _:= ⟨Int.le_refl y⟩
+ grw h1
+ apply h2
+
+example (x: Int): x ≤ x' -> -x ≤ y -> -x' ≤ y := by
+ intro h1 h2
  grw h1
  apply h2
