@@ -1,10 +1,10 @@
 -----------------
 
-class Copy (rel: β → β → Prop) (lhs: outParam β) (rhs: β) (out: outParam (rel lhs rhs)) where
+class Copy {rel: outParam β → β → Prop} {lhs: outParam β} {rhs: β} (out: outParam (rel lhs rhs)) where
 
-def put k : Copy r lhs rhs k := by constructor
+def put k : @Copy _ r lhs rhs k := by constructor
 
-def take : [Copy r lhs rhs k] -> r lhs rhs := k
+def take : [@Copy _ r lhs rhs k] -> r lhs rhs := k
 
 class Reflexive (rel: α -> α -> Prop) where
   refl : rel x x
@@ -15,9 +15,9 @@ class Proper (rel: α -> α -> Prop) (x: α) where
 instance [h: Reflexive rel] : Proper rel x where
  is_proper := h.refl
 
-instance rr [k: Proper r z] : Copy r z z k.is_proper where
+instance rr [k: Proper r z] : Copy k.is_proper where
 
-macro "grw" h:term : tactic => `(tactic | have := put $h <;> apply Iff.mp take)
+macro "grw" h:term ("fixing")? : tactic => `(tactic | have := put $h <;> apply Iff.mp take)
 
 -----------------
 
@@ -26,28 +26,36 @@ def rNatEven x y := x%2 = 0 ∧ x = y
 
 axiom p : Nat -> Prop
 axiom p₁ : rNatZero x y -> (p x ↔ p y)
-instance pm₁ [Copy _ _ _ k]: Copy _ _ _ (p₁ k) where
+instance pm₁ [Copy k]: Copy (p₁ k) where
 axiom p₂ : rNatEven x y -> (p x ↔ p y)
-instance pm₂ [Copy _ _ _ k]: Copy _ _ _ (p₂ k) where
+instance pm₂ [Copy k]: Copy (p₂ k) where
 
 
 axiom f: Nat -> Nat
 axiom f₁ : rNatZero x y -> rNatZero (f x) (f y)
-instance fm₁ [Copy _ _ _ k]: Copy _ _ _ (f₁ k) where
+instance fm₁ [Copy k]: Copy (f₁ k) where
 axiom f₂ : rNatEven x y -> rNatEven (f x) (f y)
-instance fm₂ [Copy _ _ _ k]: Copy _ _ _ (f₂ k) where
+instance fm₂ [Copy k]: Copy (f₂ k) where
 
 axiom g : Nat -> Nat -> Nat
 axiom g₁: rNatZero x x' -> rNatZero y y' -> rNatZero (g x y) (g x' y')
-instance gm₁ [Copy _ _ _ k₁] [Copy _ _ _ k₂] : Copy _ _ _ (g₁ k₁ k₂) where
+instance gm₁ [Copy k₁] [Copy k₂] : Copy (g₁ k₁ k₂) where
 
 axiom hmul₁ : rNatZero x x' -> rNatZero y y' -> rNatZero (x*y) (x'*y')
-instance hmulm₁ [Copy _ _ _ k₁] [Copy _ _ _ k₂] : Copy _ _ _ (hmul₁ k₁ k₂) where
+instance hmulm₁ [Copy k₁] [Copy k₂] : Copy (hmul₁ k₁ k₂) where
 
 axiom hadd₁ : rNatZero x x' -> rNatZero y y' -> rNatZero (x+y) (x'+y')
-instance haddm₁ [Copy _ _ _ k₁] [Copy _ _ _ k₂] : Copy _ _ _ (hadd₁ k₁ k₂) where
+instance haddm₁ [Copy k₁] [Copy k₂] : Copy (hadd₁ k₁ k₂) where
 
--- set_option trace.Meta.synthInstance true
+axiom le₁ {y': Int}: x ≥ x' -> y ≤ y' -> (x ≤ y ↔ x' ≤ y')
+instance lem₁ [Copy k₁] [Copy k₂]: Copy (le₁ k₁ k₂) where
+
+axiom minus₁ : x ≥ y -> -x ≤ -y
+instance minusm₁ [Copy k]: Copy (minus₁ k) where
+axiom minus₂ : x ≤ y -> -x ≥ -y
+instance minusm₂ [Copy k]: Copy (minus₁ k) where
+
+set_option trace.Meta.synthInstance true
 
 example : ∀ x y : Nat, rNatZero x y -> p x -> p y := by
  intro x y h1 h2
@@ -100,5 +108,23 @@ example : ∀ x y z : Nat, rNatZero (f z) (f z) -> rNatZero x y -> p (g (f z) x)
 example : ∀ x y z : Nat, rNatZero z z -> rNatZero x y -> p ((x+z)* x) -> p ((y+z) * y) := by
  intro x y z k h1 h2
  have foo : Proper _ _:= ⟨k⟩
+ grw h1
+ apply h2
+
+example (x: Int): y ≤ y' -> x ≤ y -> x ≤ y' := by
+ intro h1 h2
+ have foo : Proper GE.ge _:= ⟨Int.le_refl x⟩
+ grw h1
+ apply h2
+
+example (x: Int): x ≥ x' -> x ≤ y -> x' ≤ y := by
+ intro h1 h2
+ have foo : Proper LE.le _:= ⟨Int.le_refl y⟩
+ grw h1
+ apply h2
+
+example (x: Int): -x ≥ -x' -> -x ≤ y -> -x' ≤ y := by
+ intro h1 h2
+ have foo : Proper LE.le _:= ⟨Int.le_refl y⟩
  grw h1
  apply h2
