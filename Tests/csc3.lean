@@ -152,7 +152,7 @@ abbrev defined (x: Partial α) := Proper peq x
 theorem defined_not_none{x: Partial α} : defined x -> x ≠ .none
  | ⟨⟨k,_⟩⟩ => k
 
-theorem defined_is_some {x : Partial  α} : defined x -> ∃ y, x = .some y := by 
+theorem defined_is_some {x : Partial  α} : defined x -> ∃ y, x = .some y := by
   cases x
   . intro a
     have := defined_not_none a
@@ -202,29 +202,29 @@ def propPlift₂ (op : α -> β -> Prop) : Partial α -> Partial β -> Prop
 
  instance : Strict₂ (plift₂ op) where
    is_strict₁ {x y}
-    | ⟨ ⟨ h₁ , h₂ ⟩ ⟩ => by 
+    | ⟨ ⟨ h₁ , h₂ ⟩ ⟩ => by
       cases x
       . cases y <;> dsimp [plift₂] at h₁ <;> grind
       . constructor ; constructor <;> grind
    is_strict₂ {x y}
-    | ⟨ ⟨ h₁ , h₂ ⟩ ⟩ => by 
+    | ⟨ ⟨ h₁ , h₂ ⟩ ⟩ => by
       cases y
       . cases x <;> dsimp [plift₂] at h₁ <;> grind
       . constructor ; constructor <;> grind
 
-instance : LE (Partial  Nat) := ⟨ propPlift₂ Nat.le ⟩ 
+instance : LE (Partial  Nat) := ⟨ propPlift₂ Nat.le ⟩
 
 instance : Add (Partial Nat) := ⟨plift₂ Nat.add⟩
 instance : Mul (Partial Nat) := ⟨plift₂ HMul.hMul⟩
 instance : Div (Partial Nat) where
-    div 
+    div
     | .some _, .some 0 => .none
     | .some x, .some y => .some (x / y)
     | _, _ => .none
 
 instance : Strict₂ (HDiv.hDiv (α := Partial Nat)) where
   is_strict₁ {x y}
-    | ⟨ ⟨ h₁ , h₂ ⟩ ⟩ => 
+    | ⟨ ⟨ h₁ , h₂ ⟩ ⟩ =>
       match x with
       | .some _ => by infer_instance
 
@@ -245,11 +245,63 @@ theorem ex1 : ∀ x y : Partial Nat, defined x -> defined y -> y ≠ .some 0 -> 
   . apply Nat.le_refl
 
 theorem ex2 : ∀ x y : Partial Nat, defined ((x / y) * y) -> (x / y) * y <= x := by
-  intro x y d₁ 
+  intro x y d₁
   change (defined (plift₂ _ _ _)) at d₁
   unfold HMul.hMul at d₁ ; have d₂ := Strict₂.is_strict₁ d₁
   have d₃ := Strict₂.is_strict₁ d₂
   have d₄ := Strict₂.is_strict₂ d₂
   refine ex1 x y d₃ d₄ ?_
 
+--------- running example ------------
+namespace running_example
 
+abbrev ℕ := Nat
+axiom ℝ : Type
+axiom isdef : ℝ -> Prop
+
+@[coe]
+axiom inj : ℕ → ℝ
+axiom inj_def: isdef (inj n)
+noncomputable instance : Coe ℕ ℝ := ⟨inj⟩
+
+noncomputable instance : OfNat ℝ n where ofNat := n
+
+axiom sub : ℝ -> ℝ -> ℝ
+axiom sub_def : isdef n -> isdef m -> isdef (sub n m)
+noncomputable instance : Sub ℝ := ⟨sub⟩
+
+axiom div : ℝ -> ℝ -> ℝ
+axiom div_def : isdef n -> isdef m -> m ≠ 0 -> isdef (div n m)
+noncomputable instance : Div ℝ := ⟨div⟩
+
+axiom exp : ℝ -> ℕ -> ℝ
+axiom exp_def : isdef r -> isdef (exp r n)
+noncomputable instance : HPow ℝ ℕ ℝ := ⟨exp⟩
+
+axiom lim : (ℕ -> ℝ) -> ℝ
+
+axiom bigadd : ℕ -> ℕ -> (ℕ -> ℝ) -> ℝ
+
+def peq (x y: ℝ) := isdef x ∧ x = y
+instance : HasEquiv ℝ := ⟨peq⟩
+
+theorem peq_def₁ : x ≈ y → isdef x := fun h => And.left h
+
+theorem peq_def₂ : x ≈ y → isdef y
+ | ⟨h,k⟩ => by rw [← k] ; assumption
+
+def rtol (op: ℝ -> ℝ -> Prop) : ℝ -> ℝ -> Prop :=
+ fun x y => isdef y -> op x y
+
+macro l:term "≈▷" r:term : term => `(term|rtol peq $l $r)
+
+axiom ax24 {c} {f : ℕ → ℝ} : lim (fun n => c - f n) ≈▷ c - lim (fun n => f n)
+
+example: isdef c -> isdef (lim (fun n => n)) -> isdef (lim (fun n => c - n)) := by
+ intro hc h
+ have k := ax24 (c:=c) (f:=(.)) ?_
+ . apply peq_def₁ k
+ . apply sub_def <;> assumption
+
+
+end running_example
