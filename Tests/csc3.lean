@@ -293,7 +293,13 @@ theorem peq_def₂ : x ≈ y → isdef y
 def rtol (op: ℝ -> ℝ -> Prop) : ℝ -> ℝ -> Prop :=
  fun x y => isdef y -> op x y
 
-macro l:term "≈▷" r:term : term => `(term|rtol peq $l $r)
+macro l:term:50 "≈▷" r:term:50 : term => `(term|rtol peq $l $r)
+
+theorem rtolpeq_trans: x ≈▷ y -> y ≈▷ z -> x ≈▷ z := by
+ intro h1 h2 dz
+ let ⟨d2,k2⟩ := h2 dz
+ let ⟨d1,k1⟩ := h1 d2
+ constructor <;> simp [*]
 
 axiom ax24 {c} {f : ℕ → ℝ} : lim (fun n => c - f n) ≈▷ c - lim (fun n => f n)
 
