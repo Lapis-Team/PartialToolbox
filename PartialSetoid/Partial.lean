@@ -27,7 +27,7 @@ class StrictFun₁ [Partial α] [Partial β] (f : α -> β) where
 class StrictFun₂ [Partial α] [Partial β] [Partial γ] (f : α -> β -> γ) where
  isstrict : Partial.isdef (f x y) -> Partial.isdef x ∧ Partial.isdef y
 
-namespace Option
+namespace Partial.Option
 
 open Partial
 
@@ -35,6 +35,15 @@ instance partialOption : Partial (Option α) where
  isdef
   | .none => False
   | .some _ => True
+
+@[coe]
+abbrev inj (x : α) := (.some x : Option α)
+instance : Coe α (Option α) := ⟨inj⟩
+
+def isdef_elim {P: Option α -> Sort u} {h : ∀ x, P (.some x)} : isdef x -> P x :=
+ match x with
+  | .some _ => fun _ => h _
+  | .none => False.elim
 
 def liftPred₁ (P: α -> Prop) : Option α -> Prop
  | .some x => P x
@@ -46,6 +55,8 @@ instance {P: α -> Prop}: StrictPred₁ (liftPred₁ P) where
   | .some _ => .intro
   | .none => h.elim
 
+def isstrict_liftpred₁: liftPred₁ P x -> isdef x := StrictPred₁.isstrict
+
 def liftPred₂ (P: α -> β -> Prop) : Option α -> Option β -> Prop
  | .some x, .some y => P x y
  | _,_ => False
@@ -55,6 +66,8 @@ instance {P: α -> β -> Prop}: StrictPred₂ (liftPred₂ P) where
   match x,y with
   | .some _, .some _ => ⟨.intro,.intro⟩
   | .none ,_ => h.elim
+
+def isstrict_liftpred₂: liftPred₂ P x y -> isdef x ∧ isdef y := StrictPred₂.isstrict
 
 def liftFun₁ (f: α -> β) : Option α -> Option β
  | .some x => .some (f x)
@@ -66,21 +79,24 @@ instance {f: α -> β}: StrictFun₁ (liftFun₁ f) where
   | .some _ => .intro
   | .none => h.elim
 
+def isstrict_liftfun₁: isdef (liftFun₁ f x) -> isdef x := StrictFun₁.isstrict
+
 def liftFun₂ (f: α -> β → γ) : Option α -> Option β -> Option γ
  | .some x, .some y => .some (f x y)
  | _, _ => .none
 
-instance {f: α -> β → γ}: StrictFun₂ (liftFun₂ f) where
+instance strictfun₂_liftfun₂ {f: α -> β → γ}: StrictFun₂ (liftFun₂ f) where
  isstrict {x} {y} h :=
   match x, y with
   | .some _, .some _ => ⟨.intro,.intro⟩
   | .none, _ => h.elim
   | .some _, .none => h.elim
 
-theorem lift_def_refl [Std.Refl P] : isdef x -> liftPred₂ P x x :=
- match x with
- | .some _ => fun _ => Std.Refl.refl (r := P) _
- | .none => False.elim
+def isstrict_liftfun₂: isdef (liftFun₂ f x y) -> isdef x ∧ isdef y := StrictFun₂.isstrict
+
+theorem lift_def_refl [Std.Refl P] : isdef x -> liftPred₂ P x x := by
+ apply isdef_elim
+ apply Std.Refl.refl
 
 instance [Std.Symm P] : Std.Symm (liftPred₂ P) where
  symm
@@ -104,11 +120,10 @@ theorem peq_eq : peq x y -> x=y :=
  | .none, _ => False.elim
  | .some _, .none => False.elim
 
-theorem def₁_eq_peq {x y : Option α} : isdef x -> x=y -> peq x y :=
- match x,y with
- | .some x, .some y => by intro h k ; change x=y ; grind
- | .none, _ => by intro h ; apply h.elim
- | .some _, .none => by grind
+theorem def₁_eq_peq {x y : Option α} : isdef x -> x=y -> peq x y := by
+ apply isdef_elim ; intro x eq
+ rw [←eq]
+ apply Eq.refl
 
 theorem def₂_eq_peq {x y : Option α} : isdef y -> x=y -> peq x y := by
  grind [def₁_eq_peq]
