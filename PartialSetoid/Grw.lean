@@ -1,0 +1,18 @@
+class Copy {rel: outParam β → β → Prop} {lhs: outParam β} {rhs: β} (out: outParam (rel lhs rhs)) where
+
+def put k : @Copy _ r lhs rhs k := by constructor
+
+def take : [@Copy _ r lhs rhs k] -> r lhs rhs := k
+
+class Reflexive (rel: α -> α -> Prop) where
+  refl : rel x x
+
+class Proper (rel: α -> α -> Prop) (x: α) where
+ is_proper: rel x x
+
+instance [h: Reflexive rel] : Proper rel x where
+ is_proper := h.refl
+
+instance rr [k: Proper r z] : Copy k.is_proper where
+
+macro "grw" h:term : tactic => `(tactic | have := put $h <;> apply Iff.mp take)
