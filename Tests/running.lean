@@ -29,11 +29,18 @@ instance : StrictFun₂ exp := sorry
 -- instance : StrictFun₁ (fun r => exp r n) := sorry
 noncomputable instance : HPow ℝ ℕ ℝ := ⟨exp⟩
 
+axiom abs : ℝ -> ℝ
+axiom abs_def : isdef r -> isdef (abs r)
+instance : StrictFun₁ abs := sorry
+
 axiom lim : (ℕ -> ℝ) -> ℝ
 axiom lim_strict : isdef (lim xn) -> forall n, isdef (xn n) -- CSC: ??
 
 axiom bigadd : ℕ -> ℕ -> (ℕ -> ℝ) -> ℝ
 axiom bigadd_strict : isdef (bigadd n m xn) -> forall n, isdef (xn n) -- CSC: ??
+
+noncomputable instance : LT ℝ := sorry
+instance : StrictPred₂ (LT.lt (α:=ℝ)) := sorry
 
 def peq (x y: ℝ) := isdef x ∧ x = y
 instance : HasEquiv ℝ := ⟨peq⟩
@@ -58,10 +65,39 @@ theorem rtolpeq_trans: x ≈▷ y -> y ≈▷ z -> x ≈▷ z := by
  let ⟨d1,k1⟩ := h1 d2
  constructor <;> simp [*]
 
-axiom ax24 {c} {f : ℕ → ℝ} : lim (fun n => c - f n) ≈▷ c - lim (fun n => f n)
+instance : Trans (rtol peq) (rtol peq) (rtol peq) := ⟨rtolpeq_trans⟩
+
+variable {x : ℝ}
+axiom step₁ : lim (fun n => bigadd 0 n (fun i => exp x i)) ≈▷ lim (fun n => (1 - exp x (n+1)) / (1 - x))
+axiom step₂ {f: ℕ → ℝ} : lim (fun n => f n / m) ≈▷ lim (fun n => f n) / m
+axiom step₂' : lim (fun n => (1 - exp x (n+1)) / (1 - x)) ≈▷ lim (fun n => (1 - exp x (n+1))) / (1 - x)
+axiom step₃ {c} {f : ℕ → ℝ} : lim (fun n => c - f n) ≈▷ c - lim (fun n => f n)
+axiom step₄ : (abs x) < 1 -> lim (fun n => x^(n+1)) ≈▷ 0
+axiom step₅ {n m : Nat} : ((n : Nat) - (m : Nat) : ℝ) ≈▷ (n - m : Nat)
+axiom step₆ : abs n < m -> m - n ≠ 0
 
 example: isdef c -> isdef (lim (fun n => n)) -> isdef (lim (fun n => c - n)) := by
  intro hc h
- have k := ax24 (c:=c) (f:=(.)) ?_
+ have k := step₃ (c:=c) (f:=(.)) ?_
  . apply (StrictPred₂.isstrict k).left
  . apply sub_def <;> assumption
+
+theorem running :
+ abs x < 1 ->
+  lim (fun n => bigadd 0 n (fun i => exp x i)) ≈ 1 / (1 - x) := by
+ intro h
+ have ⟨d₁,d₂⟩ := StrictPred₂.isstrict h
+ have d₃ := StrictFun₁.isstrict d₁
+ have k :=
+  calc
+   lim (fun n => bigadd 0 n (fun i => exp x i))
+     ≈▷ lim (fun n => (1 - exp x (n+1)) / (1 - x)) := step₁
+   _ ≈▷ lim (fun n => (1 - exp x (n+1))) / (1 - x) := step₂'
+   _ ≈▷ (1 - lim (fun n => exp x (n+1))) / (1 - x) := sorry
+   _ ≈▷ (1 - 0) / (1 - x) := sorry
+   _ ≈▷ 1 / (1 - x) := sorry
+ apply k
+ apply div_def
+ . apply inj_def
+ . apply sub_def <;> assumption
+ . apply step₆ h
