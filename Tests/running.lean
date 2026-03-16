@@ -25,7 +25,8 @@ noncomputable instance : Div ℝ := ⟨div⟩
 
 axiom exp : ℝ -> ℕ -> ℝ
 axiom exp_def : isdef r -> isdef (exp r n)
-instance : StrictFun₁ (fun r => exp r n) := sorry
+instance : StrictFun₂ exp := sorry
+-- instance : StrictFun₁ (fun r => exp r n) := sorry
 noncomputable instance : HPow ℝ ℕ ℝ := ⟨exp⟩
 
 axiom lim : (ℕ -> ℝ) -> ℝ
