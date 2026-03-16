@@ -57,7 +57,7 @@ instance minusm₁ [Copy k]: Copy (minus₁ k) where
 axiom minus₂ : x ≤ y -> -x ≥ -y
 instance minusm₂ [Copy k]: Copy (minus₂ k) where
 
-set_option trace.Meta.synthInstance true
+/- set_option trace.Meta.synthInstance true -/
 -- set_option pp.explicit true
 
 example : ∀ x y : Nat, rNatZero x y -> p x -> p y := by
@@ -278,6 +278,11 @@ axiom exp : ℝ -> ℕ -> ℝ
 axiom exp_def : isdef r -> isdef (exp r n)
 noncomputable instance : HPow ℝ ℕ ℝ := ⟨exp⟩
 
+axiom abs : ℝ -> ℝ
+axiom abs_def : isdef r -> isdef (abs r)
+
+noncomputable instance : LT ℝ := sorry
+
 axiom lim : (ℕ -> ℝ) -> ℝ
 
 axiom bigadd : ℕ -> ℕ -> (ℕ -> ℝ) -> ℝ
@@ -301,7 +306,13 @@ theorem rtolpeq_trans: x ≈▷ y -> y ≈▷ z -> x ≈▷ z := by
  let ⟨d1,k1⟩ := h1 d2
  constructor <;> simp [*]
 
+ variable {x : ℝ}
+
+axiom step_1 : lim (fun n => bigadd 0 n (fun i => exp x i)) ≈▷ lim (fun n => (1 - exp x (n+1)) / (1 - x))
+axiom step_2 : lim (fun n => (1 - exp x (n+1)) / (1 - x)) ≈▷ lim (fun n => (1 - exp x (n+1))) / (1 - x)
 axiom ax24 {c} {f : ℕ → ℝ} : lim (fun n => c - f n) ≈▷ c - lim (fun n => f n)
+axiom step_3 : (abs x) < 1 -> lim (fun n => x^(n+1)) = 0
+
 
 example: isdef c -> isdef (lim (fun n => n)) -> isdef (lim (fun n => c - n)) := by
  intro hc h
