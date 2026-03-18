@@ -1,5 +1,6 @@
 import PartialSetoid.Partial
 import PartialSetoid.Grw
+import Lean
 open Partial
 
 abbrev ℕ := Nat
@@ -14,21 +15,21 @@ noncomputable instance : Coe ℕ ℝ := ⟨inj⟩
 noncomputable instance : OfNat ℝ n := ⟨ n ⟩
 
 instance : Sub ℝ := ⟨ sorry ⟩
-axiom sub_def {n m : ℝ} : isdef n -> isdef m -> isdef (n - m)
+@[def_lemma] axiom sub_def {n m : ℝ} : isdef n -> isdef m -> isdef (n - m)
 instance : StrictFun₂ (· - ·  : ℝ -> ℝ -> ℝ) := sorry
 
 
 instance : Div ℝ := ⟨ sorry ⟩
-axiom div_def {n m : ℝ} : isdef n -> isdef m -> m ≠ 0 -> isdef (n / m)
+@[def_lemma] axiom div_def {n m : ℝ} : isdef n -> isdef m -> m ≠ 0 -> isdef (n / m)
 instance : StrictFun₂ (· / · : ℝ -> ℝ -> ℝ) := sorry
 axiom div_existence {n m : ℝ} : isdef (n / m) → m ≠ 0 -- CSC: ??
 
 instance : HPow ℝ ℕ ℝ := ⟨ sorry ⟩
 instance : StrictFun₂ (· ^ · : ℝ -> ℕ -> ℝ) := sorry
-axiom exp_def {r : ℝ} {n : ℕ} : isdef r -> isdef (r ^ n)
+@[def_lemma] axiom exp_def {r : ℝ} {n : ℕ} : isdef r -> isdef (r ^ n)
 
 axiom abs : ℝ -> ℝ
-axiom abs_def : isdef r -> isdef (abs r)
+@[def_lemma] axiom abs_def : isdef r -> isdef (abs r)
 instance : StrictFun₁ abs := sorry
 
 axiom lim : (ℕ -> ℝ) -> ℝ
@@ -73,7 +74,7 @@ theorem rtolpeq_trans: x ≈▷ y -> y ≈▷ z -> x ≈▷ z := by
 
 instance : Trans rtolpeq rtolpeq rtolpeq := ⟨rtolpeq_trans⟩
 
-axiom step₁ (n : ℕ) : bigadd 0 (n - 1) (fun i => x^i) ≈▷ (1 - x ^ (n+1)) / (1 - x)
+axiom step₁ (x : ℝ) (n : ℕ) : bigadd 0 (n - 1) (fun i => x^i) ≈▷ (1 - x ^ (n+1)) / (1 - x)
 axiom step₁' : lim (fun n => bigadd 0 (n-1) (fun i => x ^ i)) ≈▷ lim (fun n => (1 - x ^ (n+1)) / (1 - x))
 axiom step₂ (m : ℝ) (f: ℕ → ℝ) : lim (fun n => f n / m) ≈▷ lim (fun n => f n) / m
 axiom step₃ (c : ℝ) (f : ℕ → ℝ) : lim (fun n => c - f n) ≈▷ c - lim (fun n => f n)
@@ -130,6 +131,8 @@ instance instRtolpeqAbs [Copy r₁] : Copy (rtolpeq_abs r₁) where
 
 instance instRtolpeqLim [forall n, Copy (r n)] : Copy (rtolpeq_lim r) where
 
+def def_rules := [``div_def, ``sub_def, ``step₆]
+
 --------------------------------------------------------
 
 example: isdef c -> isdef (lim (fun n => n)) -> isdef (lim (fun n => c - n)) := by
@@ -146,23 +149,14 @@ theorem running :
  intro h
  have ⟨d₁,d₂⟩ := StrictPred₂.isstrict h
  have d₃ := StrictFun₁.isstrict d₁
- have k :=
+ apply
   calc
-   lim (fun n => bigadd 0 (n-1) (fun i => x ^ i))
-     ≈▷ lim (fun n => (1 - x ^ (n+1)) / (1 - x)) := by
-    respects step₁
-    exact step₁'
-   _ ≈▷ lim (fun n => (1 - x ^ (n+1))) / (1 - x) := by
-    respects step₂ (1 - x) (fun n => 1 - x ^(n+1))
-   _ ≈▷ (1 - lim (fun n => x ^ (n+1))) / (1 - x) := by
-    respects step₃ 1 (fun n => x ^ (n + 1))
-   _ ≈▷ (1 - 0) / (1 - x) := by
-    respects step₄ h
-   _ ≈▷ 1 / (1 - x) := by
-    apply (_ : forall w, ((1 - 0) / (w - x)) ≈▷ 1 / (w - x)) ; intro w
-    respects step₅ 1 0
- apply k
- apply div_def
- . apply inj_def
- . apply sub_def <;> assumption
- . apply step₆ h
+        lim (fun n => bigadd 0 (n-1) (fun i => x ^ i))
+   _ ≈▷ lim (fun n => (1 - x ^ (n+1)) / (1 - x)) := by respects' (step₁ x)
+   _ ≈▷ lim (fun n => (1 - x ^ (n+1))) / (1 - x) := by respects step₂ (1 - x) (fun n => 1 - x ^(n+1))
+   _ ≈▷ (1 - lim (fun n => x ^ (n+1))) / (1 - x) := by respects step₃ 1 (fun n => x ^ (n + 1))
+   _ ≈▷ (1 - 0) / (1 - x)                        := by respects step₄ h
+   _ ≈▷ 1 / (1 - x)                              := by apply (_ : forall w, ((1 - 0) / (w - x)) ≈▷ 1 / (w - x)) ; intro w
+                                                       respects step₅ 1 0
+ apply_rules using def_lemma
+ apply step₆ h
