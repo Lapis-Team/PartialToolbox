@@ -72,7 +72,6 @@ instance : Trans rtolpeq rtolpeq rtolpeq := ⟨rtolpeq_trans⟩
 axiom step₁ (n : ℕ) : bigadd 0 (n - 1) (fun i => x^i) ≈▷ (1 - x ^ (n+1)) / (1 - x)
 axiom step₁' : lim (fun n => bigadd 0 (n-1) (fun i => x ^ i)) ≈▷ lim (fun n => (1 - x ^ (n+1)) / (1 - x))
 axiom step₂ (m : ℝ) (f: ℕ → ℝ) : lim (fun n => f n / m) ≈▷ lim (fun n => f n) / m
-axiom step₂' : lim (fun n => (1 - x ^ (n+1)) / (1 - x)) ≈▷ lim (fun n => (1 - x ^ (n+1))) / (1 - x)
 axiom step₃ (c : ℝ) (f : ℕ → ℝ) : lim (fun n => c - f n) ≈▷ c - lim (fun n => f n)
 axiom step₄ : abs x < 1 -> lim (fun n => x^(n+1)) ≈▷ 0
 axiom step₅ (n m : Nat) : ((n : Nat) - (m : Nat) : ℝ) ≈▷ (n - m : Nat)
