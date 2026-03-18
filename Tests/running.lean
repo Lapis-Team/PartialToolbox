@@ -121,7 +121,7 @@ example: isdef c -> isdef (lim (fun n => n)) -> isdef (lim (fun n => c - n)) := 
 -- set_option pp.explicit true in
 theorem running :
  abs x < 1 ->
-  lim (fun n => bigadd 0 n (fun i => x ^ i)) ≈ 1 / (1 - x) := by
+  lim (fun n => bigadd 0 (n-1) (fun i => x ^ i)) ≈ 1 / (1 - x) := by
  intro h
  have ⟨d₁,d₂⟩ := StrictPred₂.isstrict h
  have d₃ := StrictFun₁.isstrict d₁
