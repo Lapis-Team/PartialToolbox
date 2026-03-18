@@ -61,6 +61,7 @@ infix:60 " ≈▷ " => rtolpeq
 
 -- macro l:term:50 "≈▷" r:term:50 : term => `(term|rtol peq $l $r)
 
+@[def_lemma_closing]
 theorem def_rtolpeq_def {x y : ℝ} : isdef y -> x≈▷ y -> isdef x := by
  intro h h'
  apply (h' h).left
@@ -97,7 +98,7 @@ theorem rtolpeq_sub : x ≈▷ x' -> y ≈▷ y' -> (x - y) ≈▷ (x' - y') := 
   intro h₁ h₂ d₁
   have ⟨d₂,d₃⟩ := StrictFun₂.isstrict d₁
   constructor
-  . apply sub_def <;> grind [def_rtolpeq_def]
+  . def_intro
   . have hx : x = x' := by dsimp [rtolpeq, peq, rtol] at h₁ ; grind
     have hy : y = y' := by dsimp [rtolpeq, peq, rtol] at h₂ ; grind
     rw [hx, hy]
@@ -107,11 +108,9 @@ theorem rtolpeq_div : n ≈▷ n' -> d ≈▷ d' -> (n / d) ≈▷ (n' / d') := 
   have ⟨d₂,d₃⟩ := StrictFun₂.isstrict d₁
   have ce := div_existence d₁
   constructor
-  . apply div_def
-    . grind [def_rtolpeq_def]
-    . grind [def_rtolpeq_def]
-    . have := (h₂ d₃).right
-      grind
+  . def_intro
+    have := (h₂ d₃).right
+    grind
   . have hn : n = n' := by dsimp [rtolpeq, peq, rtol] at h₁ ; grind
     have hd : d = d' := by dsimp [rtolpeq, peq, rtol] at h₂ ; grind
     rw [hn, hd]
@@ -131,18 +130,14 @@ instance instRtolpeqAbs [Copy r₁] : Copy (rtolpeq_abs r₁) where
 
 instance instRtolpeqLim [forall n, Copy (r n)] : Copy (rtolpeq_lim r) where
 
-def def_rules := [``div_def, ``sub_def, ``step₆]
-
 --------------------------------------------------------
 
 example: isdef c -> isdef (lim (fun n => n)) -> isdef (lim (fun n => c - n)) := by
  intro hc h
  have k := step₃ (c:=c) (f:=(.)) ?_
  . apply (StrictPred₂.isstrict k).left
- . apply sub_def <;> assumption
+ . def_intro
 
--- set_option trace.Meta.synthInstance true in
--- set_option pp.explicit true in
 theorem running :
  abs x < 1 ->
   lim (fun n => bigadd 0 (n-1) (fun i => x ^ i)) ≈ 1 / (1 - x) := by
@@ -158,5 +153,5 @@ theorem running :
    _ ≈▷ (1 - 0) / (1 - x)                        := by respects step₄ h
    _ ≈▷ 1 / (1 - x)                              := by apply (_ : forall w, ((1 - 0) / (w - x)) ≈▷ 1 / (w - x)) ; intro w
                                                        respects step₅ 1 0
- apply_rules using def_lemma
+ def_intro
  apply step₆ h
