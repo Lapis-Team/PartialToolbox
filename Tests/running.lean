@@ -145,6 +145,53 @@ instance instRtolpeqLim [forall n, Copy (r n)] : Copy (rtolpeq_lim r) where
 
 --------------------------------------------------------
 
+class isdef_elim [Partial T] (t: T) (Q : outParam Prop) where
+ elim {P : Prop} : (Q → P) -> isdef t -> P
+
+@[default_instance]
+instance  {t : ℝ} : isdef_elim t True where
+ elim k _ := k ⟨⟩
+
+instance {x y : ℝ} [ix : isdef_elim x Qx] [iy : isdef_elim y Qy] : isdef_elim (x - y) ((isdef x ∧ Qx) ∧ (isdef y ∧ Qy)) where
+ elim h k :=
+  let ⟨u₁,u₂⟩ := StrictFun₂.isstrict k
+  ix.elim (fun qx => iy.elim (fun qy => h ⟨⟨u₁,qx⟩,⟨u₂,qy⟩⟩) u₂ ) u₁
+
+instance {x : ℝ} [ix : isdef_elim x Qx] : isdef_elim (abs x) (isdef x ∧ Qx) where
+ elim h k :=
+  let u := StrictFun₁.isstrict k
+  ix.elim (fun qx => h ⟨u,qx⟩) u
+
+instance {x y : ℝ} [ix : isdef_elim x Qx] [iy : isdef_elim y Qy] : isdef_elim (x / y) ((isdef x ∧ Qx) ∧ (isdef y ∧ y≠0 ∧ Qy)) where
+ elim h k :=
+  let ⟨u₁,u₂⟩ := StrictFun₂.isstrict k
+  let u₃ := div_existence k
+  ix.elim (fun qx => iy.elim (fun qy => h ⟨⟨u₁,qx⟩,⟨u₂,u₃,qy⟩⟩) u₂ ) u₁
+
+instance {x : ℝ} {y : ℕ} [ix : isdef_elim x Qx] [iy : isdef_elim y Qy] : isdef_elim (x ^ y) ((isdef x ∧ Qx) ∧ (isdef y ∧ Qy)) where
+ elim h k :=
+  let ⟨u₁,u₂⟩ := StrictFun₂.isstrict k
+  ix.elim (fun qx => iy.elim (fun qy => h ⟨⟨u₁,qx⟩,⟨u₂,qy⟩⟩) u₂ ) u₁
+
+instance {Qf : ℕ -> Prop} {f : ℕ → ℝ} [if' : forall n, isdef_elim (f n) (Qf n)]: isdef_elim (lim f) (forall n, isdef (f n) ∧ Qf n) where
+ elim h k :=
+  let u := lim_strict k
+  h (fun n => ⟨u n, (if' n).elim (.) (u n)⟩)
+
+class isdef_elim' (T: Prop) (Q : outParam Prop) where
+ elim {P : Prop} : (Q -> P) -> T -> P
+
+instance {x y : ℝ} [ix : isdef_elim x Qx] [iy: isdef_elim y Qy] : isdef_elim' (x < y) ((isdef x ∧ Qx) ∧ (isdef y ∧ Qy)) where
+ elim h k :=
+  let ⟨u₁,u₂⟩ := StrictPred₂.isstrict k
+  ix.elim (fun qx => iy.elim (fun qy => h ⟨⟨u₁,qx⟩,⟨u₂,qy⟩⟩) u₂ ) u₁
+
+example {x: ℝ} : 2 / lim (fun n => (x^n)^n) < 3 -> True := by
+ apply isdef_elim'.elim
+
+
+--------------------------------------------------------
+
 example: isdef c -> isdef (lim (fun n => n)) -> isdef (lim (fun n => c - n)) := by
  intro hc h
  have k := step₃ c (.)
