@@ -48,10 +48,23 @@ instance : StrictPred₂ peq where
   let ⟨d,e⟩ := h
   grind
 
-theorem def_peq₂ {x y : ℝ}: isdef y -> x=y -> x ≈ y := by
+theorem def_peq1₁ {x y : ℝ} : isdef x -> x=y -> x ≈ y := by trivial
+
+theorem def_peq₂ {x y : ℝ} : isdef y -> x=y -> x ≈ y := by
  intro d e
  rw [e]
  constructor <;> grind
+
+@[def_lemma_closing]
+theorem peq_def₁ {x y : ℝ} : x ≈ y -> isdef x := And.left
+
+@[def_lemma_closing]
+theorem peq_def₂ {x y : ℝ}: x ≈ y -> isdef y := by
+ intro h
+ rw [←h.right]
+ apply h.left
+
+theorem peq_eq {x y : ℝ} : x ≈ y -> x =y := And.right
 
 def rtol (op: ℝ -> ℝ -> Prop) : ℝ -> ℝ -> Prop :=
  fun x y => isdef y -> op x y
@@ -109,7 +122,7 @@ theorem rtolpeq_div : n ≈▷ n' -> d ≈▷ d' -> (n / d) ≈▷ (n' / d') := 
   have ce := div_existence d₁
   constructor
   . def_intro
-    have := (h₂ d₃).right
+    have := peq_eq (h₂ d₃)
     grind
   . have hn : n = n' := by dsimp [rtolpeq, peq, rtol] at h₁ ; grind
     have hd : d = d' := by dsimp [rtolpeq, peq, rtol] at h₂ ; grind
@@ -134,9 +147,8 @@ instance instRtolpeqLim [forall n, Copy (r n)] : Copy (rtolpeq_lim r) where
 
 example: isdef c -> isdef (lim (fun n => n)) -> isdef (lim (fun n => c - n)) := by
  intro hc h
- have k := step₃ (c:=c) (f:=(.)) ?_
- . apply (StrictPred₂.isstrict k).left
- . def_intro
+ have k := step₃ c (.)
+ def_intro
 
 theorem running :
  abs x < 1 ->

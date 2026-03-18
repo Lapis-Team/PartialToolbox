@@ -26,4 +26,4 @@ register_label_attr def_lemma_closing
 macro "def_intro" : tactic =>
  let dlemma := Lean.mkIdent `def_lemma
  let dlemma_closing := Lean.mkIdent `def_lemma_closing
- `(tactic | apply_rules using $dlemma <;> try solve_by_elim (maxDepth := 8) using $dlemma_closing)
+ `(tactic | (try apply_rules using $dlemma) <;> try solve_by_elim (maxDepth := 8) using $dlemma_closing, $dlemma)
