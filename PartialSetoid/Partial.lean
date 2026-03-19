@@ -1,3 +1,5 @@
+import PartialSetoid.Grw
+import Lean
 -- Partial types are types equipped with a unary isdef predicate
 -- Strict unary and binary functions are defined
 -- Strict unary and binary predicates are defined so that they
@@ -129,3 +131,52 @@ theorem def₂_eq_peq {x y : Option α} : isdef y -> x=y -> peq x y := by
  grind [def₁_eq_peq]
 
 end Option
+
+------------------ Defining PEQ on instances of Partial
+namespace Partial
+instance [Partial T]: HasEquiv T where
+ Equiv (x y : T) := isdef x ∧ x = y
+instance [Partial T] : StrictPred₂ (. ≈ . : (T) → (T) → Prop) where
+ isstrict {x y} h := by
+  let ⟨d,e⟩ := h
+  grind
+
+theorem def_peq1₁ [Partial T] {x y : T} : isdef x -> x=y -> x ≈ y := by trivial
+
+theorem def_peq₂ [Partial T] {x y : T} : isdef y -> x=y -> x ≈ y := by
+ intro d e
+ rw [e]
+ constructor <;> grind
+
+@[def_lemma_closing]
+theorem peq_def₁ [Partial T] {x y : T} : x ≈ y -> isdef x := And.left
+
+@[def_lemma_closing]
+theorem peq_def₂ [Partial T] {x y : T}: x ≈ y -> isdef y := by
+ intro h
+ rw [←h.right]
+ apply h.left
+
+theorem peq_eq [Partial T] {x y : T} : x ≈ y -> x =y := And.right
+
+def rtol [Partial T] (op: T -> T -> Prop) : T -> T -> Prop :=
+ fun x y => isdef y -> op x y
+
+abbrev rtolpeq [instPartial: Partial T] := rtol (. ≈ . : T → T → Prop)
+infix:60 " ≈▷ " => rtolpeq
+
+@[def_lemma_closing]
+theorem def_rtolpeq_def [Partial T] {x y : T} : isdef y -> x ≈▷ y -> isdef x := by
+ intro h h'
+ apply (h' h).left
+
+theorem rtolpeq_trans [Partial T] {x y z : T} : x ≈▷ y -> y ≈▷ z -> x ≈▷ z := by
+ intro h1 h2 dz
+ let ⟨d2,k2⟩ := h2 dz
+ let ⟨d1,k1⟩ := h1 d2
+ constructor <;> simp [*]
+
+instance [Partial T] : Trans (γ := T) rtolpeq rtolpeq rtolpeq := ⟨rtolpeq_trans⟩
+
+end Partial
+---------------------------------------

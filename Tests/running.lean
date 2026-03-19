@@ -1,11 +1,11 @@
 import PartialSetoid.Partial
 import PartialSetoid.Grw
 import Lean
-open Partial
+open Partial Partial.Partial
 
 abbrev ℕ := Nat
 axiom ℝ : Type
-instance : Partial ℝ := sorry
+instance instPartialR : Partial ℝ := sorry
 
 @[coe]
 axiom inj : ℕ → ℝ
@@ -40,52 +40,6 @@ axiom bigadd_strict : isdef (bigadd n m xn) -> forall n, isdef (xn n) -- CSC: ??
 
 noncomputable instance : LT ℝ := ⟨ sorry ⟩
 instance : StrictPred₂ (LT.lt (α:=ℝ)) := ⟨ sorry ⟩
-
------------------------ peq ------------------------------
-
-instance : HasEquiv ℝ where
- Equiv (x y : ℝ) := isdef x ∧ x = y
-instance : StrictPred₂ (.≈ . : ℝ → ℝ → Prop) where
- isstrict {x y} h := by
-  let ⟨d,e⟩ := h
-  grind
-
-theorem def_peq1₁ {x y : ℝ} : isdef x -> x=y -> x ≈ y := by trivial
-
-theorem def_peq₂ {x y : ℝ} : isdef y -> x=y -> x ≈ y := by
- intro d e
- rw [e]
- constructor <;> grind
-
-@[def_lemma_closing]
-theorem peq_def₁ {x y : ℝ} : x ≈ y -> isdef x := And.left
-
-@[def_lemma_closing]
-theorem peq_def₂ {x y : ℝ}: x ≈ y -> isdef y := by
- intro h
- rw [←h.right]
- apply h.left
-
-theorem peq_eq {x y : ℝ} : x ≈ y -> x =y := And.right
-
-def rtol (op: ℝ -> ℝ -> Prop) : ℝ -> ℝ -> Prop :=
- fun x y => isdef y -> op x y
-
-def rtolpeq := rtol (.≈. : ℝ → ℝ → Prop)
-infix:60 " ≈▷ " => rtolpeq
-
-@[def_lemma_closing]
-theorem def_rtolpeq_def {x y : ℝ} : isdef y -> x≈▷ y -> isdef x := by
- intro h h'
- apply (h' h).left
-
-theorem rtolpeq_trans: x ≈▷ y -> y ≈▷ z -> x ≈▷ z := by
- intro h1 h2 dz
- let ⟨d2,k2⟩ := h2 dz
- let ⟨d1,k1⟩ := h1 d2
- constructor <;> simp [*]
-
-instance : Trans rtolpeq rtolpeq rtolpeq := ⟨rtolpeq_trans⟩
 
 -------------------- isdef_elim ---------------------
 
@@ -132,16 +86,16 @@ instance {x y : ℝ} [ix : isdef_elim x Qx] [iy: isdef_elim y Qy] : isdef_elim' 
 
 -------------------- GRW INSTANCES ---------------------
 
-instance : Reflexive rtolpeq where
+instance : Reflexive (rtolpeq (instPartial := instPartialR)) where
   refl {x} h := by constructor <;> trivial
 
 theorem rtolpeq_abs : x ≈▷ x' -> (abs x) ≈▷ (abs x') := by
   sorry
 
-theorem rtolpeq_exp {n : ℕ} : x ≈▷ x' -> x ^ n ≈▷ x' ^ n := by
+theorem rtolpeq_exp {x : ℝ} {n : ℕ} : x ≈▷ x' -> x ^ n ≈▷ x' ^ n := by
   sorry
 
-theorem rtolpeq_sub : x ≈▷ x' -> y ≈▷ y' -> (x - y) ≈▷ (x' - y') := by
+theorem rtolpeq_sub {x y : ℝ} : x ≈▷ x' -> y ≈▷ y' -> (x - y) ≈▷ (x' - y') := by
   intro h₁ h₂ d₁
   apply isdef_elim.elim _ d₁ ; simp ; intro d₂ d₃
   constructor
@@ -150,7 +104,7 @@ theorem rtolpeq_sub : x ≈▷ x' -> y ≈▷ y' -> (x - y) ≈▷ (x' - y') := 
     have hy : y = y' := peq_eq (h₂ d₃)
     rw [hx, hy]
 
-theorem rtolpeq_div : n ≈▷ n' -> d ≈▷ d' -> (n / d) ≈▷ (n' / d') := by
+theorem rtolpeq_div {n n' d d' : ℝ} : n ≈▷ n' -> d ≈▷ d' -> (n / d) ≈▷ (n' / d') := by
   intro h₁ h₂ d₁
   apply isdef_elim.elim _ d₁ ; simp ; intro d₂ d₃ d₄
   constructor
@@ -185,7 +139,7 @@ axiom step₄ : abs x < 1 -> lim (fun n => x^(n+1)) ≈▷ 0
 axiom step₅ (n m : Nat) : ((n : Nat) - (m : Nat) : ℝ) ≈▷ (n - m : Nat)
 axiom step₆ : abs n < m -> m - n ≠ 0
 
-theorem running :
+theorem running {x : ℝ} :
  abs x < 1 ->
   lim (fun n => bigadd 0 (n-1) (fun i => x ^ i)) ≈ 1 / (1 - x) := by
  intro h
