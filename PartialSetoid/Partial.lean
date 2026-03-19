@@ -157,16 +157,27 @@ theorem peq_def₂ [Partial T] {x y : T}: x ≈ y -> isdef y := by
  rw [←h.right]
  apply h.left
 
-theorem peq_eq [Partial T] {x y : T} : x ≈ y -> x =y := And.right
+theorem peq_eq [Partial T] {x y : T} : x ≈ y -> x = y := And.right
 
 def rtol [Partial T] (op: T -> T -> Prop) : T -> T -> Prop :=
  fun x y => isdef y -> op x y
 
+def ltor [Partial T] (op: T -> T -> Prop) : T -> T -> Prop :=
+ fun x y => isdef x -> op y x
+
 abbrev rtolpeq [instPartial: Partial T] := rtol (. ≈ . : T → T → Prop)
 infix:60 " ≈▷ " => rtolpeq
 
+abbrev ltorpeq [instPartial: Partial T] := ltor (. ≈ . : T → T → Prop)
+infix:60 " ◁≈ " => ltorpeq
+
 @[def_lemma_closing]
 theorem def_rtolpeq_def [Partial T] {x y : T} : isdef y -> x ≈▷ y -> isdef x := by
+ intro h h'
+ apply (h' h).left
+
+@[def_lemma_closing]
+theorem def_ltorpeq_def [Partial T] {x y : T} : isdef x -> x ◁≈ y -> isdef y := by
  intro h h'
  apply (h' h).left
 
@@ -174,6 +185,18 @@ theorem rtolpeq_trans [Partial T] {x y z : T} : x ≈▷ y -> y ≈▷ z -> x �
  intro h1 h2 dz
  let ⟨d2,k2⟩ := h2 dz
  let ⟨d1,k1⟩ := h1 d2
+ constructor <;> simp [*]
+
+theorem ltorpeq_trans [Partial T] {x y z : T} : x ◁≈ y -> y ◁≈ z -> x ◁≈ z := by
+ intro h₁ h₂ dx
+ let ⟨d₂,k₂⟩ := h₁ dx
+ let ⟨d₁,k₁⟩ := h₂ d₂
+ constructor <;> simp [*]
+
+theorem rtoltopeq_trans [Partial T] {x y z : T} : isdef y -> x ≈▷ y -> y ◁≈ z -> x ≈ z := by
+ intro dy h₁ h₂
+ let ⟨d₂,k₂⟩ := h₁ dy
+ let ⟨d₁,k₁⟩ := h₂ dy
  constructor <;> simp [*]
 
 instance [Partial T] : Trans (γ := T) rtolpeq rtolpeq rtolpeq := ⟨rtolpeq_trans⟩
