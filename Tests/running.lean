@@ -90,10 +90,21 @@ instance : Reflexive (rtolpeq (instPartial := instPartialR)) where
   refl {x} h := by constructor <;> trivial
 
 theorem rtolpeq_abs : x ≈▷ x' -> (abs x) ≈▷ (abs x') := by
-  sorry
+  intro h₁ d₁ 
+  apply isdef_elim.elim _ d₁ ; simp ; intro d₂
+  constructor
+  . def_intro
+  . have hx : x = x' := peq_eq $ h₁ d₂ 
+    rw [hx]
 
 theorem rtolpeq_exp {x : ℝ} {n : ℕ} : x ≈▷ x' -> x ^ n ≈▷ x' ^ n := by
-  sorry
+  intro h₁ d₁ 
+  apply isdef_elim.elim _ d₁ ; simp
+  have ⟨ d₂, _ ⟩ := StrictFun₂.isstrict d₁ 
+  constructor
+  . def_intro
+  . have hx : x = x' := peq_eq $ h₁ d₂ 
+    rw [hx]
 
 theorem rtolpeq_sub {x y : ℝ} : x ≈▷ x' -> y ≈▷ y' -> (x - y) ≈▷ (x' - y') := by
   intro h₁ h₂ d₁
@@ -139,12 +150,8 @@ axiom step₄ : abs x < 1 -> lim (fun n => x^(n+1)) ≈▷ 0
 axiom step₅ (n m : Nat) : ((n : Nat) - (m : Nat) : ℝ) ≈▷ (n - m : Nat)
 axiom step₆ : abs n < m -> m - n ≠ 0
 
-theorem running {x : ℝ} :
- abs x < 1 ->
-  lim (fun n => bigadd 0 (n-1) (fun i => x ^ i)) ≈ 1 / (1 - x) := by
- intro h
- apply isdef_elim'.elim _ h ; simp ; intro d₁ d₂ _
- apply
+theorem calc_lemma {x : ℝ}: abs x < 1 -> lim (fun n => bigadd 0 (n-1) (fun i => x ^ i)) ≈▷ 1 / (1 - x) := by 
+  intro h
   calc
         lim (fun n => bigadd 0 (n-1) (fun i => x ^ i))
    _ ≈▷ lim (fun n => (1 - x ^ (n+1)) / (1 - x)) := by respects' (step₁ x)
@@ -153,5 +160,12 @@ theorem running {x : ℝ} :
    _ ≈▷ (1 - 0) / (1 - x)                        := by respects step₄ h
    _ ≈▷ 1 / (1 - x)                              := by apply (_ : forall w, ((1 - 0) / (w - x)) ≈▷ 1 / (w - x)) ; intro w
                                                        respects step₅ 1 0
+
+theorem running {x : ℝ} :
+ abs x < 1 ->
+  lim (fun n => bigadd 0 (n-1) (fun i => x ^ i)) ≈ 1 / (1 - x) := by
+ intro h
+ apply isdef_elim'.elim _ h ; simp ; intro d₁ d₂ _
+ apply calc_lemma h
  def_intro
  apply step₆ h
