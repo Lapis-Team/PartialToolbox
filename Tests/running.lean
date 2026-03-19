@@ -88,13 +88,6 @@ theorem rtolpeq_trans: x ≈▷ y -> y ≈▷ z -> x ≈▷ z := by
 
 instance : Trans rtolpeq rtolpeq rtolpeq := ⟨rtolpeq_trans⟩
 
-axiom step₁ (x : ℝ) (n : ℕ) : bigadd 0 (n - 1) (fun i => x^i) ≈▷ (1 - x ^ (n+1)) / (1 - x)
-axiom step₁' : lim (fun n => bigadd 0 (n-1) (fun i => x ^ i)) ≈▷ lim (fun n => (1 - x ^ (n+1)) / (1 - x))
-axiom step₂ (m : ℝ) (f: ℕ → ℝ) : lim (fun n => f n / m) ≈▷ lim (fun n => f n) / m
-axiom step₃ (c : ℝ) (f : ℕ → ℝ) : lim (fun n => c - f n) ≈▷ c - lim (fun n => f n)
-axiom step₄ : abs x < 1 -> lim (fun n => x^(n+1)) ≈▷ 0
-axiom step₅ (n m : Nat) : ((n : Nat) - (m : Nat) : ℝ) ≈▷ (n - m : Nat)
-axiom step₆ : abs n < m -> m - n ≠ 0
 
 -------------------- isdef_elim ---------------------
 
@@ -185,12 +178,14 @@ instance instRtolpeqAbs [Copy r₁] : Copy (rtolpeq_abs r₁) where
 
 instance instRtolpeqLim [forall n, Copy (r n)] : Copy (rtolpeq_lim r) where
 
---------------------------------------------------------
+----------------- running example ---------------------------------------
 
-example: isdef c -> isdef (lim (fun n => n)) -> isdef (lim (fun n => c - n)) := by
- intro hc h
- have k := step₃ c (.)
- def_intro
+axiom step₁ (x : ℝ) (n : ℕ) : bigadd 0 (n - 1) (fun i => x^i) ≈▷ (1 - x ^ (n+1)) / (1 - x)
+axiom step₂ (m : ℝ) (f: ℕ → ℝ) : lim (fun n => f n / m) ≈▷ lim (fun n => f n) / m
+axiom step₃ (c : ℝ) (f : ℕ → ℝ) : lim (fun n => c - f n) ≈▷ c - lim (fun n => f n)
+axiom step₄ : abs x < 1 -> lim (fun n => x^(n+1)) ≈▷ 0
+axiom step₅ (n m : Nat) : ((n : Nat) - (m : Nat) : ℝ) ≈▷ (n - m : Nat)
+axiom step₆ : abs n < m -> m - n ≠ 0
 
 theorem running :
  abs x < 1 ->
