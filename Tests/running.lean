@@ -41,9 +41,11 @@ axiom bigadd_strict : isdef (bigadd n m xn) -> forall n, isdef (xn n) -- CSC: ??
 noncomputable instance : LT ℝ := ⟨ sorry ⟩
 instance : StrictPred₂ (LT.lt (α:=ℝ)) := ⟨ sorry ⟩
 
-def peq (x y: ℝ) := isdef x ∧ x = y
-instance : HasEquiv ℝ := ⟨peq⟩
-instance : StrictPred₂ peq where
+----------------------- peq ------------------------------
+
+instance : HasEquiv ℝ where
+ Equiv (x y : ℝ) := isdef x ∧ x = y
+instance : StrictPred₂ (.≈ . : ℝ → ℝ → Prop) where
  isstrict {x y} h := by
   let ⟨d,e⟩ := h
   grind
@@ -69,16 +71,13 @@ theorem peq_eq {x y : ℝ} : x ≈ y -> x =y := And.right
 def rtol (op: ℝ -> ℝ -> Prop) : ℝ -> ℝ -> Prop :=
  fun x y => isdef y -> op x y
 
-def rtolpeq := rtol peq
+def rtolpeq := rtol (.≈. : ℝ → ℝ → Prop)
 infix:60 " ≈▷ " => rtolpeq
-
--- macro l:term:50 "≈▷" r:term:50 : term => `(term|rtol peq $l $r)
 
 @[def_lemma_closing]
 theorem def_rtolpeq_def {x y : ℝ} : isdef y -> x≈▷ y -> isdef x := by
  intro h h'
  apply (h' h).left
-
 
 theorem rtolpeq_trans: x ≈▷ y -> y ≈▷ z -> x ≈▷ z := by
  intro h1 h2 dz
@@ -87,7 +86,6 @@ theorem rtolpeq_trans: x ≈▷ y -> y ≈▷ z -> x ≈▷ z := by
  constructor <;> simp [*]
 
 instance : Trans rtolpeq rtolpeq rtolpeq := ⟨rtolpeq_trans⟩
-
 
 -------------------- isdef_elim ---------------------
 
