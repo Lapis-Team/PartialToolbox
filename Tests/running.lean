@@ -96,54 +96,7 @@ axiom step₄ : abs x < 1 -> lim (fun n => x^(n+1)) ≈▷ 0
 axiom step₅ (n m : Nat) : ((n : Nat) - (m : Nat) : ℝ) ≈▷ (n - m : Nat)
 axiom step₆ : abs n < m -> m - n ≠ 0
 
--------------------- GRW INSTANCES ---------------------
-
-instance : Reflexive rtolpeq where
-  refl {x} h := by constructor <;> trivial
-
-theorem rtolpeq_abs : x ≈▷ x' -> (abs x) ≈▷ (abs x') := by
-  sorry
-
-theorem rtolpeq_exp {n : ℕ} : x ≈▷ x' -> x ^ n ≈▷ x' ^ n := by
-  sorry
-
-theorem rtolpeq_sub : x ≈▷ x' -> y ≈▷ y' -> (x - y) ≈▷ (x' - y') := by
-  intro h₁ h₂ d₁
-  have ⟨d₂,d₃⟩ := StrictFun₂.isstrict d₁
-  constructor
-  . def_intro
-  . have hx : x = x' := by dsimp [rtolpeq, peq, rtol] at h₁ ; grind
-    have hy : y = y' := by dsimp [rtolpeq, peq, rtol] at h₂ ; grind
-    rw [hx, hy]
-
-theorem rtolpeq_div : n ≈▷ n' -> d ≈▷ d' -> (n / d) ≈▷ (n' / d') := by
-  intro h₁ h₂ d₁
-  have ⟨d₂,d₃⟩ := StrictFun₂.isstrict d₁
-  have ce := div_existence d₁
-  constructor
-  . def_intro
-    have := peq_eq (h₂ d₃)
-    grind
-  . have hn : n = n' := by dsimp [rtolpeq, peq, rtol] at h₁ ; grind
-    have hd : d = d' := by dsimp [rtolpeq, peq, rtol] at h₂ ; grind
-    rw [hn, hd]
-
-theorem rtolpeq_lim : (forall n, f n ≈▷ f' n) -> lim f ≈▷ lim f' := by
- intro h d
- have l := lim_strict d
- have k : f=f' := by
-  ext y
-  apply (h y (l y)).right
- rw [k]
- constructor <;> trivial
-
-instance instRtolpeqDiv [Copy r₁] [Copy r₂] : Copy (rtolpeq_div r₁ r₂) where
-instance instRtolpeqSub [Copy r₁] [Copy r₂] : Copy (rtolpeq_sub r₁ r₂) where
-instance instRtolpeqAbs [Copy r₁] : Copy (rtolpeq_abs r₁) where
-
-instance instRtolpeqLim [forall n, Copy (r n)] : Copy (rtolpeq_lim r) where
-
---------------------------------------------------------
+-------------------- isdef_elim ---------------------
 
 class isdef_elim [Partial T] (t: T) (Q : outParam Prop) where
  elim {P : Prop} : (Q → P) -> isdef t -> P
@@ -186,9 +139,53 @@ instance {x y : ℝ} [ix : isdef_elim x Qx] [iy: isdef_elim y Qy] : isdef_elim' 
   let ⟨u₁,u₂⟩ := StrictPred₂.isstrict k
   ix.elim (fun qx => iy.elim (fun qy => h ⟨⟨u₁,qx⟩,⟨u₂,qy⟩⟩) u₂ ) u₁
 
-example {x: ℝ} : 2 / lim (fun n => (x^n)^n) < 3 -> True := by
- apply isdef_elim'.elim
+-------------------- GRW INSTANCES ---------------------
 
+instance : Reflexive rtolpeq where
+  refl {x} h := by constructor <;> trivial
+
+theorem rtolpeq_abs : x ≈▷ x' -> (abs x) ≈▷ (abs x') := by
+  sorry
+
+theorem rtolpeq_exp {n : ℕ} : x ≈▷ x' -> x ^ n ≈▷ x' ^ n := by
+  sorry
+
+theorem rtolpeq_sub : x ≈▷ x' -> y ≈▷ y' -> (x - y) ≈▷ (x' - y') := by
+  intro h₁ h₂ d₁
+  apply isdef_elim.elim _ d₁ ; simp ; intro d₂ d₃
+  constructor
+  . def_intro
+  . have hx : x = x' := peq_eq (h₁ d₂) -- dsimp [rtolpeq, peq, rtol] at h₁ ; grind
+    have hy : y = y' := peq_eq (h₂ d₃)
+    rw [hx, hy]
+
+theorem rtolpeq_div : n ≈▷ n' -> d ≈▷ d' -> (n / d) ≈▷ (n' / d') := by
+  intro h₁ h₂ d₁
+  apply isdef_elim.elim _ d₁ ; simp ; intro d₂ d₃ d₄
+  constructor
+  . def_intro
+    have := peq_eq (h₂ d₃)
+    grind
+  . have hn : n = n' := peq_eq (h₁ d₂)
+    have hd : d = d' := peq_eq (h₂ d₃)
+    rw [hn, hd]
+
+theorem rtolpeq_lim : (forall n, f n ≈▷ f' n) -> lim f ≈▷ lim f' := by
+ intro h d
+ apply isdef_elim.elim _ d ; simp ; intro l
+ have k : f=f' := by
+  ext y
+  apply (h y (l y)).right
+ rw [k]
+ constructor <;> trivial
+
+instance instRtolpeqDiv [Copy r₁] [Copy r₂] : Copy (rtolpeq_div r₁ r₂) where
+instance instRtolpeqSub [Copy r₁] [Copy r₂] : Copy (rtolpeq_sub r₁ r₂) where
+instance instRtolpeqAbs [Copy r₁] : Copy (rtolpeq_abs r₁) where
+
+instance instRtolpeqLim [forall n, Copy (r n)] : Copy (rtolpeq_lim r) where
+
+--------------------------------------------------------
 
 --------------------------------------------------------
 
@@ -201,8 +198,7 @@ theorem running :
  abs x < 1 ->
   lim (fun n => bigadd 0 (n-1) (fun i => x ^ i)) ≈ 1 / (1 - x) := by
  intro h
- have ⟨d₁,d₂⟩ := StrictPred₂.isstrict h
- have d₃ := StrictFun₁.isstrict d₁
+ apply isdef_elim'.elim _ h ; simp ; intro d₁ d₂ _
  apply
   calc
         lim (fun n => bigadd 0 (n-1) (fun i => x ^ i))
