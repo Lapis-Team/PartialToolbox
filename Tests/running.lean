@@ -155,7 +155,7 @@ theorem rtolpeq_sub : x ≈▷ x' -> y ≈▷ y' -> (x - y) ≈▷ (x' - y') := 
   apply isdef_elim.elim _ d₁ ; simp ; intro d₂ d₃
   constructor
   . def_intro
-  . have hx : x = x' := peq_eq (h₁ d₂) -- dsimp [rtolpeq, peq, rtol] at h₁ ; grind
+  . have hx : x = x' := peq_eq (h₁ d₂)
     have hy : y = y' := peq_eq (h₂ d₃)
     rw [hx, hy]
 
@@ -184,8 +184,6 @@ instance instRtolpeqSub [Copy r₁] [Copy r₂] : Copy (rtolpeq_sub r₁ r₂) w
 instance instRtolpeqAbs [Copy r₁] : Copy (rtolpeq_abs r₁) where
 
 instance instRtolpeqLim [forall n, Copy (r n)] : Copy (rtolpeq_lim r) where
-
---------------------------------------------------------
 
 --------------------------------------------------------
 

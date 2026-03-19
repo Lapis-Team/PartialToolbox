@@ -322,3 +322,22 @@ example: isdef c -> isdef (lim (fun n => n)) -> isdef (lim (fun n => c - n)) := 
 
 
 end running_example
+
+
+axiom T: type
+axiom pp : T -> T -> T
+noncomputable instance : Add T := ⟨pp⟩
+
+
+set_option pp.explicit true
+
+class Urca (f: S -> S -> S) where
+ magic : ∀x, f x x = x
+
+instance ii : Urca (. + . : T -> T -> T) := sorry
+
+#print ii
+
+example : (x: T) -> x + x = x := by
+ intro x
+ apply Urca.magic
