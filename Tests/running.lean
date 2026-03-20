@@ -1,7 +1,7 @@
 import PartialSetoid.Partial
 import PartialSetoid.Grw
 import Lean
-open Partial Partial.Partial
+open Partial
 
 abbrev ℕ := Nat
 axiom ℝ : Type

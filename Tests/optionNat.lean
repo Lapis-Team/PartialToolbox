@@ -1,4 +1,4 @@
-import PartialSetoid.Partial
+import PartialSetoid.PartialOption
 open Partial (isdef)
 open Partial.Option
 
