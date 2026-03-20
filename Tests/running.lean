@@ -24,6 +24,10 @@ instance : Div ℝ := ⟨ sorry ⟩
 instance : StrictFun₂ (· / · : ℝ -> ℝ -> ℝ) := sorry
 axiom div_existence {n m : ℝ} : isdef (n / m) → m ≠ 0 -- CSC: ??
 
+instance : Mul ℝ := sorry
+@[def_lemma] axiom mul_def {x y : ℝ} : isdef x -> isdef y -> isdef (x * y)
+instance : StrictFun₂ (· * · : ℝ -> ℝ -> ℝ) := sorry
+
 instance : HPow ℝ ℕ ℝ := ⟨ sorry ⟩
 instance : StrictFun₂ (· ^ · : ℝ -> ℕ -> ℝ) := sorry
 @[def_lemma] axiom exp_def {r : ℝ} {n : ℕ} : isdef r -> isdef (r ^ n)
@@ -106,7 +110,15 @@ theorem rtolpeq_exp {x : ℝ} {n : ℕ} : x ≈▷ x' -> x ^ n ≈▷ x' ^ n := 
   . have hx : x = x' := peq_eq $ h₁ d₂ 
     rw [hx]
 
-theorem rtolpeq_sub {x y : ℝ} : x ≈▷ x' -> y ≈▷ y' -> (x - y) ≈▷ (x' - y') := by
+theorem peq_sub {x y x' y' : ℝ} : x ≈ x' -> y ≈ y' -> (x - y) ≈ (x' - y') := by
+  intro h₁ h₂
+  have ⟨_, k₁⟩ := h₁
+  have ⟨_, k₂⟩ := h₂
+  constructor
+  . def_intro
+  . rw [k₁, k₂]
+
+theorem rtolpeq_sub {x y x' y' : ℝ} : x ≈▷ x' -> y ≈▷ y' -> (x - y) ≈▷ (x' - y') := by
   intro h₁ h₂ d₁
   apply isdef_elim.elim _ d₁ ; simp ; intro d₂ d₃
   constructor
@@ -115,7 +127,13 @@ theorem rtolpeq_sub {x y : ℝ} : x ≈▷ x' -> y ≈▷ y' -> (x - y) ≈▷ (
     have hy : y = y' := peq_eq (h₂ d₃)
     rw [hx, hy]
 
-theorem rtolpeq_div {n n' d d' : ℝ} : n ≈▷ n' -> d ≈▷ d' -> (n / d) ≈▷ (n' / d') := by
+theorem peq_mul {x x' y y' : ℝ} : x ≈ x' -> y ≈ y' -> (x * y) ≈ (x' * y') := by 
+  intro ⟨_, k₁⟩ ⟨_, k₂⟩
+  constructor 
+  . def_intro
+  . rw [k₁, k₂]
+
+theorem rtolpeq_div {n n' d d'  : ℝ} : n ≈▷ n' -> d ≈▷ d' -> (n / d) ≈▷ (n' / d') := by
   intro h₁ h₂ d₁
   apply isdef_elim.elim _ d₁ ; simp ; intro d₂ d₃ d₄
   constructor
@@ -135,10 +153,11 @@ theorem rtolpeq_lim : (forall n, f n ≈▷ f' n) -> lim f ≈▷ lim f' := by
  rw [k]
  constructor <;> trivial
 
-instance instRtolpeqDiv [Copy r₁] [Copy r₂] : Copy (rtolpeq_div r₁ r₂) where
+instance instPeqMul [Copy r₁] [Copy r₂] : Copy (peq_mul r₁ r₂) := ⟨⟩ 
+
 instance instRtolpeqSub [Copy r₁] [Copy r₂] : Copy (rtolpeq_sub r₁ r₂) where
 instance instRtolpeqAbs [Copy r₁] : Copy (rtolpeq_abs r₁) where
-
+instance instRtolpeqDiv [Copy r₁] [Copy r₂] : Copy (rtolpeq_div r₁ r₂) where
 instance instRtolpeqLim [forall n, Copy (r n)] : Copy (rtolpeq_lim r) where
 
 ----------------- running example ---------------------------------------
@@ -150,22 +169,31 @@ axiom step₄ : abs x < 1 -> lim (fun n => x^(n+1)) ≈▷ 0
 axiom step₅ (n m : Nat) : ((n : Nat) - (m : Nat) : ℝ) ≈▷ (n - m : Nat)
 axiom step₆ : abs n < m -> m - n ≠ 0
 
-theorem calc_lemma {x : ℝ}: abs x < 1 -> lim (fun n => bigadd 0 (n-1) (fun i => x ^ i)) ≈▷ 1 / (1 - x) := by 
+noncomputable def geometricSeries (x: ℝ) := lim (fun n => bigadd 0 (n-1) (fun i => x ^ i))
+
+theorem running {x : ℝ} : abs x < 1 -> geometricSeries x ≈ 1 / (1 - x) := by
   intro h
-  calc
-        lim (fun n => bigadd 0 (n-1) (fun i => x ^ i))
+  apply calc
+        geometricSeries x
    _ ≈▷ lim (fun n => (1 - x ^ (n+1)) / (1 - x)) := by respects' (step₁ x)
    _ ≈▷ lim (fun n => (1 - x ^ (n+1))) / (1 - x) := by respects step₂ (1 - x) (fun n => 1 - x ^(n+1))
    _ ≈▷ (1 - lim (fun n => x ^ (n+1))) / (1 - x) := by respects step₃ 1 (fun n => x ^ (n + 1))
    _ ≈▷ (1 - 0) / (1 - x)                        := by respects step₄ h
    _ ≈▷ 1 / (1 - x)                              := by apply (_ : forall w, ((1 - 0) / (w - x)) ≈▷ 1 / (w - x)) ; intro w
                                                        respects step₅ 1 0
+  apply isdef_elim'.elim _ h ; simp ; intro _ _ _
+  def_intro
+  exact step₆ h
 
-theorem running {x : ℝ} :
- abs x < 1 ->
-  lim (fun n => bigadd 0 (n-1) (fun i => x ^ i)) ≈ 1 / (1 - x) := by
- intro h
- apply isdef_elim'.elim _ h ; simp ; intro d₁ d₂ _
- apply calc_lemma h
- def_intro
- apply step₆ h
+axiom step₇ (x y : ℝ) : (x * (y / x)) ◁≈ y
+
+-- running example 2
+theorem running₂ { x : ℝ } : abs x < 1 -> (1 - x) * geometricSeries x ≈ 1 := by
+  intro h
+  have : isdef (1 - x) := by apply isdef_elim'.elim _ h ; simp ; intro _ _ _ ; def_intro
+  have h₁ : (1 - x) ≈ (1 - x) := by def_intro
+  calc 
+        (1 - x) * geometricSeries x 
+    -- FIXME: this works if we define (. ≈ .) as reflexive, but it isn't...
+    _ ≈ (1 - x) * (1 / (1 - x))     := by respects running h
+    _ ◁≈ 1                          := by respects step₇ (1 - x) 1
