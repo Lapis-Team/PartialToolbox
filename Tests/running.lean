@@ -187,13 +187,6 @@ theorem running {x : ℝ} : abs x < 1 -> geometricSeries x ≈ 1 / (1 - x) := by
 
 axiom step₇ (x y : ℝ) : (x * (y / x)) ◁≈ y
 
--- CSC: muoverlo nel file giusto
-theorem isdef_peqrefl {x: T} [Partial T]: isdef x -> x ≈ x :=
- fun a => def_peq₂ a rfl
-
--- CSC: generalizzarlo (?) e muoverlo nel file giusto
-theorem peq_to_peqrtl {x y : T} [Partial T]: x ≈ y -> x ≈▷ y := fun a _ => a
-
 -- running example 2
 theorem running₂ { x : ℝ } : abs x < 1 -> (1 - x) * geometricSeries x ≈ 1 := by
   intro h
@@ -202,11 +195,11 @@ theorem running₂ { x : ℝ } : abs x < 1 -> (1 - x) * geometricSeries x ≈ 1 
         (1 - x) * geometricSeries x
     -- FIXME: this works if we define (. ≈ .) as reflexive, but it isn't...
     _ ≈▷ (1 - x) * (1 / (1 - x))    := by
-                                        have k := (peq_to_peqrtl (running h))
+                                        have k := (peq_rtolpeq (running h))
                                         -- CSC: non so perchè non funzioni
                                         respects k
     _ ≈ (1 - x) * (1 / (1 - x))     := by
-                                        apply isdef_peqrefl
+                                        apply def_peqrfl
                                         def_intro
                                         exact step₆ h
     _ ◁≈ 1                          := by respects step₇ (1 - x) 1

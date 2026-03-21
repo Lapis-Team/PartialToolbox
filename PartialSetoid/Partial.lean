@@ -55,6 +55,9 @@ theorem def_peq₂ [Partial T] {x y : T} : isdef y -> x = y -> x ≈ y := by
  rw [e]
  constructor <;> grind
 
+theorem def_peqrfl {x: T} [Partial T]: isdef x -> x ≈ x :=
+ fun a => def_peq₁ a rfl
+
 @[def_lemma_closing]
 theorem peq_def₁ [Partial T] {x y : T} : x ≈ y -> isdef x := And.left
 
@@ -85,9 +88,6 @@ theorem peq_trans [Partial T] {x y z : T} : x ≈ y -> y ≈ z -> x ≈ z := by
 def rtol [Partial T] (op: T -> T -> Prop) : T -> T -> Prop :=
  fun x y => isdef y -> op x y
 
-def rtolp [Partial T] (op : T -> T -> Prop) : T -> T -> Prop :=
- fun x y => isdef y -> prel (op := op) x y
-
 abbrev rtolpeq [instPartial: Partial T] := rtol (. ≈ . : T → T → Prop)
 infix:60 " ≈▷ " => rtolpeq
 
@@ -97,11 +97,6 @@ def peq_rtolpeq [Partial T] {x y : T} : x ≈ y -> x ≈▷ y := by
 
 @[def_lemma_closing]
 theorem def_rtol_def [Partial T] {x y : T} : isdef y -> x ≈▷ y -> isdef x := by
- intro h h'
- apply (h' h).left
-
-@[def_lemma_closing]
-theorem def_rtol_def₁ [Partial T] {x y : T} : isdef y -> rtolp op x y -> isdef x := by
  intro h h'
  apply (h' h).left
 
@@ -138,9 +133,6 @@ instance [Partial T] : Trans (γ := T) rtolpeq (. ≈ .) (. ≈ .) := ⟨r_trans
 
 def ltor [Partial T] (op: T -> T -> Prop) : T -> T -> Prop :=
  fun x y => isdef x -> op x y
-
-def ltorp [Partial T] (op: T -> T -> Prop) : T -> T -> Prop :=
- fun x y => isdef x -> prel (op := op) x y
 
 abbrev ltorpeq [instPartial: Partial T] := ltor (. ≈ . : T → T → Prop)
 infix:60 " ◁≈ " => ltorpeq
