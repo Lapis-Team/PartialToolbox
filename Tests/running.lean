@@ -180,7 +180,8 @@ noncomputable def geometricSeries (x: ℝ) := lim (fun n => bigadd 0 (n-1) (fun 
 
 theorem running {x : ℝ} : abs x < 1 -> geometricSeries x ≈ 1 / (1 - x) := by
   intro h
-  apply calc
+  apply isdef_elim'.elim _ h ; simp ; intro _ _ _
+  calc
         geometricSeries x
    _ ≈▷ lim (fun n => (1 - x ^ (n+1)) / (1 - x)) := by respects' (step₁ x)
    _ ≈▷ lim (fun n => (1 - x ^ (n+1))) / (1 - x) := by respects step₂ (1 - x) (fun n => 1 - x ^(n+1))
@@ -188,9 +189,9 @@ theorem running {x : ℝ} : abs x < 1 -> geometricSeries x ≈ 1 / (1 - x) := by
    _ ≈▷ (1 - 0) / (1 - x)                        := by respects step₄ h
    _ ≈▷ 1 / (1 - x)                              := by apply (_ : forall w, ((1 - 0) / (w - x)) ≈▷ 1 / (w - x)) ; intro w
                                                        respects step₅ 1 0
-  apply isdef_elim'.elim _ h ; simp ; intro _ _ _
-  def_intro
-  exact step₆ h
+   _ ≈  1 / (1 - x)                              := by
+                                                     def_intro
+                                                     exact step₆ h
 
 axiom step₇ (x y : ℝ) : (x * (y / x)) ◁≈ y
 
