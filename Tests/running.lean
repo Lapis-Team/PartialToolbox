@@ -59,6 +59,11 @@ instance {x y : ℝ} [ix : isdef_elim x Qx] [iy : isdef_elim y Qy] : isdef_elim 
   let ⟨u₁,u₂⟩ := StrictFun₂.isstrict k
   ix.elim (fun qx => iy.elim (fun qy => h ⟨⟨u₁,qx⟩,⟨u₂,qy⟩⟩) u₂ ) u₁
 
+instance {x y : ℝ} [ix : isdef_elim x Qx] [iy : isdef_elim y Qy] : isdef_elim (x * y) ((isdef x ∧ Qx) ∧ (isdef y ∧ Qy)) where
+ elim h k :=
+  let ⟨u₁,u₂⟩ := StrictFun₂.isstrict k
+  ix.elim (fun qx => iy.elim (fun qy => h ⟨⟨u₁,qx⟩,⟨u₂,qy⟩⟩) u₂ ) u₁
+
 instance {x : ℝ} [ix : isdef_elim x Qx] : isdef_elim (abs x) (isdef x ∧ Qx) where
  elim h k :=
   let u := StrictFun₁.isstrict k
@@ -127,11 +132,14 @@ theorem rtolpeq_sub {x y x' y' : ℝ} : x ≈▷ x' -> y ≈▷ y' -> (x - y) �
     have hy : y = y' := peq_eq (h₂ d₃)
     rw [hx, hy]
 
-theorem peq_mul {x x' y y' : ℝ} : x ≈ x' -> y ≈ y' -> (x * y) ≈ (x' * y') := by
-  intro ⟨_, k₁⟩ ⟨_, k₂⟩
+theorem rtolpeq_mul {x y x' y' : ℝ} : x ≈▷ x' -> y ≈▷ y' -> (x * y) ≈▷ (x' * y') := by
+  intro h₁ h₂ d₁
+  apply isdef_elim.elim _ d₁ ; simp ; intro d₂ d₃
   constructor
   . def_intro
-  . rw [k₁, k₂]
+  . have hx : x = x' := peq_eq (h₁ d₂)
+    have hy : y = y' := peq_eq (h₂ d₃)
+    rw [hx, hy]
 
 theorem rtolpeq_div {n n' d d'  : ℝ} : n ≈▷ n' -> d ≈▷ d' -> (n / d) ≈▷ (n' / d') := by
   intro h₁ h₂ d₁
@@ -153,9 +161,8 @@ theorem rtolpeq_lim : (forall n, f n ≈▷ f' n) -> lim f ≈▷ lim f' := by
  rw [k]
  constructor <;> trivial
 
-instance instPeqMul [Copy r₁] [Copy r₂] : Copy (peq_mul r₁ r₂) := ⟨⟩
-
 instance instRtolpeqSub [Copy r₁] [Copy r₂] : Copy (rtolpeq_sub r₁ r₂) where
+instance instRtolpeqMul [Copy r₁] [Copy r₂] : Copy (rtolpeq_mul r₁ r₂) where
 instance instRtolpeqAbs [Copy r₁] : Copy (rtolpeq_abs r₁) where
 instance instRtolpeqDiv [Copy r₁] [Copy r₂] : Copy (rtolpeq_div r₁ r₂) where
 instance instRtolpeqLim [forall n, Copy (r n)] : Copy (rtolpeq_lim r) where
@@ -192,13 +199,9 @@ theorem running₂ { x : ℝ } : abs x < 1 -> (1 - x) * geometricSeries x ≈ 1 
   intro h
   apply isdef_elim'.elim _ h ; simp ; intro d₁ d₂ _
   calc
-        (1 - x) * geometricSeries x
-    -- FIXME: this works if we define (. ≈ .) as reflexive, but it isn't...
-    _ ≈▷ (1 - x) * (1 / (1 - x))    := by
-                                        have k := (peq_rtolpeq (running h))
-                                        -- CSC: non so perchè non funzioni
-                                        respects k
-    _ ≈ (1 - x) * (1 / (1 - x))     := by
+         (1 - x) * geometricSeries x
+    _ ≈▷ (1 - x) * (1 / (1 - x))    := by respects (peq_rtolpeq (running h))
+    _ ≈  (1 - x) * (1 / (1 - x))    := by
                                         apply def_peqrfl
                                         def_intro
                                         exact step₆ h
