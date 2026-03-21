@@ -32,7 +32,13 @@ class StrictFun₂ [Partial α] [Partial β] [Partial γ] (f : α -> β -> γ) w
 ------------------ Defining PEQ on instances of Partial
 namespace Partial
 
-def prel {op : T -> T -> Prop} [Partial T] (x y: T) : Prop := isdef x ∧ op x y
+-- CSC: commentata via perchè non ha senso
+-- Ha senso per peq perchè = è simmetrica e = è definita
+-- per ogni tipo, ma prel non ha senso in quanto non chiede y
+-- definita e op è comunque da definirsi sul tipo parziale
+-- Secondo me dove volevi usare prel devi usare un predicato
+-- Strict₂ e basta
+-- def prel {op : T -> T -> Prop} [Partial T] (x y: T) : Prop := isdef x ∧ op x y
 
 instance [Partial T] : HasEquiv T where
  Equiv (x y : T) := isdef x ∧ x = y
@@ -71,8 +77,8 @@ theorem peq_eq [Partial T] {x y : T} : x ≈ y -> x = y := And.right
 
 --- PEQ Transitivity
 theorem peq_trans [Partial T] {x y z : T} : x ≈ y -> y ≈ z -> x ≈ z := by
-  intro ⟨_, k₁⟩ ⟨dy, k₂⟩ 
-  rw [k₁] 
+  intro ⟨_, k₁⟩ ⟨dy, k₂⟩
+  rw [k₁]
   exact def_peq₁ dy k₂
 
 -- RTOL Direction ------------------------------------
@@ -86,7 +92,7 @@ abbrev rtolpeq [instPartial: Partial T] := rtol (. ≈ . : T → T → Prop)
 infix:60 " ≈▷ " => rtolpeq
 
 @[def_lemma_closing]
-def peq_rtolpeq [Partial T] {x y : T} : x ≈ y -> x ≈▷ y := by 
+def peq_rtolpeq [Partial T] {x y : T} : x ≈ y -> x ≈▷ y := by
   intro h ; exact fun _ => h
 
 @[def_lemma_closing]
@@ -107,7 +113,7 @@ theorem r_trans₁ [Partial T] {x y z : T} : x ≈▷ y -> y ≈▷ z -> x ≈�
 
 -- Reflexivity
 instance [Partial T] : Reflexive (. ≈▷ . : T -> T -> Prop) where
-  refl := by 
+  refl := by
     intro x d
     constructor <;> trivial
 
@@ -117,7 +123,7 @@ theorem r_trans₂ [Partial T] {x y z : T} : x ≈ y -> y ≈▷ z -> x ≈▷ z
   let ⟨_, k₁⟩ := h₂ dz
   rw [<- k₁] ; assumption
 
-theorem r_trans₃ [Partial T] {x y z : T} : x ≈▷ y -> y ≈ z -> x ≈ z := by 
+theorem r_trans₃ [Partial T] {x y z : T} : x ≈▷ y -> y ≈ z -> x ≈ z := by
   intro h₁ h₂
   have dy : isdef y := by exact peq_def₁ h₂
   have ⟨_, h₃⟩ := h₁ dy
@@ -147,7 +153,7 @@ theorem def_ltor_def [Partial T] {x y : T} : isdef x -> x ◁≈ y -> isdef y :=
 
 -- Reflexivity
 instance [Partial T] : Reflexive (. ◁≈ . : T -> T -> Prop) where
-  refl := by 
+  refl := by
     intro x d
     constructor <;> trivial
 
@@ -163,7 +169,7 @@ theorem ltrans₁ [Partial T] {x y z : T} : x ◁≈ y -> y ◁≈ z -> x ◁≈
 theorem ltrans₂ [Partial T] {x y z : T} : x ≈ y -> y ◁≈ z -> x ≈ z := by
   intro h₁ h₂
   have dy : isdef y := by exact peq_def₂ h₁
-  have ⟨_, h₃⟩ := h₂ dy 
+  have ⟨_, h₃⟩ := h₂ dy
   rw [<- h₃] ; assumption
 
 theorem ltrans₃ [Partial T] {x y z : T} : x ◁≈ y -> y ≈ z -> x ◁≈ z := by
@@ -185,8 +191,8 @@ theorem rl_trans₁ [Partial T] {x y z : T} : isdef y -> x ≈▷ y -> y ◁≈ 
   constructor <;> simp [*]
   simp [<- k₁, d₁]
 
-theorem rl_trans₂ [Partial T] {x y z: T} : isdef x -> isdef z -> x ◁≈ y -> y ≈▷ z -> x ≈ z := by 
-  intro dx dz h₁ h₂ 
+theorem rl_trans₂ [Partial T] {x y z: T} : isdef x -> isdef z -> x ◁≈ y -> y ≈▷ z -> x ≈ z := by
+  intro dx dz h₁ h₂
   exact r_trans₃ (fun _ => h₁ dx) (h₂ dz)
 
 end Partial

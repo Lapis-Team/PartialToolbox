@@ -94,20 +94,20 @@ instance : Reflexive (rtolpeq (instPartial := instPartialR)) where
   refl {x} h := by constructor <;> trivial
 
 theorem rtolpeq_abs : x ≈▷ x' -> (abs x) ≈▷ (abs x') := by
-  intro h₁ d₁ 
+  intro h₁ d₁
   apply isdef_elim.elim _ d₁ ; simp ; intro d₂
   constructor
   . def_intro
-  . have hx : x = x' := peq_eq $ h₁ d₂ 
+  . have hx : x = x' := peq_eq $ h₁ d₂
     rw [hx]
 
 theorem rtolpeq_exp {x : ℝ} {n : ℕ} : x ≈▷ x' -> x ^ n ≈▷ x' ^ n := by
-  intro h₁ d₁ 
+  intro h₁ d₁
   apply isdef_elim.elim _ d₁ ; simp
-  have ⟨ d₂, _ ⟩ := StrictFun₂.isstrict d₁ 
+  have ⟨ d₂, _ ⟩ := StrictFun₂.isstrict d₁
   constructor
   . def_intro
-  . have hx : x = x' := peq_eq $ h₁ d₂ 
+  . have hx : x = x' := peq_eq $ h₁ d₂
     rw [hx]
 
 theorem peq_sub {x y x' y' : ℝ} : x ≈ x' -> y ≈ y' -> (x - y) ≈ (x' - y') := by
@@ -127,9 +127,9 @@ theorem rtolpeq_sub {x y x' y' : ℝ} : x ≈▷ x' -> y ≈▷ y' -> (x - y) �
     have hy : y = y' := peq_eq (h₂ d₃)
     rw [hx, hy]
 
-theorem peq_mul {x x' y y' : ℝ} : x ≈ x' -> y ≈ y' -> (x * y) ≈ (x' * y') := by 
+theorem peq_mul {x x' y y' : ℝ} : x ≈ x' -> y ≈ y' -> (x * y) ≈ (x' * y') := by
   intro ⟨_, k₁⟩ ⟨_, k₂⟩
-  constructor 
+  constructor
   . def_intro
   . rw [k₁, k₂]
 
@@ -153,7 +153,7 @@ theorem rtolpeq_lim : (forall n, f n ≈▷ f' n) -> lim f ≈▷ lim f' := by
  rw [k]
  constructor <;> trivial
 
-instance instPeqMul [Copy r₁] [Copy r₂] : Copy (peq_mul r₁ r₂) := ⟨⟩ 
+instance instPeqMul [Copy r₁] [Copy r₂] : Copy (peq_mul r₁ r₂) := ⟨⟩
 
 instance instRtolpeqSub [Copy r₁] [Copy r₂] : Copy (rtolpeq_sub r₁ r₂) where
 instance instRtolpeqAbs [Copy r₁] : Copy (rtolpeq_abs r₁) where
@@ -187,13 +187,26 @@ theorem running {x : ℝ} : abs x < 1 -> geometricSeries x ≈ 1 / (1 - x) := by
 
 axiom step₇ (x y : ℝ) : (x * (y / x)) ◁≈ y
 
+-- CSC: muoverlo nel file giusto
+theorem isdef_peqrefl {x: T} [Partial T]: isdef x -> x ≈ x :=
+ fun a => def_peq₂ a rfl
+
+-- CSC: generalizzarlo (?) e muoverlo nel file giusto
+theorem peq_to_peqrtl {x y : T} [Partial T]: x ≈ y -> x ≈▷ y := fun a _ => a
+
 -- running example 2
 theorem running₂ { x : ℝ } : abs x < 1 -> (1 - x) * geometricSeries x ≈ 1 := by
   intro h
-  have : isdef (1 - x) := by apply isdef_elim'.elim _ h ; simp ; intro _ _ _ ; def_intro
-  have h₁ : (1 - x) ≈ (1 - x) := by def_intro
-  calc 
-        (1 - x) * geometricSeries x 
+  apply isdef_elim'.elim _ h ; simp ; intro d₁ d₂ _
+  calc
+        (1 - x) * geometricSeries x
     -- FIXME: this works if we define (. ≈ .) as reflexive, but it isn't...
-    _ ≈ (1 - x) * (1 / (1 - x))     := by respects running h
+    _ ≈▷ (1 - x) * (1 / (1 - x))    := by
+                                        have k := (peq_to_peqrtl (running h))
+                                        -- CSC: non so perchè non funzioni
+                                        respects k
+    _ ≈ (1 - x) * (1 / (1 - x))     := by
+                                        apply isdef_peqrefl
+                                        def_intro
+                                        exact step₆ h
     _ ◁≈ 1                          := by respects step₇ (1 - x) 1
