@@ -190,6 +190,7 @@ theorem running {x : ℝ} : abs x < 1 -> geometricSeries x ≈ 1 / (1 - x) := by
    _ ≈▷ 1 / (1 - x)                              := by apply (_ : forall w, ((1 - 0) / (w - x)) ≈▷ 1 / (w - x)) ; intro w
                                                        respects step₅ 1 0
    _ ≈  1 / (1 - x)                              := by
+                                                     apply def_peqrfl
                                                      def_intro
                                                      exact step₆ h
 
