@@ -98,59 +98,35 @@ instance {x y : ℝ} [ix : isdef_elim x Qx] [iy: isdef_elim y Qy] : isdef_elim' 
 instance : Reflexive (rtolpeq (instPartial := instPartialR)) where
   refl {x} h := by constructor <;> trivial
 
-theorem rtolpeq_abs : x ≈▷ x' -> (abs x) ≈▷ (abs x') := by
+theorem rtolpeq_StrictFun₁ {op : α → β} [Partial α] [Partial β] [StrictFun₁ op] : x ≈▷ x' -> op x ≈▷ op x' := by
   intro h₁ d₁
-  apply isdef_elim.elim _ d₁ ; simp ; intro d₂
-  constructor
-  . def_intro
-  . have hx : x = x' := peq_eq $ h₁ d₂
-    rw [hx]
+  have d₂ := StrictFun₁.isstrict d₁
+  apply def_peq₂ d₁
+  have hx : x = x' := peq_eq (h₁ d₂)
+  rw [hx]
 
-theorem rtolpeq_exp {x : ℝ} {n : ℕ} : x ≈▷ x' -> x ^ n ≈▷ x' ^ n := by
-  intro h₁ d₁
-  apply isdef_elim.elim _ d₁ ; simp
-  have ⟨ d₂, _ ⟩ := StrictFun₂.isstrict d₁
-  constructor
-  . def_intro
-  . have hx : x = x' := peq_eq $ h₁ d₂
-    rw [hx]
-
-theorem peq_sub {x y x' y' : ℝ} : x ≈ x' -> y ≈ y' -> (x - y) ≈ (x' - y') := by
-  intro h₁ h₂
-  have ⟨_, k₁⟩ := h₁
-  have ⟨_, k₂⟩ := h₂
-  constructor
-  . def_intro
-  . rw [k₁, k₂]
-
-theorem rtolpeq_sub {x y x' y' : ℝ} : x ≈▷ x' -> y ≈▷ y' -> (x - y) ≈▷ (x' - y') := by
+theorem rtolpeq_StrictFun₂ {op : α → β → γ} [Partial α] [Partial β] [Partial γ] [StrictFun₂ op] : x ≈▷ x' -> y ≈▷ y' -> op x y ≈▷ op x' y' := by
   intro h₁ h₂ d₁
-  apply isdef_elim.elim _ d₁ ; simp ; intro d₂ d₃
-  constructor
-  . def_intro
-  . have hx : x = x' := peq_eq (h₁ d₂)
-    have hy : y = y' := peq_eq (h₂ d₃)
-    rw [hx, hy]
+  have ⟨d₂,d₃⟩ := StrictFun₂.isstrict d₁
+  apply def_peq₂ d₁
+  have hx : x = x' := peq_eq (h₁ d₂)
+  have hy : y = y' := peq_eq (h₂ d₃)
+  rw [hx, hy]
 
-theorem rtolpeq_mul {x y x' y' : ℝ} : x ≈▷ x' -> y ≈▷ y' -> (x * y) ≈▷ (x' * y') := by
-  intro h₁ h₂ d₁
-  apply isdef_elim.elim _ d₁ ; simp ; intro d₂ d₃
-  constructor
-  . def_intro
-  . have hx : x = x' := peq_eq (h₁ d₂)
-    have hy : y = y' := peq_eq (h₂ d₃)
-    rw [hx, hy]
+theorem rtolpeq_abs : x ≈▷ x' -> (abs x) ≈▷ (abs x') :=
+ rtolpeq_StrictFun₁
 
-theorem rtolpeq_div {n n' d d'  : ℝ} : n ≈▷ n' -> d ≈▷ d' -> (n / d) ≈▷ (n' / d') := by
-  intro h₁ h₂ d₁
-  apply isdef_elim.elim _ d₁ ; simp ; intro d₂ d₃ d₄
-  constructor
-  . def_intro
-    have := peq_eq (h₂ d₃)
-    grind
-  . have hn : n = n' := peq_eq (h₁ d₂)
-    have hd : d = d' := peq_eq (h₂ d₃)
-    rw [hn, hd]
+theorem rtolpeq_exp {x x': ℝ} {n n': ℕ} : x ≈▷ x' -> n ≈▷ n' -> x ^ n ≈▷ x' ^ n' :=
+ rtolpeq_StrictFun₂
+
+theorem rtolpeq_sub {x y x' y' : ℝ} : x ≈▷ x' -> y ≈▷ y' -> (x - y) ≈▷ (x' - y') :=
+ rtolpeq_StrictFun₂
+
+theorem rtolpeq_mul {x y x' y' : ℝ} : x ≈▷ x' -> y ≈▷ y' -> (x * y) ≈▷ (x' * y') :=
+ rtolpeq_StrictFun₂
+
+theorem rtolpeq_div {n n' d d'  : ℝ} : n ≈▷ n' -> d ≈▷ d' -> (n / d) ≈▷ (n' / d') :=
+ rtolpeq_StrictFun₂
 
 theorem rtolpeq_lim : (forall n, f n ≈▷ f' n) -> lim f ≈▷ lim f' := by
  intro h d
