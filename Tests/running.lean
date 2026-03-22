@@ -113,21 +113,6 @@ theorem rtolpeq_StrictFun₂ {op : α → β → γ} [Partial α] [Partial β] [
   have hy : y = y' := peq_eq (h₂ d₃)
   rw [hx, hy]
 
-theorem rtolpeq_abs : x ≈▷ x' -> (abs x) ≈▷ (abs x') :=
- rtolpeq_StrictFun₁
-
-theorem rtolpeq_exp {x x': ℝ} {n n': ℕ} : x ≈▷ x' -> n ≈▷ n' -> x ^ n ≈▷ x' ^ n' :=
- rtolpeq_StrictFun₂
-
-theorem rtolpeq_sub {x y x' y' : ℝ} : x ≈▷ x' -> y ≈▷ y' -> (x - y) ≈▷ (x' - y') :=
- rtolpeq_StrictFun₂
-
-theorem rtolpeq_mul {x y x' y' : ℝ} : x ≈▷ x' -> y ≈▷ y' -> (x * y) ≈▷ (x' * y') :=
- rtolpeq_StrictFun₂
-
-theorem rtolpeq_div {n n' d d'  : ℝ} : n ≈▷ n' -> d ≈▷ d' -> (n / d) ≈▷ (n' / d') :=
- rtolpeq_StrictFun₂
-
 theorem rtolpeq_lim : (forall n, f n ≈▷ f' n) -> lim f ≈▷ lim f' := by
  intro h d
  apply isdef_elim.elim _ d ; simp ; intro l
@@ -137,10 +122,16 @@ theorem rtolpeq_lim : (forall n, f n ≈▷ f' n) -> lim f ≈▷ lim f' := by
  rw [k]
  constructor <;> trivial
 
-instance instRtolpeqSub [Copy r₁] [Copy r₂] : Copy (rtolpeq_sub r₁ r₂) where
-instance instRtolpeqMul [Copy r₁] [Copy r₂] : Copy (rtolpeq_mul r₁ r₂) where
-instance instRtolpeqAbs [Copy r₁] : Copy (rtolpeq_abs r₁) where
-instance instRtolpeqDiv [Copy r₁] [Copy r₂] : Copy (rtolpeq_div r₁ r₂) where
+instance instRtolpeqStrictFun₁
+ [Partial α] [Partial β] {op : α → β} [StrictFun₁ op]
+ {r₁ : x ≈▷ x'}
+ [Copy r₁] : Copy (rtolpeq_StrictFun₁ (op := op) r₁) where
+
+instance instRtolpeqStrictFun₂
+ [Partial α] [Partial β] [Partial γ] {op : α → β → γ} [StrictFun₂ op]
+ {r₁ : x ≈▷ x'} {r₂ : y ≈▷ y'}
+ [Copy r₁] [Copy r₂] : Copy (rtolpeq_StrictFun₂ (op := op) r₁ r₂) where
+
 instance instRtolpeqLim [forall n, Copy (r n)] : Copy (rtolpeq_lim r) where
 
 ----------------- running example ---------------------------------------
