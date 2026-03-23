@@ -15,7 +15,7 @@ class Partial α where
  isdef : α -> Prop
 
 @[default_instance]
-instance default_partial : Partial α where
+instance (priority := low) default_partial : Partial α where
  isdef _ := True
 
 class StrictPred₁ [Partial α] (P : α -> Prop) where
@@ -36,7 +36,7 @@ class Existence [Partial α] (x : α) (P: outParam Prop) where
  cond : Partial.isdef x → P
 
 @[default_instance]
-instance default_existence {x: α} [Partial α] : Existence x True where
+instance (priority := low) default_existence {x: α} [Partial α] : Existence x True where
  cond _ := True.intro
 
 ------------------ Defining PEQ on instances of Partial
@@ -222,5 +222,36 @@ instance instRtolpeqStrictFun₂
  {r₁ : x ≈▷ x'} {r₂ : y ≈▷ y'}
  [Copy r₁] [Copy r₂] : Copy (rtolpeq_StrictFun₂ (op := op) r₁ r₂) where
 
+---------------------- isdef_elim ---------------------
+
+class isdef_elim [Partial T] (t: T) (Q : outParam Prop) where
+ elim {P : Prop} : (Q → P) -> isdef t -> P
+
+@[default_instance]
+instance (priority := low) [Partial α] {t : α} : isdef_elim t True where
+ elim k _ := k ⟨⟩
+
+instance isdef_elim_StrictFun₁
+  [Partial α] {op : α → α} [s : StrictFun₁ op]
+  [e : Existence (op x) E] [ix : isdef_elim x Qx] :
+  isdef_elim (op x) (isdef x ∧ Qx ∧ E) where
+ elim h k :=
+  let u₁ := s.isstrict k
+  let u₂ := e.cond k
+  ix.elim (fun qx => h ⟨u₁,qx,u₂⟩) u₁
+
+instance isdef_elim_StrictFun₂ [Partial α] {op : α → α → α} [s: StrictFun₂ op] [e : Existence (op x y) E] [ix : isdef_elim x Qx] [iy : isdef_elim y Qy] : isdef_elim (op x y) ((isdef x ∧ Qx) ∧ (isdef y ∧ E ∧ Qy)) where
+ elim h k :=
+  have ⟨u₁,u₂⟩ := s.isstrict k
+  have u₃ := e.cond k
+  ix.elim (fun qx => iy.elim (fun qy => h ⟨⟨u₁,qx⟩,⟨u₂,u₃,qy⟩⟩) u₂ ) u₁
+
+class isdef_elim' (T: Prop) (Q : outParam Prop) where
+ elim {P : Prop} : (Q -> P) -> T -> P
+
+instance [Partial α] {x y : α} {rel : α → α → Prop} [s: StrictPred₂ rel] [ix : isdef_elim x Qx] [iy: isdef_elim y Qy] : isdef_elim' (rel x y) ((isdef x ∧ Qx) ∧ (isdef y ∧ Qy)) where
+ elim h k :=
+  let ⟨u₁,u₂⟩ := s.isstrict k
+  ix.elim (fun qx => iy.elim (fun qy => h ⟨⟨u₁,qx⟩,⟨u₂,qy⟩⟩) u₂ ) u₁
 
 end Partial

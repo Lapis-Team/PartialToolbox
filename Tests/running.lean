@@ -13,6 +13,8 @@ instance instPartialR : Partial ℝ := sorry
 axiom inj : ℕ → ℝ
 axiom inj_def: isdef (inj n)
 noncomputable instance : Coe ℕ ℝ := ⟨inj⟩
+instance : StrictFun₁ inj where
+ isstrict _ := True.intro
 
 noncomputable instance : OfNat ℝ n := ⟨ n ⟩
 instance : Sub ℝ := sorry
@@ -55,43 +57,10 @@ instance : StrictPred₂ (LT.lt (α:=ℝ)) := sorry
 
 -------------------- isdef_elim ---------------------
 
-class isdef_elim [Partial T] (t: T) (Q : outParam Prop) where
- elim {P : Prop} : (Q → P) -> isdef t -> P
-
-@[default_instance]
-instance  {t : ℝ} : isdef_elim t True where
- elim k _ := k ⟨⟩
-
-instance isdef_elim_StrictFun₁
-  [Partial α] {op : α → α} [s : StrictFun₁ op]
-  [e : Existence (op x) E] [ix : isdef_elim x Qx] :
-  isdef_elim (op x) (isdef x ∧ Qx ∧ E) where
- elim h k :=
-  let u₁ := s.isstrict k
-  let u₂ := e.cond k
-  ix.elim (fun qx => h ⟨u₁,qx,u₂⟩) u₁
-
-instance [s : StrictFun₁ abs] [e : Existence (abs x) E] [ix : isdef_elim x Qx] : isdef_elim (abs x) (isdef x ∧ Qx ∧ E) :=
- isdef_elim_StrictFun₁
-
-instance isdef_elim_StrictFun₂ [Partial α] {op : α → α → α} [s: StrictFun₂ op] [e : Existence (op x y) E] [ix : isdef_elim x Qx] [iy : isdef_elim y Qy] : isdef_elim (op x y) ((isdef x ∧ Qx) ∧ (isdef y ∧ E ∧ Qy)) where
- elim h k :=
-  have ⟨u₁,u₂⟩ := s.isstrict k
-  have u₃ := e.cond k
-  ix.elim (fun qx => iy.elim (fun qy => h ⟨⟨u₁,qx⟩,⟨u₂,u₃,qy⟩⟩) u₂ ) u₁
-
 instance {Qf : ℕ -> Prop} {f : ℕ → ℝ} [if' : forall n, isdef_elim (f n) (Qf n)]: isdef_elim (lim f) (∃ N, ∀ n, n ≥ N → isdef (f n) ∧ Qf n) where
  elim h k :=
   let ⟨N,u⟩ := lim_strict k
   h ⟨N, fun n ge => ⟨u n ge, (if' n).elim (.) (u n ge)⟩⟩
-
-class isdef_elim' (T: Prop) (Q : outParam Prop) where
- elim {P : Prop} : (Q -> P) -> T -> P
-
-instance {x y : ℝ} [ix : isdef_elim x Qx] [iy: isdef_elim y Qy] : isdef_elim' (x < y) ((isdef x ∧ Qx) ∧ (isdef y ∧ Qy)) where
- elim h k :=
-  let ⟨u₁,u₂⟩ := StrictPred₂.isstrict k
-  ix.elim (fun qx => iy.elim (fun qy => h ⟨⟨u₁,qx⟩,⟨u₂,qy⟩⟩) u₂ ) u₁
 
 -------------------- GRW INSTANCES ---------------------
 
