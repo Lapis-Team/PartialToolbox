@@ -3,6 +3,8 @@ import PartialSetoid.Grw
 import Lean
 open Partial
 
+-- set_option warn.sorry false
+
 abbrev ℕ := Nat
 axiom ℝ : Type
 instance instPartialR : Partial ℝ := sorry
@@ -13,21 +15,20 @@ axiom inj_def: isdef (inj n)
 noncomputable instance : Coe ℕ ℝ := ⟨inj⟩
 
 noncomputable instance : OfNat ℝ n := ⟨ n ⟩
-
-instance : Sub ℝ := ⟨ sorry ⟩
+instance : Sub ℝ := sorry
 @[def_lemma] axiom sub_def {n m : ℝ} : isdef n -> isdef m -> isdef (n - m)
 instance : StrictFun₂ (· - ·  : ℝ -> ℝ -> ℝ) := sorry
 
-instance : Div ℝ := ⟨ sorry ⟩
+instance : Div ℝ := sorry
 @[def_lemma] axiom div_def {n m : ℝ} : isdef n -> isdef m -> m ≠ 0 -> isdef (n / m)
 instance : StrictFun₂ (· / · : ℝ -> ℝ -> ℝ) := sorry
-axiom div_existence {n m : ℝ} : isdef (n / m) → m ≠ 0 -- CSC: ??
+instance div_existence {n d : ℝ} : Existence (n / d) (d ≠ 0) := sorry
 
 instance : Mul ℝ := sorry
 @[def_lemma] axiom mul_def {x y : ℝ} : isdef x -> isdef y -> isdef (x * y)
 instance : StrictFun₂ (· * · : ℝ -> ℝ -> ℝ) := sorry
 
-instance : HPow ℝ ℕ ℝ := ⟨ sorry ⟩
+instance : HPow ℝ ℕ ℝ := sorry
 instance : StrictFun₂ (· ^ · : ℝ -> ℕ -> ℝ) := sorry
 @[def_lemma] axiom exp_def {r : ℝ} {n : ℕ} : isdef r -> isdef (r ^ n)
 
@@ -49,8 +50,8 @@ axiom lim_eventually_extensional :
 axiom bigadd : ℕ -> ℕ -> (ℕ -> ℝ) -> ℝ
 axiom bigadd_strict : isdef (bigadd n m xn) -> forall n, isdef (xn n)
 
-noncomputable instance : LT ℝ := ⟨ sorry ⟩
-instance : StrictPred₂ (LT.lt (α:=ℝ)) := ⟨ sorry ⟩
+noncomputable instance : LT ℝ := sorry
+instance : StrictPred₂ (LT.lt (α:=ℝ)) := sorry
 
 -------------------- isdef_elim ---------------------
 
@@ -61,31 +62,23 @@ class isdef_elim [Partial T] (t: T) (Q : outParam Prop) where
 instance  {t : ℝ} : isdef_elim t True where
  elim k _ := k ⟨⟩
 
-instance {x y : ℝ} [ix : isdef_elim x Qx] [iy : isdef_elim y Qy] : isdef_elim (x - y) ((isdef x ∧ Qx) ∧ (isdef y ∧ Qy)) where
+instance isdef_elim_StrictFun₁
+  [Partial α] {op : α → α} [s : StrictFun₁ op]
+  [e : Existence (op x) E] [ix : isdef_elim x Qx] :
+  isdef_elim (op x) (isdef x ∧ Qx ∧ E) where
  elim h k :=
-  let ⟨u₁,u₂⟩ := StrictFun₂.isstrict k
-  ix.elim (fun qx => iy.elim (fun qy => h ⟨⟨u₁,qx⟩,⟨u₂,qy⟩⟩) u₂ ) u₁
+  let u₁ := s.isstrict k
+  let u₂ := e.cond k
+  ix.elim (fun qx => h ⟨u₁,qx,u₂⟩) u₁
 
-instance {x y : ℝ} [ix : isdef_elim x Qx] [iy : isdef_elim y Qy] : isdef_elim (x * y) ((isdef x ∧ Qx) ∧ (isdef y ∧ Qy)) where
- elim h k :=
-  let ⟨u₁,u₂⟩ := StrictFun₂.isstrict k
-  ix.elim (fun qx => iy.elim (fun qy => h ⟨⟨u₁,qx⟩,⟨u₂,qy⟩⟩) u₂ ) u₁
+instance [s : StrictFun₁ abs] [e : Existence (abs x) E] [ix : isdef_elim x Qx] : isdef_elim (abs x) (isdef x ∧ Qx ∧ E) :=
+ isdef_elim_StrictFun₁
 
-instance {x : ℝ} [ix : isdef_elim x Qx] : isdef_elim (abs x) (isdef x ∧ Qx) where
+instance isdef_elim_StrictFun₂ [Partial α] {op : α → α → α} [s: StrictFun₂ op] [e : Existence (op x y) E] [ix : isdef_elim x Qx] [iy : isdef_elim y Qy] : isdef_elim (op x y) ((isdef x ∧ Qx) ∧ (isdef y ∧ E ∧ Qy)) where
  elim h k :=
-  let u := StrictFun₁.isstrict k
-  ix.elim (fun qx => h ⟨u,qx⟩) u
-
-instance {x y : ℝ} [ix : isdef_elim x Qx] [iy : isdef_elim y Qy] : isdef_elim (x / y) ((isdef x ∧ Qx) ∧ (isdef y ∧ y≠0 ∧ Qy)) where
- elim h k :=
-  let ⟨u₁,u₂⟩ := StrictFun₂.isstrict k
-  let u₃ := div_existence k
+  have ⟨u₁,u₂⟩ := s.isstrict k
+  have u₃ := e.cond k
   ix.elim (fun qx => iy.elim (fun qy => h ⟨⟨u₁,qx⟩,⟨u₂,u₃,qy⟩⟩) u₂ ) u₁
-
-instance {x : ℝ} {y : ℕ} [ix : isdef_elim x Qx] [iy : isdef_elim y Qy] : isdef_elim (x ^ y) ((isdef x ∧ Qx) ∧ (isdef y ∧ Qy)) where
- elim h k :=
-  let ⟨u₁,u₂⟩ := StrictFun₂.isstrict k
-  ix.elim (fun qx => iy.elim (fun qy => h ⟨⟨u₁,qx⟩,⟨u₂,qy⟩⟩) u₂ ) u₁
 
 instance {Qf : ℕ -> Prop} {f : ℕ → ℝ} [if' : forall n, isdef_elim (f n) (Qf n)]: isdef_elim (lim f) (∃ N, ∀ n, n ≥ N → isdef (f n) ∧ Qf n) where
  elim h k :=

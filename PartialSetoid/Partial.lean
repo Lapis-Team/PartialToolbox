@@ -14,7 +14,8 @@ import Lean
 class Partial α where
  isdef : α -> Prop
 
-instance default : Partial α where
+@[default_instance]
+instance default_partial : Partial α where
  isdef _ := True
 
 class StrictPred₁ [Partial α] (P : α -> Prop) where
@@ -28,6 +29,15 @@ class StrictFun₁ [Partial α] [Partial β] (f : α -> β) where
 
 class StrictFun₂ [Partial α] [Partial β] [Partial γ] (f : α -> β -> γ) where
  isstrict : Partial.isdef (f x y) -> Partial.isdef x ∧ Partial.isdef y
+
+-- Necessary existence condition typeclass
+
+class Existence [Partial α] (x : α) (P: outParam Prop) where
+ cond : Partial.isdef x → P
+
+@[default_instance]
+instance default_existence {x: α} [Partial α] : Existence x True where
+ cond _ := True.intro
 
 ------------------ Defining PEQ on instances of Partial
 namespace Partial
