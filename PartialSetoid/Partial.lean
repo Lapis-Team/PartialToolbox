@@ -108,9 +108,7 @@ theorem r_trans₁ [Partial T] {x y z : T} : x ≈▷ y -> y ≈▷ z -> x ≈�
 
 -- Reflexivity
 instance [Partial T] : Reflexive (. ≈▷ . : T -> T -> Prop) where
-  refl := by
-    intro x d
-    constructor <;> trivial
+  refl {x} h := by constructor <;> trivial
 
 -- Transitivity
 theorem r_trans₂ [Partial T] {x y z : T} : x ≈ y -> y ≈▷ z -> x ≈▷ z := by
@@ -186,5 +184,33 @@ theorem rl_trans₁ [Partial T] {x y z : T} : isdef y -> x ≈▷ y -> y ◁≈ 
 theorem rl_trans₂ [Partial T] {x y z: T} : isdef x -> isdef z -> x ◁≈ y -> y ≈▷ z -> x ≈ z := by
   intro dx dz h₁ h₂
   exact r_trans₃ (fun _ => h₁ dx) (h₂ dz)
+
+------- GRW for ≈▷ ------
+
+theorem rtolpeq_StrictFun₁ {op : α → β} [Partial α] [Partial β] [StrictFun₁ op] : x ≈▷ x' -> op x ≈▷ op x' := by
+  intro h₁ d₁
+  have d₂ := StrictFun₁.isstrict d₁
+  apply def_peq₂ d₁
+  have hx : x = x' := peq_eq (h₁ d₂)
+  rw [hx]
+
+instance instRtolpeqStrictFun₁
+ [Partial α] [Partial β] {op : α → β} [StrictFun₁ op]
+ {r₁ : x ≈▷ x'}
+ [Copy r₁] : Copy (rtolpeq_StrictFun₁ (op := op) r₁) where
+
+theorem rtolpeq_StrictFun₂ {op : α → β → γ} [Partial α] [Partial β] [Partial γ] [StrictFun₂ op] : x ≈▷ x' -> y ≈▷ y' -> op x y ≈▷ op x' y' := by
+  intro h₁ h₂ d₁
+  have ⟨d₂,d₃⟩ := StrictFun₂.isstrict d₁
+  apply def_peq₂ d₁
+  have hx : x = x' := peq_eq (h₁ d₂)
+  have hy : y = y' := peq_eq (h₂ d₃)
+  rw [hx, hy]
+
+instance instRtolpeqStrictFun₂
+ [Partial α] [Partial β] [Partial γ] {op : α → β → γ} [StrictFun₂ op]
+ {r₁ : x ≈▷ x'} {r₂ : y ≈▷ y'}
+ [Copy r₁] [Copy r₂] : Copy (rtolpeq_StrictFun₂ (op := op) r₁ r₂) where
+
 
 end Partial

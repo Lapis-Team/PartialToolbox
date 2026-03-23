@@ -102,39 +102,11 @@ instance {x y : ℝ} [ix : isdef_elim x Qx] [iy: isdef_elim y Qy] : isdef_elim' 
 
 -------------------- GRW INSTANCES ---------------------
 
-instance : Reflexive (rtolpeq (instPartial := instPartialR)) where
-  refl {x} h := by constructor <;> trivial
-
-theorem rtolpeq_StrictFun₁ {op : α → β} [Partial α] [Partial β] [StrictFun₁ op] : x ≈▷ x' -> op x ≈▷ op x' := by
-  intro h₁ d₁
-  have d₂ := StrictFun₁.isstrict d₁
-  apply def_peq₂ d₁
-  have hx : x = x' := peq_eq (h₁ d₂)
-  rw [hx]
-
-theorem rtolpeq_StrictFun₂ {op : α → β → γ} [Partial α] [Partial β] [Partial γ] [StrictFun₂ op] : x ≈▷ x' -> y ≈▷ y' -> op x y ≈▷ op x' y' := by
-  intro h₁ h₂ d₁
-  have ⟨d₂,d₃⟩ := StrictFun₂.isstrict d₁
-  apply def_peq₂ d₁
-  have hx : x = x' := peq_eq (h₁ d₂)
-  have hy : y = y' := peq_eq (h₂ d₃)
-  rw [hx, hy]
-
 theorem rtolpeq_lim : (∀ n, f n ≈▷ f' n) -> lim f ≈▷ lim f' := by
  intro h
  apply lim_eventually_extensional
  apply Exists.intro 0
  grind
-
-instance instRtolpeqStrictFun₁
- [Partial α] [Partial β] {op : α → β} [StrictFun₁ op]
- {r₁ : x ≈▷ x'}
- [Copy r₁] : Copy (rtolpeq_StrictFun₁ (op := op) r₁) where
-
-instance instRtolpeqStrictFun₂
- [Partial α] [Partial β] [Partial γ] {op : α → β → γ} [StrictFun₂ op]
- {r₁ : x ≈▷ x'} {r₂ : y ≈▷ y'}
- [Copy r₁] [Copy r₂] : Copy (rtolpeq_StrictFun₂ (op := op) r₁ r₂) where
 
 instance instRtolpeqLim [forall n, Copy (r n)] : Copy (rtolpeq_lim r) where
 
