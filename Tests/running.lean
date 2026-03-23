@@ -3,8 +3,6 @@ import PartialSetoid.Grw
 import Lean
 open Partial
 
--- set_option warn.sorry false
-
 abbrev ℕ := Nat
 axiom ℝ : Type
 @[instance] axiom instPartialR : Partial ℝ
