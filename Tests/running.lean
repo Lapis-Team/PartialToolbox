@@ -31,8 +31,13 @@ noncomputable instance : OfNat ℝ n := ⟨ n ⟩
 @[def_lemma] axiom exp_def {r : ℝ} {n : ℕ} : isdef r -> isdef (r ^ n)
 
 axiom abs : ℝ -> ℝ
-@[def_lemma] axiom abs_def : isdef r -> isdef (abs r)
-@[instance] axiom abs_strict : StrictFun₁ abs
+macro:max atomic("|" noWs) a:term noWs "|" : term => `(abs $a)
+@[app_unexpander abs]
+meta def abs.unexpander : Lean.PrettyPrinter.Unexpander
+  | `($_ $a) => `(|$a|)
+  | _ => throw ()
+@[def_lemma] axiom abs_def : isdef r -> isdef |r|
+@[instance] axiom abs_strict : StrictFun₁ (|.|)
 
 def eventually₁ (P : α -> Prop) (s: ℕ → α) : Prop :=
  ∃ N, ∀ n, n ≥ N → P (s n)
@@ -49,7 +54,7 @@ axiom bigadd : ℕ -> ℕ -> (ℕ -> ℝ) -> ℝ
 axiom bigadd_strict : isdef (bigadd n m xn) -> forall n, isdef (xn n)
 
 @[instance] axiom lt_inst : LT ℝ
-@[instance] axiom lt_strict : StrictPred₂ (LT.lt (α:=ℝ))
+@[instance] axiom lt_strict : StrictPred₂ (. < . : ℝ → ℝ → Prop)
 
 -------------------- isdef_elim ---------------------
 
@@ -71,15 +76,15 @@ instance instRtolpeqLim [forall n, Copy (r n)] : Copy (rtolpeq_lim r) where
 ----------------- running example ---------------------------------------
 
 axiom step₁ (x : ℝ) (n : ℕ) : bigadd 0 (n - 1) (fun i => x^i) ≈▷ (1 - x ^ (n+1)) / (1 - x)
-axiom step₂ (m : ℝ) (f: ℕ → ℝ) : lim (fun n => f n / m) ≈▷ lim (fun n => f n) / m
+axiom step₂ (x : ℝ) (f: ℕ → ℝ) : lim (fun n => f n / x) ≈▷ lim (fun n => f n) / x
 axiom step₃ (c : ℝ) (f : ℕ → ℝ) : lim (fun n => c - f n) ≈▷ c - lim (fun n => f n)
-axiom step₄ : abs x < 1 -> lim (fun n => x^(n+1)) ≈▷ 0
+axiom step₄ : |x| < 1 -> lim (fun n => x^(n+1)) ≈▷ 0
 axiom step₅ (n m : Nat) : ((n : Nat) - (m : Nat) : ℝ) ≈▷ (n - m : Nat)
-axiom step₆ : abs n < m -> m - n ≠ 0
+axiom step₆ : |x| < y -> y - x ≠ 0
 
 noncomputable def geometricSeries (x: ℝ) := lim (fun n => bigadd 0 (n-1) (fun i => x ^ i))
 
-theorem running {x : ℝ} : abs x < 1 -> geometricSeries x ≈ 1 / (1 - x) := by
+theorem running {x : ℝ} : |x| < 1 -> geometricSeries x ≈ 1 / (1 - x) := by
   intro h
   apply isdef_elim'.elim _ h ; simp ; intro _ _ _
   calc
@@ -98,7 +103,7 @@ theorem running {x : ℝ} : abs x < 1 -> geometricSeries x ≈ 1 / (1 - x) := by
 axiom step₇ (x y : ℝ) : (x * (y / x)) ◁≈ y
 
 -- running example 2
-theorem running₂ { x : ℝ } : abs x < 1 -> (1 - x) * geometricSeries x ≈ 1 := by
+theorem running₂ { x : ℝ } : |x| < 1 -> (1 - x) * geometricSeries x ≈ 1 := by
   intro h
   apply isdef_elim'.elim _ h ; simp ; intro d₁ d₂ _
   calc
