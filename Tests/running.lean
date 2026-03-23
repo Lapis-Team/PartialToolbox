@@ -18,7 +18,6 @@ instance : Sub ℝ := ⟨ sorry ⟩
 @[def_lemma] axiom sub_def {n m : ℝ} : isdef n -> isdef m -> isdef (n - m)
 instance : StrictFun₂ (· - ·  : ℝ -> ℝ -> ℝ) := sorry
 
-
 instance : Div ℝ := ⟨ sorry ⟩
 @[def_lemma] axiom div_def {n m : ℝ} : isdef n -> isdef m -> m ≠ 0 -> isdef (n / m)
 instance : StrictFun₂ (· / · : ℝ -> ℝ -> ℝ) := sorry
@@ -36,11 +35,19 @@ axiom abs : ℝ -> ℝ
 @[def_lemma] axiom abs_def : isdef r -> isdef (abs r)
 instance : StrictFun₁ abs := sorry
 
+def eventually₁ (P : α -> Prop) (s: ℕ → α) : Prop :=
+ ∃ N, ∀ n, n ≥ N → P (s n)
+
+def eventually₂ (P : α -> β -> Prop) (s: ℕ → α) (s' : ℕ → β) : Prop :=
+ ∃ N, ∀ n, n ≥ N → P (s n) (s' n)
+
 axiom lim : (ℕ -> ℝ) -> ℝ
-axiom lim_strict : isdef (lim xn) -> forall n, isdef (xn n) -- CSC: ??
+axiom lim_strict : isdef (lim xn) -> eventually₁ isdef xn
+axiom lim_eventually_extensional :
+ eventually₂ (.≈▷.) xn xn' -> lim xn ≈▷ lim xn'
 
 axiom bigadd : ℕ -> ℕ -> (ℕ -> ℝ) -> ℝ
-axiom bigadd_strict : isdef (bigadd n m xn) -> forall n, isdef (xn n) -- CSC: ??
+axiom bigadd_strict : isdef (bigadd n m xn) -> forall n, isdef (xn n)
 
 noncomputable instance : LT ℝ := ⟨ sorry ⟩
 instance : StrictPred₂ (LT.lt (α:=ℝ)) := ⟨ sorry ⟩
@@ -80,10 +87,10 @@ instance {x : ℝ} {y : ℕ} [ix : isdef_elim x Qx] [iy : isdef_elim y Qy] : isd
   let ⟨u₁,u₂⟩ := StrictFun₂.isstrict k
   ix.elim (fun qx => iy.elim (fun qy => h ⟨⟨u₁,qx⟩,⟨u₂,qy⟩⟩) u₂ ) u₁
 
-instance {Qf : ℕ -> Prop} {f : ℕ → ℝ} [if' : forall n, isdef_elim (f n) (Qf n)]: isdef_elim (lim f) (forall n, isdef (f n) ∧ Qf n) where
+instance {Qf : ℕ -> Prop} {f : ℕ → ℝ} [if' : forall n, isdef_elim (f n) (Qf n)]: isdef_elim (lim f) (∃ N, ∀ n, n ≥ N → isdef (f n) ∧ Qf n) where
  elim h k :=
-  let u := lim_strict k
-  h (fun n => ⟨u n, (if' n).elim (.) (u n)⟩)
+  let ⟨N,u⟩ := lim_strict k
+  h ⟨N, fun n ge => ⟨u n ge, (if' n).elim (.) (u n ge)⟩⟩
 
 class isdef_elim' (T: Prop) (Q : outParam Prop) where
  elim {P : Prop} : (Q -> P) -> T -> P
@@ -113,14 +120,11 @@ theorem rtolpeq_StrictFun₂ {op : α → β → γ} [Partial α] [Partial β] [
   have hy : y = y' := peq_eq (h₂ d₃)
   rw [hx, hy]
 
-theorem rtolpeq_lim : (forall n, f n ≈▷ f' n) -> lim f ≈▷ lim f' := by
- intro h d
- apply isdef_elim.elim _ d ; simp ; intro l
- have k : f=f' := by
-  ext y
-  apply (h y (l y)).right
- rw [k]
- constructor <;> trivial
+theorem rtolpeq_lim : (∀ n, f n ≈▷ f' n) -> lim f ≈▷ lim f' := by
+ intro h
+ apply lim_eventually_extensional
+ apply Exists.intro 0
+ grind
 
 instance instRtolpeqStrictFun₁
  [Partial α] [Partial β] {op : α → β} [StrictFun₁ op]
