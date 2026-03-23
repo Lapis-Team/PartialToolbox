@@ -17,6 +17,7 @@ noncomputable instance : OfNat ℝ n := ⟨ n ⟩
 @[def_lemma] axiom sub_def {n m : ℝ} : isdef n -> isdef m -> isdef (n - m)
 @[instance] axiom sub_strict : StrictFun₂ (· - ·  : ℝ -> ℝ -> ℝ)
 
+
 @[instance] axiom sub_div : Div ℝ
 @[def_lemma] axiom div_def {n m : ℝ} : isdef n -> isdef m -> m ≠ 0 -> isdef (n / m)
 @[instance] axiom div_strict : StrictFun₂ (· / · : ℝ -> ℝ -> ℝ)
@@ -28,7 +29,8 @@ noncomputable instance : OfNat ℝ n := ⟨ n ⟩
 
 @[instance] axiom pow_inst : HPow ℝ ℕ ℝ
 @[instance] axiom pow_strict : StrictFun₂ (· ^ · : ℝ -> ℕ -> ℝ)
-@[def_lemma] axiom exp_def {r : ℝ} {n : ℕ} : isdef r -> isdef (r ^ n)
+@[def_lemma] axiom pow_def {r : ℝ} {n : ℕ} : isdef r -> isdef n -> isdef (r ^ n)
+
 
 axiom abs : ℝ -> ℝ
 macro:max atomic("|" noWs) a:term noWs "|" : term => `(abs $a)
@@ -51,10 +53,64 @@ axiom lim_eventually_extensional :
  eventually₂ (.≈▷.) xn xn' -> lim xn ≈▷ lim xn'
 
 axiom bigadd : ℕ -> ℕ -> (ℕ -> ℝ) -> ℝ
-axiom bigadd_strict : isdef (bigadd n m xn) -> forall n, isdef (xn n)
+axiom bigadd_strict : isdef (bigadd n m xn) -> isdef n ∧ isdef m ∧ forall n, isdef (xn n)
+axiom bigadd_def : isdef n -> isdef m -> (forall i, isdef (xn i)) -> isdef (bigadd n m xn)
 
 @[instance] axiom lt_inst : LT ℝ
 @[instance] axiom lt_strict : StrictPred₂ (. < . : ℝ → ℝ → Prop)
+
+-------------------------------------------
+class ToBeProved (P : Prop) (Q: outParam Prop) where
+ easy: Q → P
+
+@[default_instance]
+instance (priority := low) : ToBeProved P P where
+ easy h := h
+
+instance {n m : ℝ} [hn : ToBeProved (isdef n) Qn] [hm : ToBeProved (isdef m) Qm] :
+ ToBeProved (isdef (n-m)) (Qn ∧ Qm) where
+ easy := by
+  rintro ⟨kn,km⟩
+  apply sub_def (hn.easy kn) (hm.easy km)
+
+instance {n m : ℝ} [hn : ToBeProved (isdef n) Qn] [hm : ToBeProved (isdef m) Qm] :
+ ToBeProved (isdef (n/m)) (Qn ∧ Qm ∧ m ≠ 0) where
+ easy := by
+  rintro ⟨kn,km,e⟩
+  apply div_def (hn.easy kn) (hm.easy km) e
+
+instance {n m : ℝ} [hn : ToBeProved (isdef n) Qn] [hm : ToBeProved (isdef m) Qm] :
+ ToBeProved (isdef (n*m)) (Qn ∧ Qm) where
+ easy := by
+  rintro ⟨kn,km⟩
+  apply mul_def (hn.easy kn) (hm.easy km)
+
+instance {n : ℝ} {m : ℕ} [hn : ToBeProved (isdef n) Qn] [hm : ToBeProved (isdef m) Qm] :
+ ToBeProved (isdef (n^m)) (Qn ∧ Qm) where
+ easy := by
+  rintro ⟨kn,km⟩
+  apply pow_def (hn.easy kn) (hm.easy km)
+
+instance {n : ℝ} [hn : ToBeProved (isdef n) Qn] :
+ ToBeProved (isdef |n|) Qn where
+ easy := by
+  intro kn
+  apply abs_def (hn.easy kn)
+
+instance {n : ℕ} {m : ℕ} {xn : ℕ → ℝ} {Qi : ℕ → Prop}
+  [hn : ToBeProved (isdef n) Qn] [hm : ToBeProved (isdef m) Qm]
+  [hi : ∀i, ToBeProved (isdef (xn i)) (Qi i)] :
+ ToBeProved (isdef (bigadd n m xn)) (Qn ∧ Qm ∧ ∀i, Qi i) where
+ easy := by
+  rintro ⟨kn,km,ksn⟩
+  apply bigadd_def (hn.easy kn) (hm.easy km) (fun (i : ℕ) => (hi i).easy (ksn i))
+
+-------------------------------------------
+
+example {x y z : ℝ} : isdef (x / y - y / z) -> isdef (y / y * x * z) := by
+ apply isdef_elim.elim ; simp ; intro a b c d e f g h
+ apply ToBeProved.easy
+ trivial
 
 -------------------- isdef_elim ---------------------
 
@@ -97,8 +153,10 @@ theorem running {x : ℝ} : |x| < 1 -> geometricSeries x ≈ 1 / (1 - x) := by
                                                        respects step₅ 1 0
    _ ≈  1 / (1 - x)                              := by
                                                      apply def_peqrfl
-                                                     def_intro
-                                                     exact step₆ h
+                                                     apply ToBeProved.easy
+                                                     grind [step₆]
+                                                     -- def_intro
+                                                     -- exact step₆ h
 
 axiom step₇ (x y : ℝ) : (x * (y / x)) ◁≈ y
 
@@ -111,6 +169,8 @@ theorem running₂ { x : ℝ } : |x| < 1 -> (1 - x) * geometricSeries x ≈ 1 :=
     _ ≈▷ (1 - x) * (1 / (1 - x))    := by respects (peq_rtolpeq (running h))
     _ ≈  (1 - x) * (1 / (1 - x))    := by
                                         apply def_peqrfl
-                                        def_intro
-                                        exact step₆ h
+                                        apply ToBeProved.easy
+                                        grind [step₆]
+                                        -- def_intro
+                                        -- exact step₆ h
     _ ◁≈ 1                          := by respects step₇ (1 - x) 1
