@@ -7,36 +7,34 @@ open Partial
 
 abbrev ℕ := Nat
 axiom ℝ : Type
-instance instPartialR : Partial ℝ := sorry
+@[instance] axiom instPartialR : Partial ℝ
 
-@[coe]
-axiom inj : ℕ → ℝ
+@[coe] axiom inj : ℕ → ℝ
 axiom inj_def: isdef (inj n)
 noncomputable instance : Coe ℕ ℝ := ⟨inj⟩
-instance : StrictFun₁ inj where
- isstrict _ := True.intro
+instance : StrictFun₁ inj where isstrict _ := True.intro
 
 noncomputable instance : OfNat ℝ n := ⟨ n ⟩
-instance : Sub ℝ := sorry
+@[instance] axiom sub_inst : Sub ℝ
 @[def_lemma] axiom sub_def {n m : ℝ} : isdef n -> isdef m -> isdef (n - m)
-instance : StrictFun₂ (· - ·  : ℝ -> ℝ -> ℝ) := sorry
+@[instance] axiom sub_strict : StrictFun₂ (· - ·  : ℝ -> ℝ -> ℝ)
 
-instance : Div ℝ := sorry
+@[instance] axiom sub_div : Div ℝ
 @[def_lemma] axiom div_def {n m : ℝ} : isdef n -> isdef m -> m ≠ 0 -> isdef (n / m)
-instance : StrictFun₂ (· / · : ℝ -> ℝ -> ℝ) := sorry
-instance div_existence {n d : ℝ} : Existence (n / d) (d ≠ 0) := sorry
+@[instance] axiom div_strict : StrictFun₂ (· / · : ℝ -> ℝ -> ℝ)
+@[instance] axiom div_existence {n d : ℝ} : Existence (n / d) (d ≠ 0)
 
-instance : Mul ℝ := sorry
+@[instance] axiom mul_inst : Mul ℝ
 @[def_lemma] axiom mul_def {x y : ℝ} : isdef x -> isdef y -> isdef (x * y)
-instance : StrictFun₂ (· * · : ℝ -> ℝ -> ℝ) := sorry
+@[instance] axiom mul_strict : StrictFun₂ (· * · : ℝ -> ℝ -> ℝ)
 
-instance : HPow ℝ ℕ ℝ := sorry
-instance : StrictFun₂ (· ^ · : ℝ -> ℕ -> ℝ) := sorry
+@[instance] axiom pow_inst : HPow ℝ ℕ ℝ
+@[instance] axiom pow_strict : StrictFun₂ (· ^ · : ℝ -> ℕ -> ℝ)
 @[def_lemma] axiom exp_def {r : ℝ} {n : ℕ} : isdef r -> isdef (r ^ n)
 
 axiom abs : ℝ -> ℝ
 @[def_lemma] axiom abs_def : isdef r -> isdef (abs r)
-instance : StrictFun₁ abs := sorry
+@[instance] axiom abs_strict : StrictFun₁ abs
 
 def eventually₁ (P : α -> Prop) (s: ℕ → α) : Prop :=
  ∃ N, ∀ n, n ≥ N → P (s n)
@@ -52,8 +50,8 @@ axiom lim_eventually_extensional :
 axiom bigadd : ℕ -> ℕ -> (ℕ -> ℝ) -> ℝ
 axiom bigadd_strict : isdef (bigadd n m xn) -> forall n, isdef (xn n)
 
-noncomputable instance : LT ℝ := sorry
-instance : StrictPred₂ (LT.lt (α:=ℝ)) := sorry
+@[instance] axiom lt_inst : LT ℝ
+@[instance] axiom lt_strict : StrictPred₂ (LT.lt (α:=ℝ))
 
 -------------------- isdef_elim ---------------------
 
