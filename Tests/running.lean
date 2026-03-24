@@ -3,6 +3,11 @@ import PartialSetoid.Grw
 import Lean
 open Partial
 
+---------------------------------
+class DefIntro [Partial α] (t: α) (necessary : outParam Prop) where
+ holds : necessary -> Partial.isdef t
+---------------------------------
+
 abbrev ℕ := Nat
 axiom ℝ : Type
 @[instance] axiom instPartialR : Partial ℝ
@@ -14,22 +19,25 @@ instance : StrictFun₁ inj where isstrict _ := True.intro
 
 noncomputable instance : OfNat ℝ n := ⟨ n ⟩
 @[instance] axiom sub_inst : Sub ℝ
-@[def_lemma] axiom sub_def {n m : ℝ} : isdef n -> isdef m -> isdef (n - m)
+-- @[def_lemma] axiom sub_def {n m : ℝ} : isdef n -> isdef m -> isdef (n - m)
+@[instance] axiom sub_def {n m : ℝ} : DefIntro (n - m) (isdef n ∧ isdef m)
 @[instance] axiom sub_strict : StrictFun₂ (· - ·  : ℝ -> ℝ -> ℝ)
 
 @[instance] axiom sub_div : Div ℝ
-@[def_lemma] axiom div_def {n m : ℝ} : isdef n -> isdef m -> m ≠ 0 -> isdef (n / m)
+--@[def_lemma] axiom div_def {n m : ℝ} : isdef n -> isdef m -> m ≠ 0 -> isdef (n / m)
+@[instance] axiom div_def {n m : ℝ} : DefIntro (n / m) (isdef n ∧ isdef m ∧ m ≠ 0)
 @[instance] axiom div_strict : StrictFun₂ (· / · : ℝ -> ℝ -> ℝ)
 @[instance] axiom div_existence {n d : ℝ} : Existence (n / d) (d ≠ 0)
 
 @[instance] axiom mul_inst : Mul ℝ
-@[def_lemma] axiom mul_def {x y : ℝ} : isdef x -> isdef y -> isdef (x * y)
+--@[def_lemma] axiom mul_def {x y : ℝ} : isdef x -> isdef y -> isdef (x * y)
+@[instance] axiom mul_def {n m : ℝ} : DefIntro (n * m) (isdef n ∧ isdef m)
 @[instance] axiom mul_strict : StrictFun₂ (· * · : ℝ -> ℝ -> ℝ)
 
 @[instance] axiom pow_inst : HPow ℝ ℕ ℝ
 @[instance] axiom pow_strict : StrictFun₂ (· ^ · : ℝ -> ℕ -> ℝ)
-@[def_lemma] axiom pow_def {r : ℝ} {n : ℕ} : isdef r -> isdef n -> isdef (r ^ n)
-
+-- @[def_lemma] axiom pow_def {r : ℝ} {n : ℕ} : isdef r -> isdef n -> isdef (r ^ n)
+@[instance] axiom pow_def {r : ℝ} {n : ℕ} : DefIntro (r ^ n) (isdef r ∧ isdef n)
 
 axiom abs : ℝ -> ℝ
 macro:max atomic("|" noWs) a:term noWs "|" : term => `(abs $a)
@@ -37,7 +45,8 @@ macro:max atomic("|" noWs) a:term noWs "|" : term => `(abs $a)
 meta def abs.unexpander : Lean.PrettyPrinter.Unexpander
   | `($_ $a) => `(|$a|)
   | _ => throw ()
-@[def_lemma] axiom abs_def : isdef r -> isdef |r|
+-- @[def_lemma] axiom abs_def : isdef r -> isdef |r|
+@[instance] axiom abs_def : DefIntro |r| (isdef r)
 @[instance] axiom abs_strict : StrictFun₁ (|.|)
 
 def eventually₁ (P : α -> Prop) (s: ℕ → α) : Prop :=
@@ -53,7 +62,7 @@ axiom lim_eventually_extensional :
 
 axiom bigadd : ℕ -> ℕ -> (ℕ -> ℝ) -> ℝ
 axiom bigadd_strict : isdef (bigadd n m xn) -> isdef n ∧ isdef m ∧ forall n, isdef (xn n)
-axiom bigadd_def : isdef n -> isdef m -> (forall i, isdef (xn i)) -> isdef (bigadd n m xn)
+@[instance] axiom bigadd_def : DefIntro (bigadd n m xn) (isdef n ∧ isdef m ∧ (forall i, isdef (xn i)))
 
 @[instance] axiom lt_inst : LT ℝ
 @[instance] axiom lt_strict : StrictPred₂ (. < . : ℝ → ℝ → Prop)
@@ -66,47 +75,24 @@ class ToBeProved (P : Prop) (Q: outParam Prop) where
 instance (priority := low) : ToBeProved P P where
  easy h := h
 
-instance {n m : ℝ} [hn : ToBeProved (isdef n) Qn] [hm : ToBeProved (isdef m) Qm] :
- ToBeProved (isdef (n-m)) (Qn ∧ Qm) where
- easy := by
-  rintro ⟨kn,km⟩
-  apply sub_def (hn.easy kn) (hm.easy km)
+instance [h₁ : ToBeProved P₁ Q₁] [h₂ : ToBeProved P₂ Q₂] : ToBeProved (P₁ ∧ P₂) (Q₁ ∧ Q₂) where
+ easy := fun ⟨q₁,q₂⟩ => ⟨h₁.easy q₁, h₂.easy q₂⟩
 
-instance {n m : ℝ} [hn : ToBeProved (isdef n) Qn] [hm : ToBeProved (isdef m) Qm] :
- ToBeProved (isdef (n/m)) (Qn ∧ Qm ∧ m ≠ 0) where
- easy := by
-  rintro ⟨kn,km,e⟩
-  apply div_def (hn.easy kn) (hm.easy km) e
+instance {P Q : α → Prop} [h : ∀ n, ToBeProved (P n) (Q n)]  : ToBeProved (∀ n, P n) (∀ n, Q n) where
+ easy k n := (h n).easy (k n)
 
-instance {n m : ℝ} [hn : ToBeProved (isdef n) Qn] [hm : ToBeProved (isdef m) Qm] :
- ToBeProved (isdef (n*m)) (Qn ∧ Qm) where
- easy := by
-  rintro ⟨kn,km⟩
-  apply mul_def (hn.easy kn) (hm.easy km)
-
-instance {n : ℝ} {m : ℕ} [hn : ToBeProved (isdef n) Qn] [hm : ToBeProved (isdef m) Qm] :
- ToBeProved (isdef (n^m)) (Qn ∧ Qm) where
- easy := by
-  rintro ⟨kn,km⟩
-  apply pow_def (hn.easy kn) (hm.easy km)
-
-instance {n : ℝ} [hn : ToBeProved (isdef n) Qn] :
- ToBeProved (isdef |n|) Qn where
- easy := by
-  intro kn
-  apply abs_def (hn.easy kn)
-
-instance {n : ℕ} {m : ℕ} {xn : ℕ → ℝ} {Qi : ℕ → Prop}
-  [hn : ToBeProved (isdef n) Qn] [hm : ToBeProved (isdef m) Qm]
-  [hi : ∀i, ToBeProved (isdef (xn i)) (Qi i)] :
- ToBeProved (isdef (bigadd n m xn)) (Qn ∧ Qm ∧ ∀i, Qi i) where
- easy := by
-  rintro ⟨kn,km,ksn⟩
-  apply bigadd_def (hn.easy kn) (hm.easy km) (fun (i : ℕ) => (hi i).easy (ksn i))
+instance [Partial α] {t: α} [h: DefIntro t P] [k : ToBeProved P Q] :
+ ToBeProved (isdef t) Q where
+ easy p := h.holds (k.easy p)
 
 -------------------------------------------
 
 example {x y z : ℝ} : isdef (x / y - y / z) -> isdef (y / y * x * z) := by
+ apply isdef_elim.elim ; simp ; intro a b c d e f g h
+ apply ToBeProved.easy
+ trivial
+
+example {a b : ℕ} {x : ℝ}: isdef (bigadd a b (fun n => x / n)) -> isdef (bigadd a b (fun n => x / (n*n))) := by
  apply isdef_elim.elim ; simp ; intro a b c d e f g h
  apply ToBeProved.easy
  trivial
