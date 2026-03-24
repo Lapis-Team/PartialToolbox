@@ -17,7 +17,6 @@ noncomputable instance : OfNat ℝ n := ⟨ n ⟩
 @[def_lemma] axiom sub_def {n m : ℝ} : isdef n -> isdef m -> isdef (n - m)
 @[instance] axiom sub_strict : StrictFun₂ (· - ·  : ℝ -> ℝ -> ℝ)
 
-
 @[instance] axiom sub_div : Div ℝ
 @[def_lemma] axiom div_def {n m : ℝ} : isdef n -> isdef m -> m ≠ 0 -> isdef (n / m)
 @[instance] axiom div_strict : StrictFun₂ (· / · : ℝ -> ℝ -> ℝ)
