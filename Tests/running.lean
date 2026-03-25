@@ -4,8 +4,28 @@ import Lean
 open Partial
 
 ---------------------------------
-class DefIntro [Partial α] (t: α) (necessary : outParam Prop) where
- holds : necessary -> Partial.isdef t
+-- [h : Backward₁ P Q] means Q -> P in an invertible way ; apply h.intro reduces P to Q
+-- [h : Backward  P Q] backchains over Backward₁s to reduce P to Q without backtracking;
+--   that's why all Backward₁ rules are supposed to be invertible
+
+class Backward₁ (P: Prop) (Q : outParam Prop) where
+ intro : Q -> P
+
+class Backward (P : Prop) (Q: outParam Prop) where
+ intro: Q → P
+
+@[default_instance]
+instance (priority := low) : Backward P P where
+ intro h := h
+
+instance [h₁ : Backward P₁ Q₁] [h₂ : Backward P₂ Q₂] : Backward (P₁ ∧ P₂) (Q₁ ∧ Q₂) where
+ intro := fun ⟨q₁,q₂⟩ => ⟨h₁.intro q₁, h₂.intro q₂⟩
+
+instance {P Q : α → Prop} [h : ∀ n, Backward (P n) (Q n)]  : Backward (∀ n, P n) (∀ n, Q n) where
+ intro k n := (h n).intro (k n)
+
+instance [h: Backward₁ P Q] [k : Backward Q R] : Backward P R where
+ intro p := h.intro (k.intro p)
 ---------------------------------
 
 abbrev ℕ := Nat
@@ -19,25 +39,21 @@ instance : StrictFun₁ inj where isstrict _ := True.intro
 
 noncomputable instance : OfNat ℝ n := ⟨ n ⟩
 @[instance] axiom sub_inst : Sub ℝ
--- @[def_lemma] axiom sub_def {n m : ℝ} : isdef n -> isdef m -> isdef (n - m)
-@[instance] axiom sub_def {n m : ℝ} : DefIntro (n - m) (isdef n ∧ isdef m)
+@[instance] axiom sub_def_b {n m : ℝ} : Backward₁ (isdef (n - m)) (isdef n ∧ isdef m)
 @[instance] axiom sub_strict : StrictFun₂ (· - ·  : ℝ -> ℝ -> ℝ)
 
 @[instance] axiom sub_div : Div ℝ
---@[def_lemma] axiom div_def {n m : ℝ} : isdef n -> isdef m -> m ≠ 0 -> isdef (n / m)
-@[instance] axiom div_def {n m : ℝ} : DefIntro (n / m) (isdef n ∧ isdef m ∧ m ≠ 0)
+@[instance] axiom div_def_b {n m : ℝ} : Backward₁ (isdef (n / m)) (isdef n ∧ isdef m ∧ m ≠ 0)
 @[instance] axiom div_strict : StrictFun₂ (· / · : ℝ -> ℝ -> ℝ)
 @[instance] axiom div_existence {n d : ℝ} : Existence (n / d) (d ≠ 0)
 
 @[instance] axiom mul_inst : Mul ℝ
---@[def_lemma] axiom mul_def {x y : ℝ} : isdef x -> isdef y -> isdef (x * y)
-@[instance] axiom mul_def {n m : ℝ} : DefIntro (n * m) (isdef n ∧ isdef m)
+@[instance] axiom mul_def_b {n m : ℝ} : Backward₁ (isdef (n * m)) (isdef n ∧ isdef m)
 @[instance] axiom mul_strict : StrictFun₂ (· * · : ℝ -> ℝ -> ℝ)
 
 @[instance] axiom pow_inst : HPow ℝ ℕ ℝ
+@[instance] axiom pow_def_b {r : ℝ} {n : ℕ} : Backward₁ (isdef (r ^ n)) (isdef r ∧ isdef n)
 @[instance] axiom pow_strict : StrictFun₂ (· ^ · : ℝ -> ℕ -> ℝ)
--- @[def_lemma] axiom pow_def {r : ℝ} {n : ℕ} : isdef r -> isdef n -> isdef (r ^ n)
-@[instance] axiom pow_def {r : ℝ} {n : ℕ} : DefIntro (r ^ n) (isdef r ∧ isdef n)
 
 axiom abs : ℝ -> ℝ
 macro:max atomic("|" noWs) a:term noWs "|" : term => `(abs $a)
@@ -45,8 +61,7 @@ macro:max atomic("|" noWs) a:term noWs "|" : term => `(abs $a)
 meta def abs.unexpander : Lean.PrettyPrinter.Unexpander
   | `($_ $a) => `(|$a|)
   | _ => throw ()
--- @[def_lemma] axiom abs_def : isdef r -> isdef |r|
-@[instance] axiom abs_def : DefIntro |r| (isdef r)
+@[instance] axiom abs_def_b : Backward₁ (isdef |r|) (isdef r)
 @[instance] axiom abs_strict : StrictFun₁ (|.|)
 
 def eventually₁ (P : α -> Prop) (s: ℕ → α) : Prop :=
@@ -62,39 +77,21 @@ axiom lim_eventually_extensional :
 
 axiom bigadd : ℕ -> ℕ -> (ℕ -> ℝ) -> ℝ
 axiom bigadd_strict : isdef (bigadd n m xn) -> isdef n ∧ isdef m ∧ forall n, isdef (xn n)
-@[instance] axiom bigadd_def : DefIntro (bigadd n m xn) (isdef n ∧ isdef m ∧ (forall i, isdef (xn i)))
+@[instance] axiom bigadd_def_b : Backward₁ (isdef (bigadd n m xn)) (isdef n ∧ isdef m ∧ (forall i, isdef (xn i)))
 
 @[instance] axiom lt_inst : LT ℝ
 @[instance] axiom lt_strict : StrictPred₂ (. < . : ℝ → ℝ → Prop)
 
 -------------------------------------------
-class ToBeProved (P : Prop) (Q: outParam Prop) where
- easy: Q → P
-
-@[default_instance]
-instance (priority := low) : ToBeProved P P where
- easy h := h
-
-instance [h₁ : ToBeProved P₁ Q₁] [h₂ : ToBeProved P₂ Q₂] : ToBeProved (P₁ ∧ P₂) (Q₁ ∧ Q₂) where
- easy := fun ⟨q₁,q₂⟩ => ⟨h₁.easy q₁, h₂.easy q₂⟩
-
-instance {P Q : α → Prop} [h : ∀ n, ToBeProved (P n) (Q n)]  : ToBeProved (∀ n, P n) (∀ n, Q n) where
- easy k n := (h n).easy (k n)
-
-instance [Partial α] {t: α} [h: DefIntro t P] [k : ToBeProved P Q] :
- ToBeProved (isdef t) Q where
- easy p := h.holds (k.easy p)
-
--------------------------------------------
 
 example {x y z : ℝ} : isdef (x / y - y / z) -> isdef (y / y * x * z) := by
  apply isdef_elim.elim ; simp ; intro a b c d e f g h
- apply ToBeProved.easy
+ apply Backward.intro
  trivial
 
 example {a b : ℕ} {x : ℝ}: isdef (bigadd a b (fun n => x / n)) -> isdef (bigadd a b (fun n => x / (n*n))) := by
  apply isdef_elim.elim ; simp ; intro a b c d e f g h
- apply ToBeProved.easy
+ apply Backward.intro
  trivial
 
 -------------------- isdef_elim ---------------------
@@ -138,10 +135,8 @@ theorem running {x : ℝ} : |x| < 1 -> geometricSeries x ≈ 1 / (1 - x) := by
                                                        respects step₅ 1 0
    _ ≈  1 / (1 - x)                              := by
                                                      apply def_peqrfl
-                                                     apply ToBeProved.easy
+                                                     apply Backward.intro
                                                      grind [step₆]
-                                                     -- def_intro
-                                                     -- exact step₆ h
 
 axiom step₇ (x y : ℝ) : (x * (y / x)) ◁≈ y
 
@@ -154,8 +149,6 @@ theorem running₂ { x : ℝ } : |x| < 1 -> (1 - x) * geometricSeries x ≈ 1 :=
     _ ≈▷ (1 - x) * (1 / (1 - x))    := by respects (peq_rtolpeq (running h))
     _ ≈  (1 - x) * (1 / (1 - x))    := by
                                         apply def_peqrfl
-                                        apply ToBeProved.easy
+                                        apply Backward.intro
                                         grind [step₆]
-                                        -- def_intro
-                                        -- exact step₆ h
     _ ◁≈ 1                          := by respects step₇ (1 - x) 1
