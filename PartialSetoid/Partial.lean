@@ -42,14 +42,6 @@ instance (priority := low) default_existence {x: α} [Partial α] : Existence x 
 ------------------ Defining PEQ on instances of Partial
 namespace Partial
 
--- CSC: commentata via perchè non ha senso
--- Ha senso per peq perchè = è simmetrica e = è definita
--- per ogni tipo, ma prel non ha senso in quanto non chiede y
--- definita e op è comunque da definirsi sul tipo parziale
--- Secondo me dove volevi usare prel devi usare un predicato
--- Strict₂ e basta
--- def prel {op : T -> T -> Prop} [Partial T] (x y: T) : Prop := isdef x ∧ op x y
-
 instance [Partial T] : HasEquiv T where
  Equiv (x y : T) := isdef x ∧ x = y
 
@@ -68,10 +60,10 @@ theorem def_peq₂ [Partial T] {x y : T} : isdef y -> x = y -> x ≈ y := by
 theorem def_peqrfl {x: T} [Partial T]: isdef x -> x ≈ x :=
  fun a => def_peq₁ a rfl
 
-@[def_lemma_closing]
+--@[def_lemma_closing]
 theorem peq_def₁ [Partial T] {x y : T} : x ≈ y -> isdef x := And.left
 
-@[def_lemma_closing]
+--@[def_lemma_closing]
 theorem peq_def₂ [Partial T] {x y : T}: x ≈ y -> isdef y := by
   intro ⟨hl, hr⟩
   rw [<- hr]
@@ -79,20 +71,15 @@ theorem peq_def₂ [Partial T] {x y : T}: x ≈ y -> isdef y := by
 
 theorem peq_eq [Partial T] {x y : T} : x ≈ y -> x = y := And.right
 
--- PEQ Reflexivity
--- ATTENTION: THIS IS FALSE
-/- instance [Partial T] : Reflexive (. ≈ . : T -> T -> Prop) where -/
-/-   refl := by  -/
-/-     intro x -/
-/-     constructor -/
-/-     . sorry -/
-/-     . trivial -/
+-- PEQ Reflexivity does not hold
 
 --- PEQ Transitivity
 theorem peq_trans [Partial T] {x y z : T} : x ≈ y -> y ≈ z -> x ≈ z := by
   intro ⟨_, k₁⟩ ⟨dy, k₂⟩
   rw [k₁]
   exact def_peq₁ dy k₂
+
+instance [Partial T] : Trans (γ := T) (.≈.) (.≈.) (.≈.) := ⟨peq_trans⟩
 
 -- RTOL Direction ------------------------------------
 def rtol [Partial T] (op: T -> T -> Prop) : T -> T -> Prop :=
@@ -101,11 +88,11 @@ def rtol [Partial T] (op: T -> T -> Prop) : T -> T -> Prop :=
 abbrev rtolpeq [instPartial: Partial T] := rtol (. ≈ . : T → T → Prop)
 infix:60 " ≈▷ " => rtolpeq
 
-@[def_lemma_closing]
+--@[def_lemma_closing]
 def peq_rtolpeq [Partial T] {x y : T} : x ≈ y -> x ≈▷ y := by
   intro h ; exact fun _ => h
 
-@[def_lemma_closing]
+--@[def_lemma_closing]
 theorem def_rtol_def [Partial T] {x y : T} : isdef y -> x ≈▷ y -> isdef x := by
  intro h h'
  apply (h' h).left
@@ -145,7 +132,7 @@ def ltor [Partial T] (op: T -> T -> Prop) : T -> T -> Prop :=
 abbrev ltorpeq [instPartial: Partial T] := ltor (. ≈ . : T → T → Prop)
 infix:60 " ◁≈ " => ltorpeq
 
-@[def_lemma_closing]
+--@[def_lemma_closing]
 theorem def_ltor_def [Partial T] {x y : T} : isdef x -> x ◁≈ y -> isdef y := by
  intro h h'
  have k := (h' h).right
@@ -177,11 +164,12 @@ theorem ltrans₃ [Partial T] {x y z : T} : x ◁≈ y -> y ≈ z -> x ◁≈ z 
   have ⟨_, k₁⟩ := h₁ dx
   rw [k₁] ; assumption
 
-
 instance [Partial T] : Trans (γ := T) ltorpeq ltorpeq ltorpeq := ⟨ ltrans₁ ⟩
 instance [Partial T] : Trans (γ := T) (. ≈ .) ltorpeq (. ≈ .) := ⟨ ltrans₂ ⟩
 instance [Partial T] : Trans (γ := T) ltorpeq (. ≈ .) ltorpeq := ⟨ ltrans₃ ⟩
 ------------------------------------------------------
+
+-- CSC: rimettere mano a questo paragrafo
 
 -- Mixed transitivity
 theorem rl_trans₁ [Partial T] {x y z : T} : isdef y -> x ≈▷ y -> y ◁≈ z -> x ≈ z := by

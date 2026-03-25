@@ -33,9 +33,11 @@ elab "respects'" h:term : tactic => do
   let putBodyStx <- `(term| fun $binders* => put $bodyStx)
   evalTactic (<- `(tactic| have := $putBodyStx <;> apply take ))
 
+/-
 register_label_attr def_lemma
 register_label_attr def_lemma_closing
 macro "def_intro" : tactic =>
  let dlemma := Lean.mkIdent `def_lemma
  let dlemma_closing := Lean.mkIdent `def_lemma_closing
  `(tactic | (try apply_rules using $dlemma) <;> try solve_by_elim (maxDepth := 8) using $dlemma_closing, $dlemma)
+-/
