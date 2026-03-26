@@ -20,7 +20,7 @@ instance rr [k: Proper r z] : Copy k.is_proper where
 macro "grw" h:term : tactic => `(tactic | have := put $h <;> apply Iff.mp take)
 macro "respects" h:term : tactic => `(tactic | have := put $h <;> apply take)
 
-open Lean Elab Tactic Meta PrettyPrinter in
+open Lean Elab Tactic Meta in
 elab "respects'" h:term : tactic => do
   let goalType <- whnf (<- getMainTarget)
 
@@ -32,12 +32,3 @@ elab "respects'" h:term : tactic => do
   let bodyStx <- `(term| $h $binders*)
   let putBodyStx <- `(term| fun $binders* => put $bodyStx)
   evalTactic (<- `(tactic| have := $putBodyStx <;> apply take ))
-
-/-
-register_label_attr def_lemma
-register_label_attr def_lemma_closing
-macro "def_intro" : tactic =>
- let dlemma := Lean.mkIdent `def_lemma
- let dlemma_closing := Lean.mkIdent `def_lemma_closing
- `(tactic | (try apply_rules using $dlemma) <;> try solve_by_elim (maxDepth := 8) using $dlemma_closing, $dlemma)
--/
