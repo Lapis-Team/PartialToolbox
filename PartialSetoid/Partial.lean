@@ -1,4 +1,5 @@
 import PartialSetoid.Grw
+import PartialSetoid.ForwardBackward
 import Lean
 -- Partial types are types equipped with a unary isdef predicate
 -- Strict unary and binary functions are defined
@@ -210,36 +211,28 @@ instance instRtolpeqStrictFun₂
  {r₁ : x ≈▷ x'} {r₂ : y ≈▷ y'}
  [Copy r₁] [Copy r₂] : Copy (rtolpeq_StrictFun₂ (op := op) r₁ r₂) where
 
----------------------- isdef_elim ---------------------
-
-class isdef_elim [Partial T] (t: T) (Q : outParam Prop) where
- elim {P : Prop} : (Q → P) -> isdef t -> P
-
-@[default_instance]
-instance (priority := low) [Partial α] {t : α} : isdef_elim t True where
- elim k _ := k ⟨⟩
+---------------------- Forward isdef ---------------------
 
 instance isdef_elim_StrictFun₁
-  [Partial α] {op : α → α} [s : StrictFun₁ op]
-  [e : Existence (op x) E] [ix : isdef_elim x Qx] :
-  isdef_elim (op x) (isdef x ∧ Qx ∧ E) where
- elim h k :=
-  let u₁ := s.isstrict k
-  let u₂ := e.cond k
-  ix.elim (fun qx => h ⟨u₁,qx,u₂⟩) u₁
+ [Partial α] [Partial β] {op : α → β} [s : StrictFun₁ op] [e : Existence (op x) E]
+ : Forward₁ (isdef (op x)) (isdef x ∧ E) where
+ elim d := ⟨s.isstrict d, e.cond d⟩
 
-instance isdef_elim_StrictFun₂ [Partial α] {op : α → α → α} [s: StrictFun₂ op] [e : Existence (op x y) E] [ix : isdef_elim x Qx] [iy : isdef_elim y Qy] : isdef_elim (op x y) ((isdef x ∧ Qx) ∧ (isdef y ∧ E ∧ Qy)) where
- elim h k :=
-  have ⟨u₁,u₂⟩ := s.isstrict k
-  have u₃ := e.cond k
-  ix.elim (fun qx => iy.elim (fun qy => h ⟨⟨u₁,qx⟩,⟨u₂,u₃,qy⟩⟩) u₂ ) u₁
+instance isdef_elim_StrictFun₂
+ [Partial α] [Partial β] [Partial γ] {op : α → β → γ} [s : StrictFun₂ op] [e : Existence (op x y) E]
+ : Forward₁ (isdef (op x y)) (isdef x ∧ isdef y ∧ E) where
+  elim d :=
+   let ⟨d₁,d₂⟩ := s.isstrict d
+   ⟨d₁, d₂, e.cond d⟩
 
-class isdef_elim' (T: Prop) (Q : outParam Prop) where
- elim {P : Prop} : (Q -> P) -> T -> P
+instance isdef_elim_StrictPred₁
+ [Partial α] {P : α → Prop} [s : StrictPred₁ P]
+ : Forward₁ (P x) (isdef x) where
+ elim := s.isstrict
 
-instance [Partial α] {x y : α} {rel : α → α → Prop} [s: StrictPred₂ rel] [ix : isdef_elim x Qx] [iy: isdef_elim y Qy] : isdef_elim' (rel x y) ((isdef x ∧ Qx) ∧ (isdef y ∧ Qy)) where
- elim h k :=
-  let ⟨u₁,u₂⟩ := s.isstrict k
-  ix.elim (fun qx => iy.elim (fun qy => h ⟨⟨u₁,qx⟩,⟨u₂,qy⟩⟩) u₂ ) u₁
+instance isdef_elim_StrictPred₂
+ [Partial α] [Partial β] {P : α → β -> Prop} [s : StrictPred₂ P]
+ : Forward₁ (P x y) (isdef x ∧ isdef y) where
+ elim := s.isstrict
 
 end Partial

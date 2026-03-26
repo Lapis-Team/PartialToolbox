@@ -1,6 +1,6 @@
 import PartialSetoid.Partial
 import PartialSetoid.Grw
-import PartialSetoid.Backward
+import PartialSetoid.ForwardBackward
 import Lean
 open Partial
 
@@ -11,7 +11,7 @@ axiom ℝ : Type
 @[instance] axiom instPartialR : Partial ℝ
 
 @[coe] axiom inj : ℕ → ℝ
-axiom inj_def: isdef (inj n)
+@[instance] axiom inj_def {n} : Backward₁ (isdef (inj n)) (isdef n)
 noncomputable instance : Coe ℕ ℝ := ⟨inj⟩
 instance : StrictFun₁ inj where isstrict _ := True.intro
 
@@ -54,30 +54,18 @@ axiom lim_eventually_extensional :
  eventually₂ (.≈▷.) xn xn' -> lim xn ≈▷ lim xn'
 
 axiom bigadd : ℕ -> ℕ -> (ℕ -> ℝ) -> ℝ
-axiom bigadd_strict : isdef (bigadd n m xn) -> isdef n ∧ isdef m ∧ forall n, isdef (xn n)
+@[instance] axiom bigadd_strict : Forward₁ (isdef (bigadd n m xn)) (isdef n ∧ isdef m ∧ forall n, isdef (xn n))
 @[instance] axiom bigadd_def_b : Backward₁ (isdef (bigadd n m xn)) (isdef n ∧ isdef m ∧ (forall i, isdef (xn i)))
 
 @[instance] axiom lt_inst : LT ℝ
 @[instance] axiom lt_strict : StrictPred₂ (. < . : ℝ → ℝ → Prop)
 
--------------------------------------------
+-------------------- Forward₁ lim ---------------------
 
-example {x y z : ℝ} : isdef (x / y - y / z) -> isdef (y / y * x * z) := by
- apply isdef_elim.elim ; simp ; intro a b c d e f g h
- apply Backward.intro
- trivial
-
-example {a b : ℕ} {x : ℝ}: isdef (bigadd a b (fun n => x / n)) -> isdef (bigadd a b (fun n => x / (n*n))) := by
- apply isdef_elim.elim ; simp ; intro a b c d e f g h
- apply Backward.intro
- trivial
-
--------------------- isdef_elim ---------------------
-
-instance {Qf : ℕ -> Prop} {f : ℕ → ℝ} [if' : forall n, isdef_elim (f n) (Qf n)]: isdef_elim (lim f) (∃ N, ∀ n, n ≥ N → isdef (f n) ∧ Qf n) where
- elim h k :=
-  let ⟨N,u⟩ := lim_strict k
-  h ⟨N, fun n ge => ⟨u n ge, (if' n).elim (.) (u n ge)⟩⟩
+instance {Qf : ℕ -> Prop} {f : ℕ → ℝ} [if' : forall n, Forward (isdef (f n)) (Qf n)] : Forward₁ (isdef (lim f)) (∃ N, ∀ n, n ≥ N → Qf n) where
+ elim h :=
+  let ⟨N,u⟩ := lim_strict h
+  ⟨N, fun n ge => (if' n).elim (u n ge)⟩
 
 -------------------- GRW INSTANCES ---------------------
 
@@ -88,6 +76,25 @@ theorem rtolpeq_lim : (∀ n, f n ≈▷ f' n) -> lim f ≈▷ lim f' := by
  grind
 
 instance instRtolpeqLim [forall n, Copy (r n)] : Copy (rtolpeq_lim r) where
+
+-------------- Backward/Forward examples -----------------------------
+
+example {x y z : ℝ} : isdef (x / y - y / z) -> isdef (y / y * x * z) := by
+ apply elim ; simp ; intro a b c d e f
+ apply Backward.intro
+ trivial
+
+example {a b : ℕ} {x : ℝ} : isdef (bigadd a b (fun n => x / n)) -> isdef (bigadd a (b*a) (fun n => n / n)) := by
+ apply elim ; simp ; intro a b c
+ apply Backward.intro
+ and_intros <;> try trivial
+ intro n
+ apply elim _ (c n) ; simp
+
+example {x : ℝ} : isdef (lim (fun n => n / x)) -> x ≠ 0 := by
+ apply elim ; simp ; intro N h
+ specialize h N (by simp)
+ apply elim _ h ; simp
 
 ----------------- running example ---------------------------------------
 
@@ -102,7 +109,7 @@ noncomputable def geometricSeries (x: ℝ) := lim (fun n => bigadd 0 (n-1) (fun 
 
 theorem running {x : ℝ} : |x| < 1 -> geometricSeries x ≈ 1 / (1 - x) := by
   intro h
-  apply isdef_elim'.elim _ h ; simp ; intro _ _ _
+  apply elim _ h ; simp ; intro _ _
   calc
         geometricSeries x
    _ ≈▷ lim (fun n => (1 - x ^ (n+1)) / (1 - x)) := by respects' (step₁ x)
@@ -121,7 +128,7 @@ axiom step₇ (x y : ℝ) : (x * (y / x)) ◁≈ y
 -- running example 2
 theorem running₂ { x : ℝ } : |x| < 1 -> (1 - x) * geometricSeries x ≈ 1 := by
   intro h
-  apply isdef_elim'.elim _ h ; simp ; intro d₁ d₂ _
+  apply elim _ h ; simp ; intro d₁ d₂
   calc
          (1 - x) * geometricSeries x
     _ ≈▷ (1 - x) * (1 / (1 - x))    := by respects (peq_rtolpeq (running h))
