@@ -7,14 +7,10 @@ instance : Add (Option Nat) := ⟨liftFun₂ Add.add⟩
 instance : Mul (Option Nat) := ⟨liftFun₂ Mul.mul⟩
 instance : Div (Option Nat) := ⟨liftFun₂ Div.div (dom := fun _ y => y != 0)⟩
 
-instance : StrictPred₂ (.≤. : Option Nat -> Option Nat -> Prop) := strictpred₂_liftpred₂
-instance : StrictFun₂ (.+. : Option Nat -> Option Nat -> Option Nat) := strictfun₂_liftfun₂
-instance : StrictFun₂ (.*. : Option Nat -> Option Nat -> Option Nat) := strictfun₂_liftfun₂
-instance : StrictFun₂ (./. : Option Nat -> Option Nat -> Option Nat) := strictfun₂_liftfun₂
-instance {x y : Option Nat}: Existence (x/y) (y != 0) := existence_liftfun₂
-instance {x y : Option Nat} : Backward₁ (isdef (x+y)) (isdef x ∧ isdef y ∧ true) := strictfun₂_backward
-instance {x y : Option Nat} : Backward₁ (isdef (x*y)) (isdef x ∧ isdef y ∧ true) := strictfun₂_backward
-instance {x y : Option Nat} : Backward₁ (isdef (x/y)) (isdef x ∧ isdef y ∧ y != 0) := strictfun₂_backward
+instance : Unfoldable (.≤. : Option Nat -> Option Nat -> Prop) (liftPred₂ LE.le) := .id
+instance : Unfoldable (.*. : Option Nat -> Option Nat -> Option Nat) (liftFun₂ Mul.mul) := .id
+instance : Unfoldable (.+. : Option Nat -> Option Nat -> Option Nat) (liftFun₂ Add.add) := .id
+instance : Unfoldable (./. : Option Nat -> Option Nat -> Option Nat) (liftFun₂ Div.div (dom := fun _ y => y != 0)) := .id
 
 theorem ex₁ {x y : Option Nat} : isdef x -> isdef y -> y != 0 -> (x / y) * y <= x := by
   apply isdef_option_elim ; intro x

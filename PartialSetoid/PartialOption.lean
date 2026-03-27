@@ -117,3 +117,31 @@ instance [Trans P Q R] : Trans (liftPred₂ P) (liftPred₂ Q) (liftPred₂ R) w
   | .some _, .some _, .none => fun _ => False.elim
 
 end Partial.Option
+
+@[class]
+inductive Unfoldable (T : α) : (T : outParam α) -> Prop where
+ | id: Unfoldable T T
+
+instance [Partial α] [Partial β] {g f : α -> β → Prop} [u: Unfoldable g f] [StrictPred₂ f] : StrictPred₂ g := by
+ cases u ; assumption
+
+instance [Partial α] {g f : α -> Prop} [u: Unfoldable g f] [StrictPred₁ f] : StrictPred₁ g := by
+ cases u ; assumption
+
+instance [Partial α] [Partial β] {g f : α -> β} [u: Unfoldable g f] [StrictFun₁ f] : StrictFun₁ g := by
+ cases u ; assumption
+
+instance [Partial α] [Partial β] [Partial γ] {g f : α -> β → γ} [u: Unfoldable g f] [StrictFun₂ f] : StrictFun₂ g := by
+ cases u ; assumption
+
+instance [Partial α] [Partial β] {g f : α -> β} [u: Unfoldable g f] [Existence (f x) P] : Existence (g x) P := by
+ cases u ; assumption
+
+instance [Partial α] [Partial β] [Partial γ] {g f : α -> β → γ} [u: Unfoldable g f] [Existence (f x y) P] : Existence (g x y) P := by
+ cases u ; assumption
+
+instance [Partial α] [Partial β] {g f : α -> β} [u: Unfoldable g f] [Backward₁ (Partial.isdef (f x)) P] : Backward₁ (Partial.isdef (g x)) P := by
+ cases u ; assumption
+
+instance [Partial α] [Partial β] [Partial γ] {g f : α -> β → γ} [u: Unfoldable g f] [Backward₁ (Partial.isdef (f x y)) P] : Backward₁ (Partial.isdef (g x y)) P := by
+ cases u ; assumption
