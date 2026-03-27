@@ -13,7 +13,7 @@ instance partialOption : Partial (Option α) where
 abbrev inj (x : α) := (.some x : Option α)
 instance : Coe α (Option α) := ⟨inj⟩
 
-def isdef_elim {P: Option α -> Sort u} {h : ∀ x, P (.some x)} : isdef x -> P x :=
+def isdef_option_elim {P: Option α -> Sort u} {h : ∀ x, P (.some x)} : isdef x -> P x :=
  match x with
   | .some _ => fun _ => h _
   | .none => False.elim
@@ -22,28 +22,24 @@ def liftPred₁ (P: α -> Prop) : Option α -> Prop
  | .some x => P x
  | _ => False
 
-instance {P: α -> Prop}: StrictPred₁ (liftPred₁ P) where
+instance strictpred₁_liftpred₁ {P: α -> Prop}: StrictPred₁ (liftPred₁ P) where
  isstrict {x} h :=
   match x with
   | .some _ => .intro
   | .none => h.elim
 
-def isstrict_liftpred₁: liftPred₁ P x -> isdef x := StrictPred₁.isstrict
-
 def liftPred₂ (P: α -> β -> Prop) : Option α -> Option β -> Prop
  | .some x, .some y => P x y
  | _,_ => False
 
-instance {P: α -> β -> Prop}: StrictPred₂ (liftPred₂ P) where
+instance strictpred₂_liftpred₂ {P: α -> β -> Prop}: StrictPred₂ (liftPred₂ P) where
  isstrict {x} {y} h :=
   match x,y with
   | .some _, .some _ => ⟨.intro,.intro⟩
   | .none ,_ => h.elim
 
-def isstrict_liftpred₂: liftPred₂ P x y -> isdef x ∧ isdef y := StrictPred₂.isstrict
-
-def liftFun₁ (f: α -> β) : Option α -> Option β
- | .some x => .some (f x)
+def liftFun₁ (f: α -> β) (dom : Option α → Bool := fun _ => true) : Option α -> Option β
+ | .some x => if dom (.some x) then .some (f x) else .none
  | _ => .none
 
 instance {f: α -> β}: StrictFun₁ (liftFun₁ f) where
@@ -52,23 +48,58 @@ instance {f: α -> β}: StrictFun₁ (liftFun₁ f) where
   | .some _ => .intro
   | .none => h.elim
 
-def isstrict_liftfun₁: isdef (liftFun₁ f x) -> isdef x := StrictFun₁.isstrict
+instance existence_liftfun₁ {f: α -> β} : Existence (liftFun₁ f dom x) (dom x) where
+ cond h :=
+  match x with
+  | .some _ => by
+     simp [liftFun₁] at h
+     split at h <;> trivial
+  | .none => h.elim
 
-def liftFun₂ (f: α -> β → γ) : Option α -> Option β -> Option γ
- | .some x, .some y => .some (f x y)
+instance strictfun₁_backward {f: α → β} : Backward₁ (isdef (liftFun₁ f dom x)) (isdef x ∧ dom x) where
+ intro := by
+  simp
+  apply isdef_option_elim ; intro x
+  intro ec
+  simp [liftFun₁]
+  split
+  . apply True.intro
+  . contradiction
+
+def liftFun₂ (f: α -> β → γ) (dom : Option α → Option β → Bool := fun _ _ => true) : Option α -> Option β -> Option γ
+ | .some x, .some y =>
+    if dom (.some x) (.some y) then .some (f x y) else .none
  | _, _ => .none
 
-instance strictfun₂_liftfun₂ {f: α -> β → γ}: StrictFun₂ (liftFun₂ f) where
+instance strictfun₂_liftfun₂ {f: α -> β → γ} : StrictFun₂ (liftFun₂ f dom) where
  isstrict {x} {y} h :=
   match x, y with
   | .some _, .some _ => ⟨.intro,.intro⟩
   | .none, _ => h.elim
   | .some _, .none => h.elim
 
-def isstrict_liftfun₂: isdef (liftFun₂ f x y) -> isdef x ∧ isdef y := StrictFun₂.isstrict
+instance existence_liftfun₂ {f: α -> β → γ} : Existence (liftFun₂ f dom x y) (dom x y) where
+ cond h :=
+  match x, y with
+  | .some _, .some _ => by
+     simp [liftFun₂] at h
+     split at h <;> trivial
+  | .none, _ => h.elim
+  | .some _, .none => h.elim
+
+instance strictfun₂_backward {f: α → β → γ} : Backward₁ (isdef (liftFun₂ f dom x y)) (isdef x ∧ isdef y ∧ dom x y) where
+ intro := by
+  simp
+  apply isdef_option_elim ; intro x
+  apply isdef_option_elim ; intro y
+  intro ec
+  simp [liftFun₂]
+  split
+  . apply True.intro
+  . contradiction
 
 theorem lift_def_refl [Std.Refl P] : isdef x -> liftPred₂ P x x := by
- apply isdef_elim
+ apply isdef_option_elim
  apply Std.Refl.refl
 
 instance [Std.Symm P] : Std.Symm (liftPred₂ P) where
@@ -85,21 +116,4 @@ instance [Trans P Q R] : Trans (liftPred₂ P) (liftPred₂ Q) (liftPred₂ R) w
   | .some _, .none, _ => False.elim
   | .some _, .some _, .none => fun _ => False.elim
 
-def peq (x y: Option α) : Prop := liftPred₂ Eq x y
-
-theorem peq_eq : peq x y -> x=y :=
- match x,y with
- | .some x, .some y => by change x = y -> _ ; simp
- | .none, _ => False.elim
- | .some _, .none => False.elim
-
-theorem def₁_eq_peq {x y : Option α} : isdef x -> x=y -> peq x y := by
- apply isdef_elim ; intro x eq
- rw [←eq]
- apply Eq.refl
-
-theorem def₂_eq_peq {x y : Option α} : isdef y -> x=y -> peq x y := by
- grind [def₁_eq_peq]
-
-end Option
-
+end Partial.Option
