@@ -70,8 +70,8 @@ theorem ex₃ {x₁ x₂ y₁ y₂ : Option Nat} :
  change x₁ / y₁ ≤ x₂ / y₂
  exact Nat.div_le_div hx hy fun a => ec (congrArg some a)
 
-theorem ex₄ {x : Option Nat}: x ◁≈ x / 1 := by
- apply isdef_option_elim ; simp ;  intro x
+theorem ex₄ {x : Option Nat}: x ≈▷ x / 1 := by
+ apply elim ; simp ; apply isdef_option_elim ; intro x _ _
  constructor
  . trivial
  . congr
@@ -82,7 +82,7 @@ theorem ex₅ {x y : Option Nat} : 1 ≤ y -> x * y ≤ x := by
  intro h
  calc
       x * y
-  _ ≈ (x / 1) * y := sorry
+  _ ≈▷ (x / 1) * y := sorry
   _ ≤▷ (x / y) * y := sorry
   _ ≈ (x /y ) * y := sorry
   _ ◁≤ x := sorry
