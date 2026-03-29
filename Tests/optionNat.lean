@@ -12,17 +12,22 @@ instance : Unfoldable (.*. : Option Nat -> Option Nat -> Option Nat) (liftFun₂
 instance : Unfoldable (.+. : Option Nat -> Option Nat -> Option Nat) (liftFun₂ Add.add) := .id
 instance : Unfoldable (./. : Option Nat -> Option Nat -> Option Nat) (liftFun₂ Div.div (dom := fun _ y => y != 0)) := .id
 
-abbrev ltorleq [Partial T] [LE T]:= ltor (. ≤ . : T → T → Prop)
-infix:60 " ◁≤ " => ltorleq
+infix:60 " ◁≤ " => ltor LE.le
+infix:60 " ≤▷ " => rtol LE.le
+infix:60 " ≥▷ " => rtol GE.ge
+infix:60 " ◁≥ " => ltor GE.ge
 
-abbrev rtolleq [Partial T] [LE T]:= rtol (. ≤ . : T → T → Prop)
-infix:60 " ≤▷ " => rtolleq
+@[app_unexpander ltor]
+meta def ltor.unexpander : Lean.PrettyPrinter.Unexpander
+  | `($_ LE.le $a $b) => `($a ◁≤ $b)
+  | `($_ GE.ge $a $b) => `($a ◁≥ $b)
+  | _ => throw ()
 
-abbrev ltorgeq [Partial T] [LE T]:= ltor (. ≥ . : T → T → Prop)
-infix:60 " ◁≥ " => ltorgeq
-
-abbrev rtolgeq [Partial T] [LE T]:= rtol (. ≥ . : T → T → Prop)
-infix:60 " ≥▷ " => rtolgeq
+@[app_unexpander rtol]
+meta def rtol.unexpander : Lean.PrettyPrinter.Unexpander
+  | `($_ LE.le $a $b) => `($a ≤▷ $b)
+  | `($_ GE.ge $a $b) => `($a ≥▷ $b)
+  | _ => throw ()
 
 example {x y : Option Nat}: isdef ((x / y) * y) -> isdef ((y * x * 3) / y) := by
   apply elim ; simp ; intros
