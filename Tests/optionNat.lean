@@ -12,7 +12,23 @@ instance : Unfoldable (.*. : Option Nat -> Option Nat -> Option Nat) (liftFun₂
 instance : Unfoldable (.+. : Option Nat -> Option Nat -> Option Nat) (liftFun₂ Add.add) := .id
 instance : Unfoldable (./. : Option Nat -> Option Nat -> Option Nat) (liftFun₂ Div.div (dom := fun _ y => y != 0)) := .id
 
-theorem ex₁ {x y : Option Nat} : isdef x -> isdef y -> y != 0 -> (x / y) * y <= x := by
+abbrev ltorleq [Partial T] [LE T]:= ltor (. ≤ . : T → T → Prop)
+infix:60 " ◁≤ " => ltorleq
+
+abbrev rtolleq [Partial T] [LE T]:= rtol (. ≤ . : T → T → Prop)
+infix:60 " ≤▷ " => rtolleq
+
+abbrev ltorgeq [Partial T] [LE T]:= ltor (. ≥ . : T → T → Prop)
+infix:60 " ◁≥ " => ltorgeq
+
+abbrev rtolgeq [Partial T] [LE T]:= rtol (. ≥ . : T → T → Prop)
+infix:60 " ≥▷ " => rtolgeq
+
+example {x y : Option Nat}: isdef ((x / y) * y) -> isdef ((y * x * 3) / y) := by
+  apply elim ; simp ; intros
+  apply Backward.intro ; try simp ; trivial
+
+theorem ex₁ {x y : Option Nat} : isdef x -> isdef y -> y != 0 -> (x / y) * y ≤ x := by
   apply isdef_option_elim ; intro x
   apply isdef_option_elim ; intro y
   intro h
@@ -23,10 +39,45 @@ theorem ex₁ {x y : Option Nat} : isdef x -> isdef y -> y != 0 -> (x / y) * y <
     exact bne_iff_ne.mp h
   . apply Nat.le_refl
 
-theorem ex₂ {x y : Option Nat} : isdef ((x / y) * y) -> (x / y) * y <= x := by
+theorem ex₂ {x y : Option Nat} : (x / y) * y ◁≤ x := by
   apply elim ; simp ; intros
   apply ex₁ <;> (try simp) <;> trivial
 
-theorem ex₃ {x y : Option Nat}: isdef ((x / y) * y) -> isdef ((y * x * 3) / y) := by
-  apply elim ; simp ; intros
-  apply Backward.intro ; try simp ; trivial
+theorem ex₃ {x₁ x₂ y₁ y₂ : Option Nat} :
+ x₁ ≤▷ x₂ → y₁ ≥▷ y₂ -> x₁ / y₁ ≤▷ x₂ / y₂ := by
+ intro hx hy
+ apply elim ; simp ; intro dx dy ec
+ specialize hx dx
+ specialize hy dy
+ rcases x₁ with ⟨⟩|x₁ ; apply hx.elim
+ rcases x₂ with ⟨⟩|x₂ ; apply hx.elim
+ rcases y₂ with ⟨⟩|y₂ ; apply hy.elim
+ rcases y₁ with ⟨⟩|y₁ ; apply hy.elim
+ change x₁ ≤ x₂ at hx
+ change y₁ ≥ y₂ at hy
+ have ec' : some y₁ != 0 := by
+  have : y₂ ≠ 0 := by exact fun a => ec (congrArg some a)
+  have : y₁ ≠ 0 := by grind
+  have : some y₁ ≠ some 0 := by grind
+  simp ; congr
+ change ((if some y₁ != 0 then some (x₁/y₁) else none) ≤ (if some y₂ != 0 then some (x₂/y₂) else none))
+ simp [ec, ec']
+ change x₁ / y₁ ≤ x₂ / y₂
+ exact Nat.div_le_div hx hy fun a => ec (congrArg some a)
+
+theorem ex₄ {x : Option Nat}: x ◁≈ x / 1 := by
+ apply isdef_option_elim ; simp ;  intro x
+ constructor
+ . trivial
+ . congr
+   change x = x / 1
+   simp
+
+theorem ex₅ {x y : Option Nat} : 1 ≤ y -> x * y ≤ x := by
+ intro h
+ calc
+      x * y
+  _ ≈ (x / 1) * y := sorry
+  _ ≤▷ (x / y) * y := sorry
+  _ ≈ (x /y ) * y := sorry
+  _ ◁≤ x := sorry

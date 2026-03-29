@@ -1,3 +1,6 @@
+
+-----------------------------------------
+
 -- [h : Backward₁ P Q] means Q -> P in an invertible way ; apply h.intro reduces P to Q
 -- [h : Backward  P Q] backchains over Backward₁s to reduce P to Q without backtracking;
 --   that's why all Backward₁ rules are supposed to be invertible
