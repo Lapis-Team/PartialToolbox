@@ -86,8 +86,11 @@ instance [Partial T] : Trans (γ := T) (.≈.) (.≈.) (.≈.) := ⟨peq_trans�
 def rtol [Partial T] (op: T -> T -> Prop) : T -> T -> Prop :=
  fun x y => isdef y -> op x y
 
-abbrev rtolpeq [instPartial: Partial T] := rtol (. ≈ . : T → T → Prop)
-infix:60 " ≈▷ " => rtolpeq
+infix:60 " ≈▷ " => rtol HasEquiv.Equiv
+@[app_unexpander rtol]
+meta def rtol.unexpander_peqq : Lean.PrettyPrinter.Unexpander
+  | `($_ HasEquiv.Equiv $a $b) => `($a ≈▷ $b)
+  | _ => throw ()
 
 --@[def_lemma_closing]
 def peq_rtolpeq [Partial T] {x y : T} : x ≈ y -> x ≈▷ y := by
@@ -97,6 +100,14 @@ def peq_rtolpeq [Partial T] {x y : T} : x ≈ y -> x ≈▷ y := by
 theorem def_rtol_def [Partial T] {x y : T} : isdef y -> x ≈▷ y -> isdef x := by
  intro h h'
  apply (h' h).left
+
+theorem rtrans₁ {r₁ r₂ r₃ : α -> α -> Prop} [Partial α] [StrictPred₂ r₂] [Trans r₁ r₂ r₃]  {x y z : α} :
+  rtol r₁ x y -> rtol r₂ y z -> rtol r₃ x z := by
+ intro h₂ h₁ d₁
+ have k₁ := h₁ d₁
+ have ⟨d₂,_⟩ := StrictPred₂.isstrict k₁
+ have k₂ := h₂ d₂
+ apply Trans.trans k₂ k₁
 
 theorem r_trans₁ [Partial T] {x y z : T} : x ≈▷ y -> y ≈▷ z -> x ≈▷ z := by
   intro h₁ h₂ dz
@@ -120,9 +131,9 @@ theorem r_trans₃ [Partial T] {x y z : T} : x ≈▷ y -> y ≈ z -> x ≈ z :=
   have ⟨_, h₃⟩ := h₁ dy
   rw [h₃] ; assumption
 
-instance [Partial T] : Trans (γ := T) rtolpeq rtolpeq rtolpeq := ⟨r_trans₁⟩
-instance [Partial T] : Trans (γ := T) (. ≈ .) rtolpeq rtolpeq := ⟨r_trans₂⟩
-instance [Partial T] : Trans (γ := T) rtolpeq (. ≈ .) (. ≈ .) := ⟨r_trans₃⟩
+instance {r₁ r₂ r₃ : α -> α -> Prop} [Partial α] [StrictPred₂ r₂] [Trans r₁ r₂ r₃] : Trans (rtol r₁) (rtol r₂) (rtol r₃) := ⟨ rtrans₁ ⟩
+instance [Partial T] : Trans (γ := T) (. ≈ .) (. ≈▷ .) (. ≈▷ .) := ⟨r_trans₂⟩
+instance [Partial T] : Trans (γ := T) (. ≈▷ .) (. ≈ .) (. ≈ .) := ⟨r_trans₃⟩
 ------------------------------------------------------
 
 -- LTOR Direction ------------------------------------
@@ -130,8 +141,11 @@ instance [Partial T] : Trans (γ := T) rtolpeq (. ≈ .) (. ≈ .) := ⟨r_trans
 def ltor [Partial T] (op: T -> T -> Prop) : T -> T -> Prop :=
  fun x y => isdef x -> op x y
 
-abbrev ltorpeq [instPartial: Partial T] := ltor (. ≈ . : T → T → Prop)
-infix:60 " ◁≈ " => ltorpeq
+infix:60 " ◁≈ " => ltor HasEquiv.Equiv
+@[app_unexpander ltor]
+meta def ltor.unexpander_peqq : Lean.PrettyPrinter.Unexpander
+  | `($_ HasEquiv.Equiv $a $b) => `($a ◁≈ $b)
+  | _ => throw ()
 
 --@[def_lemma_closing]
 theorem def_ltor_def [Partial T] {x y : T} : isdef x -> x ◁≈ y -> isdef y := by
@@ -146,13 +160,13 @@ instance [Partial T] : Reflexive (. ◁≈ . : T -> T -> Prop) where
     constructor <;> trivial
 
 -- Transitivity
-theorem ltrans₁ [Partial T] {x y z : T} : x ◁≈ y -> y ◁≈ z -> x ◁≈ z := by
- intro h₁ h₂ dx
- let ⟨ _, k₂ ⟩ := h₁ dx
- have d₂ : isdef y := by rw [<- k₂] ; assumption
- let ⟨d₁,k₁⟩ := h₂ d₂
- constructor <;> simp [*]
- simp [<- k₁, d₂]
+theorem ltrans₁ {r₁ r₂ r₃ : α -> α -> Prop} [Partial α] [StrictPred₂ r₁] [Trans r₁ r₂ r₃]  {x y z : α} :
+  ltor r₁ x y -> ltor r₂ y z -> ltor r₃ x z := by
+ intro h₁ h₂ d₁
+ have k₁ := h₁ d₁
+ have ⟨_,d₂⟩ := StrictPred₂.isstrict k₁
+ have k₂ := h₂ d₂
+ apply Trans.trans k₁ k₂
 
 theorem ltrans₂ [Partial T] {x y z : T} : x ≈ y -> y ◁≈ z -> x ≈ z := by
   intro h₁ h₂
@@ -165,9 +179,9 @@ theorem ltrans₃ [Partial T] {x y z : T} : x ◁≈ y -> y ≈ z -> x ◁≈ z 
   have ⟨_, k₁⟩ := h₁ dx
   rw [k₁] ; assumption
 
-instance [Partial T] : Trans (γ := T) ltorpeq ltorpeq ltorpeq := ⟨ ltrans₁ ⟩
-instance [Partial T] : Trans (γ := T) (. ≈ .) ltorpeq (. ≈ .) := ⟨ ltrans₂ ⟩
-instance [Partial T] : Trans (γ := T) ltorpeq (. ≈ .) ltorpeq := ⟨ ltrans₃ ⟩
+instance {r₁ r₂ r₃ : α -> α -> Prop} [Partial α] [StrictPred₂ r₁] [Trans r₁ r₂ r₃] : Trans (ltor r₁) (ltor r₂) (ltor r₃) := ⟨ ltrans₁ ⟩
+instance [Partial T] : Trans (γ := T) (. ≈ .) (. ◁≈ .) (. ≈ .) := ⟨ ltrans₂ ⟩
+instance [Partial T] : Trans (γ := T) (. ◁≈ .) (. ≈ .) (. ◁≈ .) := ⟨ ltrans₃ ⟩
 ------------------------------------------------------
 
 -- CSC: rimettere mano a questo paragrafo

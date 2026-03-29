@@ -18,14 +18,22 @@ infix:60 " ≥▷ " => rtol GE.ge
 infix:60 " ◁≥ " => ltor GE.ge
 
 @[app_unexpander ltor]
-meta def ltor.unexpander : Lean.PrettyPrinter.Unexpander
+meta def ltor.unexpander_le : Lean.PrettyPrinter.Unexpander
   | `($_ LE.le $a $b) => `($a ◁≤ $b)
+  | _ => throw ()
+
+@[app_unexpander ltor]
+meta def ltor.unexpander_ge : Lean.PrettyPrinter.Unexpander
   | `($_ GE.ge $a $b) => `($a ◁≥ $b)
   | _ => throw ()
 
 @[app_unexpander rtol]
-meta def rtol.unexpander : Lean.PrettyPrinter.Unexpander
+meta def rtol.unexpander_le : Lean.PrettyPrinter.Unexpander
   | `($_ LE.le $a $b) => `($a ≤▷ $b)
+  | _ => throw ()
+
+@[app_unexpander rtol]
+meta def rtol.unexpander_ge : Lean.PrettyPrinter.Unexpander
   | `($_ GE.ge $a $b) => `($a ≥▷ $b)
   | _ => throw ()
 
