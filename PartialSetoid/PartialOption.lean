@@ -119,7 +119,7 @@ instance [Trans P Q R] : Trans (liftPred₂ P) (liftPred₂ Q) (liftPred₂ R) w
 end Partial.Option
 
 @[class]
-inductive Unfoldable (T : α) : (T : outParam α) -> Prop where
+inductive Unfoldable (T : α) : outParam α -> Prop where
  | id: Unfoldable T T
 
 instance [Partial α] [Partial β] {g f : α -> β → Prop} [u: Unfoldable g f] [StrictPred₂ f] : StrictPred₂ g := by
