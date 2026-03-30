@@ -86,12 +86,6 @@ theorem ex₄ {x : Option Nat}: x ≈▷ x / 1 := by
    change x = x / 1
    simp
 
--- CSC: investigare, dovrebbe essere automatico per lifting
-instance : Trans (.≤. : Option Nat -> Option Nat -> Prop)
-(.≤. : Option Nat -> Option Nat -> Prop)
-(.≤. : Option Nat -> Option Nat -> Prop)
-:= sorry
-
 theorem ex₅ {x y : Option Nat} : 1 ≤ y -> x * y ≤ x := by
  intro h
  calc

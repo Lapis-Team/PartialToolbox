@@ -145,3 +145,8 @@ instance [Partial α] [Partial β] {g f : α -> β} [u: Unfoldable g f] [Backwar
 
 instance [Partial α] [Partial β] [Partial γ] {g f : α -> β → γ} [u: Unfoldable g f] [Backward₁ (Partial.isdef (f x y)) P] : Backward₁ (Partial.isdef (g x y)) P := by
  cases u ; assumption
+
+instance {P P' : α → β → Prop} {Q Q' : β → γ → Prop} {R : α → γ → Prop} [Trans P' Q' R] [up: Unfoldable P P'] [uq: Unfoldable Q Q'] : Trans P Q R := by
+ cases up ; cases uq ; assumption
+
+ -- CSC: implementare Sym
