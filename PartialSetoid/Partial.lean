@@ -75,12 +75,19 @@ theorem peq_eq [Partial T] {x y : T} : x ≈ y -> x = y := And.right
 -- PEQ Reflexivity does not hold
 
 --- PEQ Transitivity
-theorem peq_trans [Partial T] {x y z : T} : x ≈ y -> y ≈ z -> x ≈ z := by
-  intro ⟨_, k₁⟩ ⟨dy, k₂⟩
+theorem peq_trans₁ {x y z : α} {r : α -> α -> Prop} [Partial α] : x ≈ y -> r y z -> r x z := by
+  intro ⟨_, k₁⟩ h
   rw [k₁]
-  exact def_peq₁ dy k₂
+  exact h
 
-instance [Partial T] : Trans (γ := T) (.≈.) (.≈.) (.≈.) := ⟨peq_trans⟩
+instance { r : α -> α -> Prop } [Partial α] : Trans (.≈.) r r := ⟨peq_trans₁⟩
+
+theorem peq_trans₂ {x y z : α} {r : α -> α -> Prop} [Partial α] : r x y -> y ≈ z -> r x z := by
+  intro h ⟨_, k₁⟩
+  rw [← k₁]
+  exact h
+
+instance { r : α -> α -> Prop } [Partial α] : Trans r (.≈.) r := ⟨peq_trans₂⟩
 
 -- RTOL Direction ------------------------------------
 def rtol [Partial T] (op: T -> T -> Prop) : T -> T -> Prop :=
@@ -92,16 +99,22 @@ meta def rtol.unexpander_peqq : Lean.PrettyPrinter.Unexpander
   | `($_ HasEquiv.Equiv $a $b) => `($a ≈▷ $b)
   | _ => throw ()
 
---@[def_lemma_closing]
+-- CSC: generalizzare
 def peq_rtolpeq [Partial T] {x y : T} : x ≈ y -> x ≈▷ y := by
   intro h ; exact fun _ => h
 
---@[def_lemma_closing]
+-- CSC: generalizzare
 theorem def_rtol_def [Partial T] {x y : T} : isdef y -> x ≈▷ y -> isdef x := by
  intro h h'
  apply (h' h).left
 
-theorem rtrans₁ {r₁ r₂ r₃ : α -> α -> Prop} [Partial α] [StrictPred₂ r₂] [Trans r₁ r₂ r₃]  {x y z : α} :
+-- Reflexivity
+-- CSC: generalizzare
+instance [Partial T] : Reflexive (. ≈▷ . : T -> T -> Prop) where
+  refl {x} h := by constructor <;> trivial
+
+-- Transitivity
+theorem r_trans₁ {r₁ r₂ r₃ : α -> α -> Prop} [Partial α] [StrictPred₂ r₂] [Trans r₁ r₂ r₃]  {x y z : α} :
   rtol r₁ x y -> rtol r₂ y z -> rtol r₃ x z := by
  intro h₂ h₁ d₁
  have k₁ := h₁ d₁
@@ -109,31 +122,28 @@ theorem rtrans₁ {r₁ r₂ r₃ : α -> α -> Prop} [Partial α] [StrictPred�
  have k₂ := h₂ d₂
  apply Trans.trans k₂ k₁
 
-theorem r_trans₁ [Partial T] {x y z : T} : x ≈▷ y -> y ≈▷ z -> x ≈▷ z := by
-  intro h₁ h₂ dz
-  let ⟨dy, k₁⟩ := h₂ dz
-  let ⟨dx, k₂⟩ := h₁ dy
-  constructor <;> simp [*]
+theorem r_trans₂ {r₁ r₂ r₃ : α -> α -> Prop} [Partial α] [Trans r₁ r₂ r₃]  {x y z : α} :
+  r₁ x y -> rtol r₂ y z -> rtol r₃ x z := by
+ intro k₂ h₁ d₁
+ have k₁ := h₁ d₁
+ apply Trans.trans k₂ k₁
 
--- Reflexivity
-instance [Partial T] : Reflexive (. ≈▷ . : T -> T -> Prop) where
-  refl {x} h := by constructor <;> trivial
-
--- Transitivity
-theorem r_trans₂ [Partial T] {x y z : T} : x ≈ y -> y ≈▷ z -> x ≈▷ z := by
-  intro h₁ h₂ dz
-  let ⟨_, k₁⟩ := h₂ dz
-  rw [<- k₁] ; assumption
-
-theorem r_trans₃ [Partial T] {x y z : T} : x ≈▷ y -> y ≈ z -> x ≈ z := by
+theorem rtrans₃ [Partial T] {x y z : T} : x ≈▷ y -> y ≈ z -> x ≈ z := by
   intro h₁ h₂
   have dy : isdef y := by exact peq_def₁ h₂
   have ⟨_, h₃⟩ := h₁ dy
   rw [h₃] ; assumption
 
-instance {r₁ r₂ r₃ : α -> α -> Prop} [Partial α] [StrictPred₂ r₂] [Trans r₁ r₂ r₃] : Trans (rtol r₁) (rtol r₂) (rtol r₃) := ⟨ rtrans₁ ⟩
-instance [Partial T] : Trans (γ := T) (. ≈ .) (. ≈▷ .) (. ≈▷ .) := ⟨r_trans₂⟩
-instance [Partial T] : Trans (γ := T) (. ≈▷ .) (. ≈ .) (. ≈ .) := ⟨r_trans₃⟩
+theorem r_trans₃ {r₁ r₂ r₃ : α -> α -> Prop} [Partial α] [StrictPred₂ r₂] [Trans r₁ r₂ r₃]  {x y z : α} :
+  rtol r₁ x y -> r₂ y z -> r₃ x z := by
+ intro h₂ k₁
+ have ⟨d₂,_⟩ := StrictPred₂.isstrict k₁
+ have k₂ := h₂ d₂
+ apply Trans.trans k₂ k₁
+
+instance {r₁ r₂ r₃ : α -> α -> Prop} [Partial α] [StrictPred₂ r₂] [Trans r₁ r₂ r₃] : Trans (rtol r₁) (rtol r₂) (rtol r₃) := ⟨ r_trans₁ ⟩
+instance {r₁ r₂ r₃ : α -> α -> Prop} [Partial α] [Trans r₁ r₂ r₃] : Trans r₁ (rtol r₂) (rtol r₃) := ⟨ r_trans₂ ⟩
+instance {r₁ r₂ r₃ : α -> α -> Prop} [Partial α] [StrictPred₂ r₂] [Trans r₁ r₂ r₃] : Trans (rtol r₁) r₂ r₃ := ⟨ r_trans₃ ⟩
 ------------------------------------------------------
 
 -- LTOR Direction ------------------------------------
@@ -147,13 +157,14 @@ meta def ltor.unexpander_peqq : Lean.PrettyPrinter.Unexpander
   | `($_ HasEquiv.Equiv $a $b) => `($a ◁≈ $b)
   | _ => throw ()
 
---@[def_lemma_closing]
+--CSC: generalizzare
 theorem def_ltor_def [Partial T] {x y : T} : isdef x -> x ◁≈ y -> isdef y := by
  intro h h'
  have k := (h' h).right
  simp [<- k, h]
 
 -- Reflexivity
+-- CSC: generalizzare
 instance [Partial T] : Reflexive (. ◁≈ . : T -> T -> Prop) where
   refl := by
     intro x d
