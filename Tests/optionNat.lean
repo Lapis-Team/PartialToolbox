@@ -39,8 +39,26 @@ meta def rtol.unexpander_ge : Lean.PrettyPrinter.Unexpander
   | `($_ GE.ge $a $b) => `($a ≥▷ $b)
   | _ => throw ()
 
-axiom mul_le_morphism {x x' y y' : Option Nat} :
- x ≤▷ x' -> y ≤▷ y' -> x*y ≤▷ x'*y'
+theorem mul_le_morphism₀ {x x' y y' : Option Nat} :
+ x ≤ x' -> y ≤ y' -> x*y ≤ x'*y' := by
+ apply elim' ; simp
+ apply isdef_option_elim ; intro x
+ apply isdef_option_elim ; intro x'
+ intro (h₁ : x ≤ x')
+ apply elim' ; simp
+ apply isdef_option_elim ; intro y
+ apply isdef_option_elim ; intro y'
+ intro (h₂ : y ≤ y')
+ change x*y ≤ x' * y'
+ apply Nat.mul_le_mul h₁ h₂
+
+theorem mul_le_morphism {x x' y y' : Option Nat} :
+ x ≤▷ x' -> y ≤▷ y' -> x*y ≤▷ x'*y' := by
+ intro h₁ h₂
+ apply elim ; simp ; intro d₁ d₂
+ specialize h₁ d₁
+ specialize h₂ d₂
+ apply mul_le_morphism₀ h₁ h₂
 
 instance [Copy h₁] [Copy h₂] : Copy (mul_le_morphism h₁ h₂) where
 
@@ -101,12 +119,20 @@ theorem ex₄ {x : Option Nat}: x ≈▷ x / 1 := by
    change x = x / 1
    simp
 
+theorem ex₅_aux {y: Option Nat} : 1 ≤ y → y != 0 := by
+ apply elim' ; simp ; intro _ ; apply isdef_option_elim ; intro x h
+ intro k ; rw [k] at h
+ contradiction
+
 theorem ex₅ {x y z : Option Nat} : isdef x → w ≥▷ y → z ≤▷ y -> y ≥ 1 -> (x / w) * z ≤ x := by
  intro d₁ h₁ h₂
- change 1 ≤ y → _ ; apply elim ; simp ; intro _ d₂
+ change 1 ≤ y → _ ; apply elim' ; simp ; intro _ d₂ h₃
  calc
        (x / w) * z
   _ ≤▷ (x / w) * y := by respects h₂
-  _ ≤▷ (x / y) * y := sorry
-  _ ≈  (x / y) * y := sorry
-  _ ◁≤ x           := ex₂
+  _ ≤▷ (x / y) * y := by respects (ex₂ (Reflexive.refl : x ≤▷x) h₁)
+  _ ≈  (x / y) * y := by
+                       apply def_peqrfl
+                       apply Backward.intro <;> and_intros <;> try trivial
+                       exact ex₅_aux h₃
+  _ ◁≤ x           := ex₁
