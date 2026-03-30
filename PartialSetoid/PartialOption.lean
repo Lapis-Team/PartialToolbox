@@ -71,6 +71,12 @@ def liftFun₂ (f: α -> β → γ) (dom : Option α → Option β → Bool := f
     if dom (.some x) (.some y) then .some (f x y) else .none
  | _, _ => .none
 
+@[simp]
+theorem liftFun₂_simpl : dom (some x) (some y) → liftFun₂ f dom (some x) (some y) = some (f x y) := by
+ intro h
+ change (if dom (some x) (some y) then some (f x y) else none) = some (f x y)
+ simpa
+
 instance strictfun₂_liftfun₂ {f: α -> β → γ} : StrictFun₂ (liftFun₂ f dom) where
  isstrict {x} {y} h :=
   match x, y with
@@ -119,7 +125,7 @@ instance [Trans P Q R] : Trans (liftPred₂ P) (liftPred₂ Q) (liftPred₂ R) w
 end Partial.Option
 
 @[class]
-inductive Unfoldable (T : α) : outParam α -> Prop where
+inductive Unfoldable (T : semiOutParam α) : outParam α -> Prop where
  | id: Unfoldable T T
 
 instance [Partial α] [Partial β] {g f : α -> β → Prop} [u: Unfoldable g f] [StrictPred₂ f] : StrictPred₂ g := by
@@ -146,7 +152,11 @@ instance [Partial α] [Partial β] {g f : α -> β} [u: Unfoldable g f] [Backwar
 instance [Partial α] [Partial β] [Partial γ] {g f : α -> β → γ} [u: Unfoldable g f] [Backward₁ (Partial.isdef (f x y)) P] : Backward₁ (Partial.isdef (g x y)) P := by
  cases u ; assumption
 
-instance {P P' : α → β → Prop} {Q Q' : β → γ → Prop} {R : α → γ → Prop} [Trans P' Q' R] [up: Unfoldable P P'] [uq: Unfoldable Q Q'] : Trans P Q R := by
- cases up ; cases uq ; assumption
+instance {P P' : α → β → Prop} {Q Q' : β → γ → Prop} {R : α → γ → Prop} [Trans P' Q' R'] [up: Unfoldable P P'] [uq: Unfoldable Q Q'] [ur: Unfoldable R R'] : Trans P Q R := by
+ cases up ; cases uq ; cases ur  ; assumption
 
  -- CSC: implementare Sym
+
+@[simp]
+theorem Partial.Option.liftFun₂_simpl' {f : α → β → γ} [u: Unfoldable g (Partial.Option.liftFun₂ f dom)] : dom (some x) (some y) → g (some x) (some y) = some (f x y) := by
+ cases u ; apply Partial.Option.liftFun₂_simpl

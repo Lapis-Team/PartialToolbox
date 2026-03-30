@@ -8,9 +8,9 @@ instance : Mul (Option Nat) := ⟨liftFun₂ Mul.mul⟩
 instance : Div (Option Nat) := ⟨liftFun₂ Div.div (dom := fun _ y => y != 0)⟩
 
 instance : Unfoldable (.≤. : Option Nat -> Option Nat -> Prop) (liftPred₂ LE.le) := .id
-instance : Unfoldable (.*. : Option Nat -> Option Nat -> Option Nat) (liftFun₂ Mul.mul) := .id
-instance : Unfoldable (.+. : Option Nat -> Option Nat -> Option Nat) (liftFun₂ Add.add) := .id
-instance : Unfoldable (./. : Option Nat -> Option Nat -> Option Nat) (liftFun₂ Div.div (dom := fun _ y => y != 0)) := .id
+instance : Unfoldable (.*. : Option Nat -> Option Nat -> Option Nat) (liftFun₂ HMul.hMul) := .id
+instance : Unfoldable (.+. : Option Nat -> Option Nat -> Option Nat) (liftFun₂ HAdd.hAdd) := .id
+instance : Unfoldable (./. : Option Nat -> Option Nat -> Option Nat) (liftFun₂ HDiv.hDiv (dom := fun _ y => y != 0)) := .id
 
 infix:60 " ◁≤ " => ltor LE.le
 infix:60 " ≤▷ " => rtol LE.le
@@ -41,42 +41,48 @@ example {x y : Option Nat}: isdef ((x / y) * y) -> isdef ((y * x * 3) / y) := by
   apply elim ; simp ; intros
   apply Backward.intro ; try simp ; trivial
 
-theorem ex₁ {x y : Option Nat} : isdef x -> isdef y -> y != 0 -> (x / y) * y ≤ x := by
-  apply isdef_option_elim ; intro x
-  apply isdef_option_elim ; intro y
-  intro h
-  change (if some y != 0 then .some (x / y) else .none) * some y ≤ some x
-  simp [h] ; change x / y * y ≤ x
-  refine (Nat.le_div_iff_mul_le ?_).mp ?_
-  . apply Nat.zero_lt_of_ne_zero
-    exact bne_iff_ne.mp h
-  . apply Nat.le_refl
+theorem ex₁' {x y : Option Nat} : isdef x -> isdef y -> y != 0 -> (x / y) * y ≤ x := by
+ apply isdef_option_elim ; intro x
+ apply isdef_option_elim ; intro y
+ intro ec
+ rw [liftFun₂_simpl' (g := (./. : Option Nat -> _ -> _)) (by exact ec)]
+ apply Nat.div_mul_le_self
 
-theorem ex₂ {x y : Option Nat} : (x / y) * y ◁≤ x := by
+theorem ex₁ {x y : Option Nat} : (x / y) * y ◁≤ x := by
   apply elim ; simp ; intros
-  apply ex₁ <;> (try simp) <;> trivial
+  apply ex₁' <;> (try simp) <;> trivial
 
-theorem ex₃ {x₁ x₂ y₁ y₂ : Option Nat} :
+theorem ex₂' {x₁ x₂ y₁ y₂ : Option Nat} :
+ isdef x₁ -> isdef x₂ -> isdef y₁ -> isdef y₂ ->
+  y₁ != 0 -> y₂ != 0 -> x₁ ≤ x₂ → y₁ ≥ y₂ -> x₁ / y₁ ≤ x₂ / y₂ := by
+ apply isdef_option_elim ; intro x₁
+ apply isdef_option_elim ; intro x₂
+ apply isdef_option_elim ; intro y₁
+ apply isdef_option_elim ; intro y₂
+ intro ec₁ ec₂ h₁ h₂
+ rw [liftFun₂_simpl' (g := (./. : Option Nat -> _ -> _)) (by exact ec₁)]
+ rw [liftFun₂_simpl' (g := (./. : Option Nat -> _ -> _)) (by exact ec₂)]
+ apply Nat.div_le_div h₁ h₂
+ exact bne_iff_ne.mp ec₂
+
+theorem ex₂_aux {x y : Option Nat} : x ≤ y -> x ≠ 0 → y ≠ 0 := by
+ apply elim' ; simp
+ apply isdef_option_elim ; intro x
+ apply isdef_option_elim ; intro y
+ intro (k : x ≤ y) h i
+ injection i ; apply h ; congr
+ grind
+
+theorem ex₂ {x₁ x₂ y₁ y₂ : Option Nat} :
  x₁ ≤▷ x₂ → y₁ ≥▷ y₂ -> x₁ / y₁ ≤▷ x₂ / y₂ := by
  intro hx hy
  apply elim ; simp ; intro dx dy ec
- specialize hx dx
- specialize hy dy
- rcases x₁ with ⟨⟩|x₁ ; apply hx.elim
- rcases x₂ with ⟨⟩|x₂ ; apply hx.elim
- rcases y₂ with ⟨⟩|y₂ ; apply hy.elim
- rcases y₁ with ⟨⟩|y₁ ; apply hy.elim
- change x₁ ≤ x₂ at hx
- change y₁ ≥ y₂ at hy
- have ec' : some y₁ != 0 := by
-  have : y₂ ≠ 0 := by exact fun a => ec (congrArg some a)
-  have : y₁ ≠ 0 := by grind
-  have : some y₁ ≠ some 0 := by grind
-  simp ; congr
- change ((if some y₁ != 0 then some (x₁/y₁) else none) ≤ (if some y₂ != 0 then some (x₂/y₂) else none))
- simp [ec, ec']
- change x₁ / y₁ ≤ x₂ / y₂
- exact Nat.div_le_div hx hy fun a => ec (congrArg some a)
+ specialize hx dx ; apply elim _ hx ; simp ; intro d₁ d₂
+ specialize hy dy ; have hy' : y₂ ≤ y₁ := hy ; apply elim _ hy' ; simp ; intro d₃ d₄
+ apply ex₂' <;> try assumption
+ . have := ex₂_aux hy ec
+   grind
+ . exact bne_iff_ne.mpr ec
 
 theorem ex₄ {x : Option Nat}: x ≈▷ x / 1 := by
  apply elim ; simp ; apply isdef_option_elim ; intro x _ _
@@ -86,11 +92,12 @@ theorem ex₄ {x : Option Nat}: x ≈▷ x / 1 := by
    change x = x / 1
    simp
 
-theorem ex₅ {x y : Option Nat} : 1 ≤ y -> x * y ≤ x := by
- intro h
+theorem ex₅ {x y z : Option Nat} : isdef x → w ≥▷ y → z ≤▷ y -> y ≥ 1 -> (x / w) * z ≤ x := by
+ intro d₁ h₁ h₂
+ change 1 ≤ y → _ ; apply elim ; simp ; intro _ d₂
  calc
-      x * y
-  _ ≈▷ (x / 1) * y := sorry
+       (x / w) * z
+  _ ≤▷ (x / w) * y := sorry
   _ ≤▷ (x / y) * y := sorry
-  _ ≈ (x /y ) * y := sorry
-  _ ◁≤ x := sorry
+  _ ≈  (x / y) * y := sorry
+  _ ◁≤ x           := ex₂
