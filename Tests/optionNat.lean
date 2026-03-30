@@ -1,6 +1,8 @@
 import PartialSetoid.PartialOption
 open Partial Partial.Option
 
+instance : Reflexive (.≤. : Nat -> Nat -> Prop) := ⟨Nat.le_refl _⟩
+
 instance : OfNat (Option Nat) n where ofNat := n
 instance : LE (Option Nat) := ⟨liftPred₂ LE.le⟩
 instance : Add (Option Nat) := ⟨liftFun₂ Add.add⟩
@@ -36,6 +38,13 @@ meta def rtol.unexpander_le : Lean.PrettyPrinter.Unexpander
 meta def rtol.unexpander_ge : Lean.PrettyPrinter.Unexpander
   | `($_ GE.ge $a $b) => `($a ≥▷ $b)
   | _ => throw ()
+
+axiom mul_le_morphism {x x' y y' : Option Nat} :
+ x ≤▷ x' -> y ≤▷ y' -> x*y ≤▷ x'*y'
+
+instance [Copy h₁] [Copy h₂] : Copy (mul_le_morphism h₁ h₂) where
+
+-----------------------------------
 
 example {x y : Option Nat}: isdef ((x / y) * y) -> isdef ((y * x * 3) / y) := by
   apply elim ; simp ; intros
@@ -97,7 +106,7 @@ theorem ex₅ {x y z : Option Nat} : isdef x → w ≥▷ y → z ≤▷ y -> y 
  change 1 ≤ y → _ ; apply elim ; simp ; intro _ d₂
  calc
        (x / w) * z
-  _ ≤▷ (x / w) * y := sorry
+  _ ≤▷ (x / w) * y := by respects h₂
   _ ≤▷ (x / y) * y := sorry
   _ ≈  (x / y) * y := sorry
   _ ◁≤ x           := ex₂

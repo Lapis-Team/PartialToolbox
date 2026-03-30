@@ -103,15 +103,17 @@ meta def rtol.unexpander_peqq : Lean.PrettyPrinter.Unexpander
 def peq_rtolpeq [Partial T] {x y : T} : x ≈ y -> x ≈▷ y := by
   intro h ; exact fun _ => h
 
--- CSC: generalizzare
-theorem def_rtol_def [Partial T] {x y : T} : isdef y -> x ≈▷ y -> isdef x := by
+theorem def_rtol_def {r: α → α → Prop} [Partial α] [StrictPred₂ r] : isdef y -> rtol r x y -> isdef x := by
  intro h h'
- apply (h' h).left
+ apply (StrictPred₂.isstrict (h' h)).left
 
 -- Reflexivity
--- CSC: generalizzare
-instance [Partial T] : Reflexive (. ≈▷ . : T -> T -> Prop) where
-  refl {x} h := by constructor <;> trivial
+instance {r : α → α → Prop} [Partial α] [Reflexive r] : Reflexive (rtol r) where
+  refl _ := Reflexive.refl
+
+theorem rtol_refl {r : α → α → Prop} [Partial α] (p : ∀ {x}, isdef x -> r x x) : Reflexive (rtol r) := ⟨p⟩
+
+instance rtol_peq_refl [Partial α] : Reflexive (.≈▷. : α -> α -> Prop) := rtol_refl def_peqrfl
 
 -- Transitivity
 theorem r_trans₁ {r₁ r₂ r₃ : α -> α -> Prop} [Partial α] [StrictPred₂ r₂] [Trans r₁ r₂ r₃]  {x y z : α} :
@@ -151,18 +153,17 @@ meta def ltor.unexpander_peqq : Lean.PrettyPrinter.Unexpander
   | `($_ HasEquiv.Equiv $a $b) => `($a ◁≈ $b)
   | _ => throw ()
 
---CSC: generalizzare
-theorem def_ltor_def [Partial T] {x y : T} : isdef x -> x ◁≈ y -> isdef y := by
+theorem def_ltor_def {r: α → α → Prop} [Partial α] [StrictPred₂ r] : isdef x -> ltor r x y -> isdef y := by
  intro h h'
- have k := (h' h).right
- simp [<- k, h]
+ apply (StrictPred₂.isstrict (h' h)).right
 
 -- Reflexivity
--- CSC: generalizzare
-instance [Partial T] : Reflexive (. ◁≈ . : T -> T -> Prop) where
-  refl := by
-    intro x d
-    constructor <;> trivial
+instance {r : α → α → Prop} [Partial α] [Reflexive r] : Reflexive (ltor r) where
+  refl _ := Reflexive.refl
+
+theorem ltor_refl {r : α → α → Prop} [Partial α] (p : ∀ {x}, isdef x -> r x x) : Reflexive (ltor r) := ⟨p⟩
+
+instance ltor_peq_refl [Partial α] : Reflexive (.◁≈. : α -> α -> Prop) := ltor_refl def_peqrfl
 
 -- Transitivity
 theorem l_trans₁ {r₁ r₂ r₃ : α -> α -> Prop} [Partial α] [StrictPred₂ r₁] [Trans r₁ r₂ r₃]  {x y z : α} :

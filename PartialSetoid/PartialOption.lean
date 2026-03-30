@@ -32,11 +32,26 @@ def liftPred₂ (P: α -> β -> Prop) : Option α -> Option β -> Prop
  | .some x, .some y => P x y
  | _,_ => False
 
-instance strictpred₂_liftpred₂ {P: α -> β -> Prop}: StrictPred₂ (liftPred₂ P) where
+instance strictpred₂_liftpred₂ {P: α -> β -> Prop} : StrictPred₂ (liftPred₂ P) where
  isstrict {x} {y} h :=
   match x,y with
   | .some _, .some _ => ⟨.intro,.intro⟩
   | .none ,_ => h.elim
+
+theorem strictpred₂_reflexive_on_def {r : α → α → Prop} [Reflexive r]
+ : isdef x -> liftPred₂ r x x := by
+ apply isdef_option_elim ; intro x ; simp!
+ apply Reflexive.refl
+
+instance strictpred₂_reflexive_ltor {r : α → α → Prop} [Reflexive r]
+ : Reflexive (ltor (liftPred₂ r)) := by
+ constructor
+ intro x
+ apply strictpred₂_reflexive_on_def
+
+instance strictpred₂_reflexive_rtol {r : α → α → Prop} [Reflexive r]
+ : Reflexive (rtol (liftPred₂ r)) :=
+ ⟨strictpred₂_reflexive_ltor.refl⟩
 
 def liftFun₁ (f: α -> β) (dom : Option α → Bool := fun _ => true) : Option α -> Option β
  | .some x => if dom (.some x) then .some (f x) else .none
@@ -128,34 +143,51 @@ end Partial.Option
 inductive Unfoldable (T : semiOutParam α) : outParam α -> Prop where
  | id: Unfoldable T T
 
-instance [Partial α] [Partial β] {g f : α -> β → Prop} [u: Unfoldable g f] [StrictPred₂ f] : StrictPred₂ g := by
+instance {f g : α -> α -> Prop} [Partial α] [u: Unfoldable g f] : Unfoldable (Partial.rtol g) (Partial.rtol f) := by
+ cases u ; exact .id
+
+instance [u: Unfoldable g f] : Unfoldable (Partial.ltor g) (Partial.ltor f) := by
+ cases u ; exact .id
+
+instance [Partial α] [Partial β] {g f : α -> β → Prop} [u: Unfoldable g f] [StrictPred₂ f]
+ : StrictPred₂ g := by
  cases u ; assumption
 
-instance [Partial α] {g f : α -> Prop} [u: Unfoldable g f] [StrictPred₁ f] : StrictPred₁ g := by
+instance [Partial α] {g f : α -> Prop} [u: Unfoldable g f] [StrictPred₁ f]
+ : StrictPred₁ g := by
  cases u ; assumption
 
-instance [Partial α] [Partial β] {g f : α -> β} [u: Unfoldable g f] [StrictFun₁ f] : StrictFun₁ g := by
+instance [Partial α] [Partial β] {g f : α -> β} [u: Unfoldable g f] [StrictFun₁ f]
+ : StrictFun₁ g := by
  cases u ; assumption
 
-instance [Partial α] [Partial β] [Partial γ] {g f : α -> β → γ} [u: Unfoldable g f] [StrictFun₂ f] : StrictFun₂ g := by
+instance [Partial α] [Partial β] [Partial γ] {g f : α -> β → γ} [u: Unfoldable g f] [StrictFun₂ f]
+ : StrictFun₂ g := by
  cases u ; assumption
 
-instance [Partial α] [Partial β] {g f : α -> β} [u: Unfoldable g f] [Existence (f x) P] : Existence (g x) P := by
+instance [Partial α] [Partial β] {g f : α -> β} [u: Unfoldable g f] [Existence (f x) P]
+ : Existence (g x) P := by
  cases u ; assumption
 
-instance [Partial α] [Partial β] [Partial γ] {g f : α -> β → γ} [u: Unfoldable g f] [Existence (f x y) P] : Existence (g x y) P := by
+instance [Partial α] [Partial β] [Partial γ] {g f : α -> β → γ} [u: Unfoldable g f] [Existence (f x y) P]
+ : Existence (g x y) P := by
  cases u ; assumption
 
-instance [Partial α] [Partial β] {g f : α -> β} [u: Unfoldable g f] [Backward₁ (Partial.isdef (f x)) P] : Backward₁ (Partial.isdef (g x)) P := by
+instance [Partial α] [Partial β] {g f : α -> β} [u: Unfoldable g f] [Backward₁ (Partial.isdef (f x)) P]
+ : Backward₁ (Partial.isdef (g x)) P := by
  cases u ; assumption
 
-instance [Partial α] [Partial β] [Partial γ] {g f : α -> β → γ} [u: Unfoldable g f] [Backward₁ (Partial.isdef (f x y)) P] : Backward₁ (Partial.isdef (g x y)) P := by
+instance [Partial α] [Partial β] [Partial γ] {g f : α -> β → γ} [u: Unfoldable g f] [Backward₁ (Partial.isdef (f x y)) P]
+ : Backward₁ (Partial.isdef (g x y)) P := by
  cases u ; assumption
 
-instance {P P' : α → β → Prop} {Q Q' : β → γ → Prop} {R : α → γ → Prop} [Trans P' Q' R'] [up: Unfoldable P P'] [uq: Unfoldable Q Q'] [ur: Unfoldable R R'] : Trans P Q R := by
+instance {P P' : α → β → Prop} {Q Q' : β → γ → Prop} {R : α → γ → Prop} [Trans P' Q' R'] [up: Unfoldable P P'] [uq: Unfoldable Q Q'] [ur: Unfoldable R R']
+ : Trans P Q R := by
  cases up ; cases uq ; cases ur  ; assumption
 
- -- CSC: implementare Sym
+instance {P P' : α → α → Prop} [u: Unfoldable P P'] [Reflexive P']
+ : Reflexive P := by
+ cases u ; assumption
 
 @[simp]
 theorem Partial.Option.liftFun₂_simpl' {f : α → β → γ} [u: Unfoldable g (Partial.Option.liftFun₂ f dom)] : dom (some x) (some y) → g (some x) (some y) = some (f x y) := by
