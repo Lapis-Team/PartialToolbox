@@ -40,7 +40,14 @@ meta def rtol.unexpander_ge : Lean.PrettyPrinter.Unexpander
   | _ => throw ()
 
 theorem mul_le_morphism₀ {x x' y y' : Option Nat} :
- x ≤ x' -> y ≤ y' -> x*y ≤ x'*y' := by
+ x ≤ x' -> y ≤ y' -> x*y ≤ x'*y' :=
+ match x, x', y, y' with
+  | .some _, .some _, .some _, .some _ => Nat.mul_le_mul
+  | .none, _, _, _
+  | .some _, .none, _, _  => fun (h : False) => h.elim
+  | .some _, .some _, .none, _
+  | .some _, .some _, .some _, .none => fun _ (h : False) => h.elim
+/-
  apply elim' ; simp
  apply isdef_option_elim ; intro x
  apply isdef_option_elim ; intro x'
@@ -51,6 +58,7 @@ theorem mul_le_morphism₀ {x x' y y' : Option Nat} :
  intro (h₂ : y ≤ y')
  change x*y ≤ x' * y'
  apply Nat.mul_le_mul h₁ h₂
+-/
 
 theorem mul_le_morphism {x x' y y' : Option Nat} :
  x ≤▷ x' -> y ≤▷ y' -> x*y ≤▷ x'*y' := by
