@@ -14,10 +14,10 @@ instance : Unfoldable (.*. : Option Nat -> Option Nat -> Option Nat) (liftFun₂
 instance : Unfoldable (.+. : Option Nat -> Option Nat -> Option Nat) (liftFun₂ HAdd.hAdd) := .id
 instance : Unfoldable (./. : Option Nat -> Option Nat -> Option Nat) (liftFun₂ HDiv.hDiv (dom := fun _ y => y != 0)) := .id
 
-infix:60 " ◁≤ " => ltor LE.le
-infix:60 " ≤▷ " => rtol LE.le
-infix:60 " ≥▷ " => rtol GE.ge
-infix:60 " ◁≥ " => ltor GE.ge
+infix:60 " ◁≤ " => ◁LE.le
+infix:60 " ≤▷ " => LE.le▷
+infix:60 " ≥▷ " => GE.ge▷
+infix:60 " ◁≥ " => ◁GE.ge
 
 @[app_unexpander ltor]
 meta def ltor.unexpander_le : Lean.PrettyPrinter.Unexpander

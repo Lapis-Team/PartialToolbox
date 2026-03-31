@@ -44,14 +44,13 @@ theorem strictpred₂_reflexive_on_def {r : α → α → Prop} [Reflexive r]
  apply Reflexive.refl
 
 instance strictpred₂_reflexive_ltor {r : α → α → Prop} [Reflexive r]
- : Reflexive (ltor (liftPred₂ r)) := by
+ : Reflexive ◁(liftPred₂ r) := by
  constructor
  intro x
  apply strictpred₂_reflexive_on_def
 
 instance strictpred₂_reflexive_rtol {r : α → α → Prop} [Reflexive r]
- : Reflexive (rtol (liftPred₂ r)) :=
- ⟨strictpred₂_reflexive_ltor.refl⟩
+ : Reflexive (liftPred₂ r)▷ := ⟨strictpred₂_reflexive_ltor.refl⟩
 
 def liftFun₁ (f: α -> β) (dom : Option α → Bool := fun _ => true) : Option α -> Option β
  | .some x => if dom (.some x) then .some (f x) else .none
@@ -143,10 +142,10 @@ end Partial.Option
 inductive Unfoldable (T : semiOutParam α) : outParam α -> Prop where
  | id: Unfoldable T T
 
-instance {f g : α -> α -> Prop} [Partial α] [u: Unfoldable g f] : Unfoldable (Partial.rtol g) (Partial.rtol f) := by
+instance {f g : α -> α -> Prop} [Partial α] [u: Unfoldable g f] : Unfoldable g▷ f▷ := by
  cases u ; exact .id
 
-instance [u: Unfoldable g f] : Unfoldable (Partial.ltor g) (Partial.ltor f) := by
+instance [u: Unfoldable g f] : Unfoldable ◁g ◁f := by
  cases u ; exact .id
 
 instance [Partial α] [Partial β] {g f : α -> β → Prop} [u: Unfoldable g f] [StrictPred₂ f]
@@ -192,3 +191,5 @@ instance {P P' : α → α → Prop} [u: Unfoldable P P'] [Reflexive P']
 @[simp]
 theorem Partial.Option.liftFun₂_simpl' {f : α → β → γ} [u: Unfoldable g (Partial.Option.liftFun₂ f dom)] : dom (some x) (some y) → g (some x) (some y) = some (f x y) := by
  cases u ; apply Partial.Option.liftFun₂_simpl
+
+variable {x: Nat}
