@@ -39,26 +39,14 @@ meta def rtol.unexpander_ge : Lean.PrettyPrinter.Unexpander
   | `($_ GE.ge $a $b) => `($a ≥▷ $b)
   | _ => throw ()
 
+macro "elim_p₂" x:ident y:ident h:ident  : tactic =>
+ `(tactic|apply elim' <;> simp <;> apply isdef_option_elim <;> intro $x:ident <;> apply isdef_option_elim <;> intro $y:ident <;> intro $h:ident)
+
 theorem mul_le_morphism₀ {x x' y y' : Option Nat} :
- x ≤ x' -> y ≤ y' -> x*y ≤ x'*y' :=
- match x, x', y, y' with
-  | .some _, .some _, .some _, .some _ => Nat.mul_le_mul
-  | .none, _, _, _
-  | .some _, .none, _, _  => fun (h : False) => h.elim
-  | .some _, .some _, .none, _
-  | .some _, .some _, .some _, .none => fun _ (h : False) => h.elim
-/-
- apply elim' ; simp
- apply isdef_option_elim ; intro x
- apply isdef_option_elim ; intro x'
- intro (h₁ : x ≤ x')
- apply elim' ; simp
- apply isdef_option_elim ; intro y
- apply isdef_option_elim ; intro y'
- intro (h₂ : y ≤ y')
- change x*y ≤ x' * y'
+ x ≤ x' -> y ≤ y' -> x*y ≤ x'*y' := by
+ elim_p₂ x x' h₁
+ elim_p₂ y y' h₂
  apply Nat.mul_le_mul h₁ h₂
--/
 
 theorem mul_le_morphism {x x' y y' : Option Nat} :
  x ≤▷ x' -> y ≤▷ y' -> x*y ≤▷ x'*y' := by
@@ -85,26 +73,22 @@ theorem ex₁' {x y : Option Nat} : isdef x -> isdef y -> y != 0 -> (x / y) * y 
 
 theorem ex₁ {x y : Option Nat} : (x / y) * y ◁≤ x := by
   apply elim ; simp ; intros
-  apply ex₁' <;> (try simp) <;> trivial
+  apply ex₁' <;> simpa
 
 theorem ex₂' {x₁ x₂ y₁ y₂ : Option Nat} :
- isdef x₁ -> isdef x₂ -> isdef y₁ -> isdef y₂ ->
-  y₁ != 0 -> y₂ != 0 -> x₁ ≤ x₂ → y₁ ≥ y₂ -> x₁ / y₁ ≤ x₂ / y₂ := by
- apply isdef_option_elim ; intro x₁
- apply isdef_option_elim ; intro x₂
- apply isdef_option_elim ; intro y₁
- apply isdef_option_elim ; intro y₂
- intro ec₁ ec₂ h₁ h₂
- rw [liftFun₂_simpl' (g := (./. : Option Nat -> _ -> _)) (by exact ec₁)]
- rw [liftFun₂_simpl' (g := (./. : Option Nat -> _ -> _)) (by exact ec₂)]
+  x₁ ≤ x₂ → y₁ ≥ y₂ -> y₁ != 0 -> y₂ != 0 -> x₁ / y₁ ≤ x₂ / y₂ := by
+ elim_p₂ x₁ x₂ h₁
+ elim_p₂ y₁ y₂ h₂
+ intro ec₁ ec₂
+ rw [liftFun₂_simpl' (g := (./. : Option Nat -> _ -> _)) (by simpa)]
+ rw [liftFun₂_simpl' (g := (./. : Option Nat -> _ -> _)) (by simpa)]
  apply Nat.div_le_div h₁ h₂
- exact bne_iff_ne.mp ec₂
+ intro a ; apply ec₂ ; congr
 
 theorem ex₂_aux {x y : Option Nat} : x ≤ y -> x ≠ 0 → y ≠ 0 := by
- apply elim' ; simp
- apply isdef_option_elim ; intro x
- apply isdef_option_elim ; intro y
- intro (k : x ≤ y) h i
+ elim_p₂ x y k
+ change x ≤ y at k
+ intro h i
  injection i ; apply h ; congr
  grind
 
@@ -112,23 +96,13 @@ theorem ex₂ {x₁ x₂ y₁ y₂ : Option Nat} :
  x₁ ≤▷ x₂ → y₁ ≥▷ y₂ -> x₁ / y₁ ≤▷ x₂ / y₂ := by
  intro hx hy
  apply elim ; simp ; intro dx dy ec
- specialize hx dx ; apply elim _ hx ; simp ; intro d₁ d₂
- specialize hy dy ; have hy' : y₂ ≤ y₁ := hy ; apply elim _ hy' ; simp ; intro d₃ d₄
- apply ex₂' <;> try assumption
- . have := ex₂_aux hy ec
-   grind
- . exact bne_iff_ne.mpr ec
+ specialize hx dx
+ specialize hy dy
+ have := ex₂_aux hy ec
+ apply ex₂' <;> simpa
 
-theorem ex₄ {x : Option Nat}: x ≈▷ x / 1 := by
- apply elim ; simp ; apply isdef_option_elim ; intro x _ _
- constructor
- . trivial
- . congr
-   change x = x / 1
-   simp
-
-theorem ex₅_aux {y: Option Nat} : 1 ≤ y → y != 0 := by
- apply elim' ; simp ; intro _ ; apply isdef_option_elim ; intro x h
+theorem ex₅_aux {y: Option Nat} : 1 ≤ y → y ≠ 0 := by
+ apply elim' ; simp ; intro _ ; apply isdef_option_elim ; intro y h
  intro k ; rw [k] at h
  contradiction
 
@@ -142,5 +116,5 @@ theorem ex₅ {x y z : Option Nat} : isdef x → w ≥▷ y → z ≤▷ y -> y 
   _ ≈  (x / y) * y := by
                        apply def_peqrfl
                        apply Backward.intro <;> and_intros <;> try trivial
-                       exact ex₅_aux h₃
+                       simp ; exact ex₅_aux h₃
   _ ◁≤ x           := ex₁
