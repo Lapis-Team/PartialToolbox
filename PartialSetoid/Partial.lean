@@ -14,27 +14,29 @@ import Lean
 
 class Partial α where
  isdef : α -> Prop
+ 
+postfix:1024 "↓ " => Partial.isdef
 
 @[default_instance]
 instance (priority := low) default_partial : Partial α where
  isdef _ := True
 
 class StrictPred₁ [Partial α] (P : α -> Prop) where
- isstrict : P x -> Partial.isdef x
+ isstrict : P x -> x↓
 
 class StrictPred₂ [Partial α] [Partial β] (P : α -> β -> Prop) where
- isstrict : P x y -> Partial.isdef x ∧ Partial.isdef y
+ isstrict : P x y -> x↓ ∧ y↓
 
 class StrictFun₁ [Partial α] [Partial β] (f : α -> β) where
- isstrict : Partial.isdef (f x) -> Partial.isdef x
+ isstrict : (f x)↓ -> x↓
 
 class StrictFun₂ [Partial α] [Partial β] [Partial γ] (f : α -> β -> γ) where
- isstrict : Partial.isdef (f x y) -> Partial.isdef x ∧ Partial.isdef y
+ isstrict : (f x y)↓ -> x↓ ∧ y↓
 
 -- Necessary existence condition typeclass
 
 class Existence [Partial α] (x : α) (P: outParam Prop) where
- cond : Partial.isdef x → P
+ cond : x↓ → P
 
 @[default_instance]
 instance (priority := low) default_existence {x: α} [Partial α] : Existence x True where
@@ -44,28 +46,28 @@ instance (priority := low) default_existence {x: α} [Partial α] : Existence x 
 namespace Partial
 
 instance [Partial T] : HasEquiv T where
- Equiv (x y : T) := isdef x ∧ x = y
+ Equiv (x y : T) := x↓ ∧ x = y
 
 instance [Partial T] : StrictPred₂ (. ≈ . : T → T → Prop) where
  isstrict {x y} h := by
   let ⟨d,e⟩ := h
   grind
 
-theorem def_peq₁ [Partial T] {x y : T} : isdef x -> x = y -> x ≈ y := by trivial
+theorem def_peq₁ [Partial T] {x y : T} : x↓ -> x = y -> x ≈ y := by trivial
 
-theorem def_peq₂ [Partial T] {x y : T} : isdef y -> x = y -> x ≈ y := by
+theorem def_peq₂ [Partial T] {x y : T} : y↓ -> x = y -> x ≈ y := by
  intro d e
  rw [e]
  constructor <;> grind
 
-theorem def_peqrfl {x: T} [Partial T]: isdef x -> x ≈ x :=
+theorem def_peqrfl {x: T} [Partial T]: x↓ -> x ≈ x :=
  fun a => def_peq₁ a rfl
 
 --@[def_lemma_closing]
-theorem peq_def₁ [Partial T] {x y : T} : x ≈ y -> isdef x := And.left
+theorem peq_def₁ [Partial T] {x y : T} : x ≈ y -> x↓ := And.left
 
 --@[def_lemma_closing]
-theorem peq_def₂ [Partial T] {x y : T}: x ≈ y -> isdef y := by
+theorem peq_def₂ [Partial T] {x y : T}: x ≈ y -> y↓ := by
   intro ⟨hl, hr⟩
   rw [<- hr]
   apply hl
@@ -91,7 +93,7 @@ instance (priority := low) { r : α -> α -> Prop } [Partial α] : Trans r (.≈
 
 -- RTOL Direction ------------------------------------
 def rtol [Partial T] (op: T -> T -> Prop) : T -> T -> Prop :=
- fun x y => isdef y -> op x y
+ fun x y => y↓ -> op x y
 
 postfix:1024 "▷ " => rtol
 postfix:1024 "|> " => rtol
@@ -106,7 +108,7 @@ meta def rtol.unexpander_peqq : Lean.PrettyPrinter.Unexpander
 def peq_rtolpeq [Partial T] {x y : T} : x ≈ y -> x ≈▷ y := by
   intro h ; exact fun _ => h
 
-theorem def_rtol_def {r: α → α → Prop} [Partial α] [StrictPred₂ r] : isdef y -> r▷ x y -> isdef x := by
+theorem def_rtol_def {r: α → α → Prop} [Partial α] [StrictPred₂ r] : y↓ -> r▷ x y -> x↓ := by
  intro h h'
  apply (StrictPred₂.isstrict (h' h)).left
 
@@ -114,7 +116,7 @@ theorem def_rtol_def {r: α → α → Prop} [Partial α] [StrictPred₂ r] : is
 instance {r : α → α → Prop} [Partial α] [Reflexive r] : Reflexive r▷ where
   refl _ := Reflexive.refl
 
-theorem rtol_refl {r : α → α → Prop} [Partial α] (p : ∀ {x}, isdef x -> r x x) : Reflexive r▷ := ⟨p⟩
+theorem rtol_refl {r : α → α → Prop} [Partial α] (p : ∀ {x}, x↓ -> r x x) : Reflexive r▷ := ⟨p⟩
 
 instance rtol_peq_refl [Partial α] : Reflexive (. ≈▷ . : α -> α -> Prop) := rtol_refl def_peqrfl
 
@@ -149,7 +151,7 @@ instance {r₁ r₂ r₃ : α -> α -> Prop} [Partial α] [StrictPred₂ r₂] [
 -- LTOR Direction ------------------------------------
 
 def ltor [Partial T] (op: T -> T -> Prop) : T -> T -> Prop :=
- fun x y => isdef x -> op x y
+ fun x y => x↓ -> op x y
 
 infix:60 " ◁≈ " => ltor HasEquiv.Equiv
 @[app_unexpander ltor]
@@ -172,7 +174,7 @@ example {r : α -> α -> Prop} : r x y -> <|r|> x y := by
 variable {r : α -> α -> Prop} in
 
 
-theorem def_ltor_def {r: α → α → Prop} [Partial α] [StrictPred₂ r] : isdef x -> ◁r x y -> isdef y := by
+theorem def_ltor_def {r: α → α → Prop} [Partial α] [StrictPred₂ r] : x↓ -> ◁r x y -> y↓ := by
  intro h h'
  apply (StrictPred₂.isstrict (h' h)).right
 
@@ -180,7 +182,7 @@ theorem def_ltor_def {r: α → α → Prop} [Partial α] [StrictPred₂ r] : is
 instance {r : α → α → Prop} [Partial α] [Reflexive r] : Reflexive ◁r where
   refl _ := Reflexive.refl
 
-theorem ltor_refl {r : α → α → Prop} [Partial α] (p : ∀ {x}, isdef x -> r x x) : Reflexive ◁r := ⟨p⟩
+theorem ltor_refl {r : α → α → Prop} [Partial α] (p : ∀ {x}, x↓ -> r x x) : Reflexive ◁r := ⟨p⟩
 
 instance ltor_peq_refl [Partial α] : Reflexive (· ◁≈ · : α -> α -> Prop) := ltor_refl def_peqrfl
 
@@ -270,24 +272,24 @@ instance instRtolpeqStrictFun₂
 
 instance isdef_elim_StrictFun₁
  [Partial α] [Partial β] {op : α → β} [s : StrictFun₁ op] [e : Existence (op x) E]
- : Forward₁ (isdef (op x)) (isdef x ∧ E) where
+ : Forward₁ (op x)↓ (x↓ ∧ E) where
  elim d := ⟨s.isstrict d, e.cond d⟩
 
 instance isdef_elim_StrictFun₂
  [Partial α] [Partial β] [Partial γ] {op : α → β → γ} [s : StrictFun₂ op] [e : Existence (op x y) E]
- : Forward₁ (isdef (op x y)) (isdef x ∧ isdef y ∧ E) where
+ : Forward₁ (op x y)↓ (x↓ ∧ y↓ ∧ E) where
   elim d :=
    let ⟨d₁,d₂⟩ := s.isstrict d
    ⟨d₁, d₂, e.cond d⟩
 
 instance isdef_elim_StrictPred₁
  [Partial α] {P : α → Prop} [s : StrictPred₁ P]
- : Forward₁ (P x) (isdef x) where
+ : Forward₁ (P x) x↓ where
  elim := s.isstrict
 
 instance isdef_elim_StrictPred₂
  [Partial α] [Partial β] {P : α → β -> Prop} [s : StrictPred₂ P]
- : Forward₁ (P x y) (isdef x ∧ isdef y) where
+ : Forward₁ (P x y) (x↓ ∧ y↓) where
  elim := s.isstrict
 
 end Partial

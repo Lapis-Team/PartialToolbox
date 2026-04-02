@@ -13,7 +13,7 @@ instance partialOption : Partial (Option α) where
 abbrev inj (x : α) := (.some x : Option α)
 instance : Coe α (Option α) := ⟨inj⟩
 
-def isdef_option_elim {P: Option α -> Sort u} {h : ∀ x, P (.some x)} : isdef x -> P x :=
+def isdef_option_elim {P: Option α -> Sort u} {h : ∀ x, P (.some x)} : x↓ -> P x :=
  match x with
   | .some _ => fun _ => h _
   | .none => False.elim
@@ -39,7 +39,7 @@ instance strictpred₂_liftpred₂ {P: α -> β -> Prop} : StrictPred₂ (liftPr
   | .none ,_ => h.elim
 
 theorem strictpred₂_reflexive_on_def {r : α → α → Prop} [Reflexive r]
- : isdef x -> liftPred₂ r x x := by
+ : x↓ -> liftPred₂ r x x := by
  apply isdef_option_elim ; intro x ; simp!
  apply Reflexive.refl
 
@@ -70,7 +70,7 @@ instance existence_liftfun₁ {f: α -> β} : Existence (liftFun₁ f dom x) (do
      split at h <;> trivial
   | .none => h.elim
 
-instance strictfun₁_backward {f: α → β} : Backward₁ (isdef (liftFun₁ f dom x)) (isdef x ∧ dom x) where
+instance strictfun₁_backward {f: α → β} : Backward₁ (liftFun₁ f dom x)↓ (x↓ ∧ dom x) where
  intro := by
   simp
   apply isdef_option_elim ; intro x
@@ -107,7 +107,7 @@ instance existence_liftfun₂ {f: α -> β → γ} : Existence (liftFun₂ f dom
   | .none, _ => h.elim
   | .some _, .none => h.elim
 
-instance strictfun₂_backward {f: α → β → γ} : Backward₁ (isdef (liftFun₂ f dom x y)) (isdef x ∧ isdef y ∧ dom x y) where
+instance strictfun₂_backward {f: α → β → γ} : Backward₁ (liftFun₂ f dom x y)↓ (x↓ ∧ y↓ ∧ dom x y) where
  intro := by
   simp
   apply isdef_option_elim ; intro x
@@ -118,7 +118,7 @@ instance strictfun₂_backward {f: α → β → γ} : Backward₁ (isdef (liftF
   . apply True.intro
   . contradiction
 
-theorem lift_def_refl [Std.Refl P] : isdef x -> liftPred₂ P x x := by
+theorem lift_def_refl [Std.Refl P] : x↓ -> liftPred₂ P x x := by
  apply isdef_option_elim
  apply Std.Refl.refl
 
@@ -172,12 +172,12 @@ instance [Partial α] [Partial β] [Partial γ] {g f : α -> β → γ} [u: Unfo
  : Existence (g x y) P := by
  cases u ; assumption
 
-instance [Partial α] [Partial β] {g f : α -> β} [u: Unfoldable g f] [Backward₁ (Partial.isdef (f x)) P]
- : Backward₁ (Partial.isdef (g x)) P := by
+instance [Partial α] [Partial β] {g f : α -> β} [u: Unfoldable g f] [Backward₁ (f x)↓ P]
+ : Backward₁ (g x)↓ P := by
  cases u ; assumption
 
-instance [Partial α] [Partial β] [Partial γ] {g f : α -> β → γ} [u: Unfoldable g f] [Backward₁ (Partial.isdef (f x y)) P]
- : Backward₁ (Partial.isdef (g x y)) P := by
+instance [Partial α] [Partial β] [Partial γ] {g f : α -> β → γ} [u: Unfoldable g f] [Backward₁ (f x y)↓ P]
+ : Backward₁ (g x y)↓ P := by
  cases u ; assumption
 
 instance {P P' : α → β → Prop} {Q Q' : β → γ → Prop} {R : α → γ → Prop} [Trans P' Q' R'] [up: Unfoldable P P'] [uq: Unfoldable Q Q'] [ur: Unfoldable R R']

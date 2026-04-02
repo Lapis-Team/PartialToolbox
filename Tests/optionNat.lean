@@ -60,11 +60,11 @@ instance [Copy h₁] [Copy h₂] : Copy (mul_le_morphism h₁ h₂) where
 
 -----------------------------------
 
-example {x y : Option Nat}: isdef ((x / y) * y) -> isdef ((y * x * 3) / y) := by
+example {x y : Option Nat}:  ((x / y) * y)↓ -> ((y * x * 3) / y)↓ := by
   apply elim ; simp ; intros
   apply Backward.intro ; try simp ; trivial
 
-theorem ex₁' {x y : Option Nat} : isdef x -> isdef y -> y != 0 -> (x / y) * y ≤ x := by
+theorem ex₁' {x y : Option Nat} : x↓ -> y↓ -> y != 0 -> (x / y) * y ≤ x := by
  apply isdef_option_elim ; intro x
  apply isdef_option_elim ; intro y
  intro ec
@@ -106,7 +106,7 @@ theorem ex₅_aux {y: Option Nat} : 1 ≤ y → y ≠ 0 := by
  intro k ; rw [k] at h
  contradiction
 
-theorem ex₅ {x y z : Option Nat} : isdef x → w ≥▷ y → z ≤▷ y -> y ≥ 1 -> (x / w) * z ≤ x := by
+theorem ex₅ {x y z : Option Nat} : x↓ → w ≥▷ y → z ≤▷ y -> y ≥ 1 -> (x / w) * z ≤ x := by
  intro d₁ h₁ h₂
  change 1 ≤ y → _ ; apply elim' ; simp ; intro _ d₂ h₃
  calc
