@@ -1,4 +1,4 @@
-import PartialSetoid.PartialOption
+import PartialToolbox.PartialOption
 open Partial Partial.Option
 
 instance : Reflexive (.≤. : Nat -> Nat -> Prop) := ⟨Nat.le_refl _⟩

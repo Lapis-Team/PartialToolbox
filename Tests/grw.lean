@@ -1,4 +1,4 @@
-import PartialSetoid.Grw
+import PartialToolbox.Grw
 
 def rNatZero x y := x ≠ 0 ∧ x = y
 def rNatEven x y := x%2 = 0 ∧ x = y

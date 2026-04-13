@@ -1,4 +1,4 @@
-import PartialSetoid.Partial
+import PartialToolbox.Partial
 
 namespace Partial.Option
 

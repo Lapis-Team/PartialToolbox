@@ -1,6 +1,6 @@
-import PartialSetoid.Partial
-import PartialSetoid.Grw
-import PartialSetoid.ForwardBackward
+import PartialToolbox.Partial
+import PartialToolbox.Grw
+import PartialToolbox.ForwardBackward
 import Lean
 open Partial
 
@@ -52,8 +52,9 @@ axiom lim_eventually_extensional :
  eventually₂ (.≈▷.) xn xn' -> lim xn ≈▷ lim xn'
 
 axiom bigadd : ℕ -> ℕ -> (ℕ -> ℝ) -> ℝ
-@[instance] axiom bigadd_strict : Forward₁ (bigadd n m xn)↓ (n↓ ∧ m↓ ∧ forall n, (xn n)↓)
-@[instance] axiom bigadd_def_b : Backward₁ (bigadd n m xn)↓ (n↓ ∧ m↓ ∧ forall i, (xn i)↓)
+notation "Σ[" s "," e "]" => bigadd s e
+@[instance] axiom bigadd_strict : Forward₁ (Σ[n, m] xn)↓ (n↓ ∧ m↓ ∧ ∀ n, (xn n)↓)
+@[instance] axiom bigadd_def_b : Backward₁ (Σ[n, m] xn)↓ (n↓ ∧ m↓ ∧ ∀ i, (xn i)↓)
 
 @[instance] axiom lt_inst : LT ℝ
 @[instance] axiom lt_strict : StrictPred₂ (. < . : ℝ → ℝ → Prop)
@@ -77,7 +78,7 @@ example {x y z : ℝ} : (x / y - y / z)↓ -> (y / y * x * z)↓ := by
  apply Backward.intro
  trivial
 
-example {a b : ℕ} {x : ℝ} : (bigadd a b (fun n => x / n))↓ -> (bigadd a (b*a) (fun n => n / n))↓ := by
+example {a b : ℕ} {x : ℝ} : (Σ[a, b] (fun n => x / n))↓ -> (Σ[a, b*a] (fun n => n / n))↓ := by
  apply elim ; simp ; intro a b c
  apply Backward.intro
  and_intros <;> try trivial
@@ -91,14 +92,14 @@ example {x : ℝ} : (lim (fun n => n / x))↓ -> x ≠ 0 := by
 
 ----------------- running example ---------------------------------------
 
-axiom step₁ (x : ℝ) (n : ℕ) : bigadd 0 (n - 1) (fun i => x^i) ≈▷ (1 - x ^ (n+1)) / (1 - x)
+axiom step₁ (x : ℝ) (n : ℕ) : Σ[0, n-1] (fun i => x^i) ≈▷ (1 - x ^ (n+1)) / (1 - x)
 axiom step₂ (x : ℝ) (f: ℕ → ℝ) : lim (fun n => f n / x) ≈▷ lim (fun n => f n) / x
 axiom step₃ (c : ℝ) (f : ℕ → ℝ) : lim (fun n => c - f n) ≈▷ c - lim (fun n => f n)
 axiom step₄ : |x| < 1 -> lim (fun n => x^(n+1)) ≈▷ 0
-axiom step₅ (n m : Nat) : ((n : Nat) - (m : Nat) : ℝ) ≈▷ (n - m : Nat)
+axiom step₅ (n m : Nat) : (n - m : ℝ) ≈▷ (n - m : Nat)
 axiom step₆ : |x| < y -> y - x ≠ 0
 
-noncomputable def geometricSeries (x: ℝ) := lim (fun n => bigadd 0 (n-1) (fun i => x ^ i))
+noncomputable def geometricSeries (x: ℝ) := lim (fun n => Σ[0, n-1] fun i => x ^ i)
 
 theorem running {x : ℝ} : |x| < 1 -> geometricSeries x ≈ 1 / (1 - x) := by
   intro h
@@ -124,11 +125,11 @@ theorem running₂ { x : ℝ } : |x| < 1 -> (1 - x) * geometricSeries x ≈ 1 :=
   apply elim _ h ; simp ; intro d₁ d₂
   calc
          (1 - x) * geometricSeries x
-    _ ≈▷ (1 - x) * (1 / (1 - x))    := by respects (peq_rtolpeq (running h))
+    _ ≈▷ (1 - x) * (1 / (1 - x))    := by respects peq_rtolpeq (running h)
     _ ≈  (1 - x) * (1 / (1 - x))    := by
                                         apply def_peqrfl
                                         apply Backward.intro
-                                        grind [step₆]
+                                        simp_all [step₆]
     _ ◁≈ 1                          := by respects step₇ (1 - x) 1
 
 theorem running_full { x : ℝ } : |x| < 1 -> (1 - x) * geometricSeries x ≈ 1 := by
@@ -136,21 +137,20 @@ theorem running_full { x : ℝ } : |x| < 1 -> (1 - x) * geometricSeries x ≈ 1 
   apply elim _ h ; simp ; intro d₁ d₂
   have hgs := calc
         geometricSeries x
-   _ ≈▷ lim (fun n => (1 - x ^ (n+1)) / (1 - x)) := by respects' (step₁ x)
-   _ ≈▷ lim (fun n => (1 - x ^ (n+1))) / (1 - x) := by respects step₂ (1 - x) (fun n => 1 - x ^(n+1))
+   _ ≈▷ lim (fun n => (1 - x ^ (n+1)) / (1 - x)) := by respects' step₁ x
+   _ ≈▷ lim (fun n => (1 - x ^ (n+1))) / (1 - x) := by apply step₂ (1 - x) (fun n => 1 - x ^(n+1))
    _ ≈▷ (1 - lim (fun n => x ^ (n+1))) / (1 - x) := by respects step₃ 1 (fun n => x ^ (n + 1))
    _ ≈▷ (1 - 0) / (1 - x)                        := by respects step₄ h
-   _ ≈▷ 1 / (1 - x)                              := by apply (_ : forall w, ((1 - 0) / (w - x)) ≈▷ 1 / (w - x)) ; intro w
+   _ ≈▷ 1 / (1 - x)                              := by apply (_ : ∀ w, ((1 - 0) / (w - x)) ≈▷ 1 / (w - x))
+                                                       intro w
                                                        respects step₅ 1 0
-   _ ≈  1 / (1 - x)                              := by
-                                                     apply def_peqrfl
-                                                     apply Backward.intro
-                                                     grind [step₆]
+   _ ≈  1 / (1 - x)                              := by apply def_peqrfl
+                                                       apply Backward.intro
+                                                       simp_all [step₆]
   calc
          (1 - x) * geometricSeries x
-    _ ≈▷ (1 - x) * (1 / (1 - x))    := by respects (peq_rtolpeq hgs)
-    _ ≈  (1 - x) * (1 / (1 - x))    := by
-                                        apply def_peqrfl
-                                        apply Backward.intro
-                                        grind [step₆]
+    _ ≈▷ (1 - x) * (1 / (1 - x))    := by respects peq_rtolpeq hgs
+    _ ≈  (1 - x) * (1 / (1 - x))    := by apply def_peqrfl
+                                          apply Backward.intro
+                                          simp_all [step₆]
     _ ◁≈ 1                          := by respects step₇ (1 - x) 1

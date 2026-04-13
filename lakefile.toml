@@ -1,10 +1,6 @@
-name = "PartialSetoid"
+name = "PartialToolbox"
 version = "0.1.0"
-defaultTargets = ["partialsetoid"]
+defaultTargets = ["PartialToolbox"]
 
 [[lean_lib]]
-name = "PartialSetoid"
-
-[[lean_exe]]
-name = "partialsetoid"
-root = "Main"
+name = "PartialToolbox"

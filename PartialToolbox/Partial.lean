@@ -1,5 +1,5 @@
-import PartialSetoid.Grw
-import PartialSetoid.ForwardBackward
+import PartialToolbox.Grw
+import PartialToolbox.ForwardBackward
 import Lean
 -- Partial types are types equipped with a unary isdef predicate
 -- Strict unary and binary functions are defined
@@ -96,7 +96,6 @@ def rtol [Partial T] (op: T -> T -> Prop) : T -> T -> Prop :=
  fun x y => y↓ -> op x y
 
 postfix:1024 "▷ " => rtol
-postfix:1024 "|> " => rtol
 
 infix:60 " ≈▷ " => rtol HasEquiv.Equiv
 @[app_unexpander rtol]
@@ -160,21 +159,8 @@ meta def ltor.unexpander_peqq : Lean.PrettyPrinter.Unexpander
   | _ => throw ()
 
 prefix:1024 " ◁" => ltor
-prefix:1024 " <|" => ltor
 
-example {r : α -> α -> Prop} : r x y -> <|r x y := by 
-  intro h _ ; exact h
-
-example {r : α -> α -> Prop} : r x y -> r|> x y := by 
-  intro h _ ; exact h
-
-example {r : α -> α -> Prop} : r x y -> <|r|> x y := by 
-  intro h _ _ ; exact h
-
-variable {r : α -> α -> Prop} in
-
-
-theorem def_ltor_def {r: α → α → Prop} [Partial α] [StrictPred₂ r] : x↓ -> ◁r x y -> y↓ := by
+theorem def_ltor_def {r: α → α → Prop} [Partial α] [StrictPred₂ r] : x↓ → ◁r x y → y↓ := by
  intro h h'
  apply (StrictPred₂.isstrict (h' h)).right
 
@@ -218,6 +204,8 @@ infix:60 " ◁≈▷ " => ltor (rtol HasEquiv.Equiv)
 
 -- Reflexivity
 instance [Partial α] : Reflexive (· ◁≈▷ · : α -> α -> Prop) := ltor_refl fun _ => def_peqrfl
+
+-- x↓ -> y↓ ∧ (y↓ -> x↓ ∧ x ≈ y)
 
 -- Transitivity
 theorem bidir_trans₁ [Partial α] {r₁ r₂ r₃ : α -> α -> Prop} 
