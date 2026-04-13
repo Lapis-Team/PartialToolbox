@@ -118,3 +118,20 @@ theorem ex₅ {x y z : Option Nat} : x↓ → w ≥▷ y → z ≤▷ y -> y ≥
                        apply Backward.intro <;> and_intros <;> try trivial
                        simp ; exact ex₅_aux h₃
   _ ◁≤ x           := ex₁
+
+  -----------------------------------------------
+/-
+  @[simp]
+  axiom liftPred₂_simpl {f : α → β → Prop}
+   [u: Unfoldable g (Partial.Option.liftPred₂ f)] : g (some x) (some y) ↔ f x y
+
+  example : x ≤ some 4 -> (∃ y, x = some y) -> x ≤ (x * 1) := by
+   simp ; intro h y k ; subst_vars ; simp_all
+
+  example {x y z : Option Nat}: isdef y → z ≤ x → x + y - z ≥ y := by
+   calc
+         x + y - z
+    _ ≈▷ x - z + y := sorry
+    _ ◁≥ 0 + y     := sorry
+    _ ◁≈ y         := sorry
+-/
