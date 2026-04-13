@@ -4,13 +4,10 @@ import PartialSetoid.PartialOption
 
 open Partial
 
-#check Except
-
-instance : Partial (Option α) := ⟨(·.isSome)⟩
-instance : Partial (Except ε α) := ⟨(·.isOk)⟩
--- ⟨·.isSome⟩
-
 -------------------- Axiomatic approach for obtaining ℕ⊥ --------------------
+
+namespace AxiomNat
+
 axiom NatBot : Type
 notation "ℕ⊥" => NatBot
 axiom zero : ℕ⊥
@@ -24,9 +21,7 @@ axiom zero : ℕ⊥
 @[instance] axiom subNatBot : Sub ℕ⊥
 
 @[instance] axiom divNatBotStrict : StrictFun₂ (· / · : ℕ⊥ → _ → _)
-/- @[instance] axiom divExistence {n d : ℕ⊥} : Existence (n / d) (d ≠ zero) -/
 @[instance] axiom divExistence {n d : ℕ⊥} : Existence (n / d) (zero < d)
-/- @[instance] axiom div_def_b {n m : ℕ⊥} : Backward₁ (n / m)↓ (n↓ ∧ m↓ ∧ m ≠ zero) -/
 @[instance] axiom div_def_b {n m : ℕ⊥} : Backward₁ (n / m)↓ (n↓ ∧ m↓ ∧ zero < m)
 
 @[instance] axiom add_def_b {n m : ℕ⊥} : Backward₁ (n + m)↓ (n↓ ∧ m↓)
@@ -50,14 +45,6 @@ example {x y z: ℕ⊥} : ((x / y) - (y / z))↓ → ((x * y + z * z) / (y * z))
   have : zero < y * z := mul_gt_zero hy hz
   trivial
 
-/- axiom mul_ne_zero {n m : ℕ⊥} : n ≠ zero → m ≠ zero → (n * m) ≠ zero -/
-/- example {x y z: ℕ⊥} : ((x / y) - (y / z))↓ → ((x * y + z * z) / (y * z))↓ := by -/
-/-   apply elim ; simp ; intros -/
-/-   apply Backward.intro ; simp -/
-/-   have ⟨hy, hz⟩ : y ≠ zero ∧ z ≠ zero := by trivial -/
-/-   have : y * z ≠ zero := mul_ne_zero hy hz -/
-/-   trivial -/
-
 axiom div_def {x y : ℕ⊥} : (x / y)↓ -> x↓ ∧ y↓ ∧ zero < y
 axiom def_div {y : ℕ⊥} : zero < y -> ∀ x, x↓ -> (x / y)↓
 axiom def_add {x y : ℕ⊥}: x↓ -> y↓ -> (x + y)↓
@@ -74,26 +61,18 @@ example {x y z: ℕ⊥} : ((x / y) - (y / z))↓ → ((x * y + z * z) / (y * z))
   specialize h₃ (x * y + z * z)
   exact h₃ h₂ 
 
-/- example {x y z: ℕ⊥} : ((x / y) - (y / z))↓ → ((x * y + z * z) / (y * z))↓ := by -/
-/-   intro h -/
-/-   have ⟨a₁, a₂⟩ := sub_def h -/
-/-   have ⟨dx, dy, hy⟩ := div_def a₁ -/
-/-   have ⟨_, dz, hz⟩ := div_def a₂ -/
-/-   have h₁: y * z ≠ zero := mul_ne_zero hy hz -/
-/-   have h₂ := def_add (def_mul dx dy) (def_mul dz dz) -/
-/-   have h₃ := def_div h₁ -/
-/-   specialize h₃ (x * y + z * z) -/
-/-   exact h₃ h₂  -/
+end AxiomNat
 
 --------------------  GRW Example -------------------- 
+
+namespace GeneralizedRewriting
+
 def R x y := x ≠ 0 ∧ x = y
 
 def P (x: Nat) := ∀ y: Nat, y ≠ 0 -> x * y ≠ 0
-theorem p' : R x y -> (P x ↔ P y) := by
+theorem p' : R x y -> (P x ⟶ P y) := by
   intro ⟨l, r⟩
-  constructor
-  · rw [← r] ; exact id
-  · rw [r] ; exact id
+  rw [r] ; exact id
 instance [Copy k] : Copy (p' k) where
 
 theorem addR : R x₁ x₂ → R y₁ y₂ → R (x₁ + y₁) (x₂ + y₂) := by
@@ -122,48 +101,36 @@ example (h : R x y) (hz : z ≠ 0): P (x + z) → P (y + z) := by
   grw h
   assumption
 
-set_option pp.proofs true in
 example {x y: Nat} 
   [∀ h: R x y, Copy (p' h)] 
   {h' : R (x + x) (y + y)} [Copy h'] 
   : R x y -> P (x + x) → P (y + y) := by
  intro h₁ h₂
  grw h₁
+ assumption
 
--- FIXME: assioma falso
-axiom le₁ {x x' y y': Nat}: x ≥ x' -> y ≤ y' -> (x ≤ y ↔ x' ≤ y')
-theorem t1 {x x' y y' : Nat} : x ≥ x' → y ≤ y' -> (x ≤ y ↔ x' ≤ y') := by
-  intro h₁ h₂
-  constructor
-  · grind
-  · intros ; apply?
-instance [Copy k₁] [Copy k₂]: Copy (le₁ k₁ k₂) where
+end GeneralizedRewriting
 
-instance : @Reflexive Nat LE.le where
- refl := @Nat.le_refl
+-------------------- SIMPLE EXAMPLE LIFTING --------------------
 
-example {x y z: Nat} : x - z ≥ y + z -> x - z ≤ z * z -> y + z ≤ z * z := by
-  intro h₁ h₂
-  have : Proper GE.ge z := ⟨Nat.le_refl z⟩
-  grw h₁
+namespace Lifting
 
--------------------- RESPECTS TEST --------------------
-class Relation (α : Type) where
-  rel : α -> α -> Prop
+open Partial Option
 
-infix:90 " ~ " => Relation.rel
+instance : OfNat (Option Nat) n := ⟨n⟩
 
-namespace Respect
-axiom R : Nat -> Nat -> Prop
-axiom P : Nat -> Prop
+instance : Mul (Option Nat) := ⟨liftFun₂ Mul.mul⟩
+instance : LT (Option Nat) := ⟨liftPred₂ LT.lt⟩
+instance : Unfoldable (· < · : Option Nat → _ → _) (liftPred₂ LT.lt) := .id
 
-instance : Relation Nat := ⟨R⟩
-axiom a₁ : x ~ y → (P x ↔ P y)
-instance [Copy k] : Copy (a₁ k) := ⟨⟩
+macro "elim₁" x:ident h:ident : tactic => 
+  `(tactic| apply elim' <;> simp <;> intro _ <;> apply isdef_option_elim <;> intro $x:ident $h:ident)
 
-example : x ~ y -> P x -> P y := by
-  intro h₁ h₂
-  grw h₁
-  assumption
+theorem mul_gt_zero {x y : Option Nat} : 0 < x → 0 < y → 0 < x * y := by 
+  elim₁ x h₁
+  elim₁ y h₂
+  exact Nat.mul_pos h₁ h₂
 
-end Respect
+end Lifting
+
+----------------------------------------------------------------
