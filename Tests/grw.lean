@@ -4,9 +4,9 @@ def rNatZero x y := x ≠ 0 ∧ x = y
 def rNatEven x y := x%2 = 0 ∧ x = y
 
 axiom p : Nat -> Prop
-axiom p₁ : rNatZero x y -> (p x ↔ p y)
+axiom p₁ : rNatZero x y → p x ⟶ p y
 instance pm₁ [Copy k]: Copy (p₁ k) where
-axiom p₂ : rNatEven x y -> (p x ↔ p y)
+axiom p₂ : rNatEven x y → p x ⟶ p y
 instance pm₂ [Copy k]: Copy (p₂ k) where
 
 
@@ -26,7 +26,7 @@ instance hmulm₁ [Copy k₁] [Copy k₂] : Copy (hmul₁ k₁ k₂) where
 axiom hadd₁ : rNatZero x x' -> rNatZero y y' -> rNatZero (x+y) (x'+y')
 instance haddm₁ [Copy k₁] [Copy k₂] : Copy (hadd₁ k₁ k₂) where
 
-axiom le₁ {y': Int}: x ≥ x' -> y ≤ y' -> (x ≤ y ↔ x' ≤ y')
+axiom le₁ {y': Int}: x ≥ x' -> y ≤ y' → (x ≤ y ⟶ x' ≤ y')
 instance lem₁ [Copy k₁] [Copy k₂]: Copy (le₁ k₁ k₂) where
 instance : @Reflexive Int LE.le where
  refl := @Int.le_refl

@@ -17,7 +17,10 @@ instance [h: Reflexive rel] : Proper rel x where
 
 instance rr [k: Proper r z] : Copy k.is_proper where
 
-macro "grw" h:term : tactic => `(tactic | have := put $h <;> apply Iff.mp take)
+abbrev Impl P Q := P → Q
+infix : 40 " ⟶ " => Impl
+
+macro "grw" h:term : tactic => `(tactic | have := put $h <;> apply (take : _ ⟶ _))
 macro "respects" h:term : tactic => `(tactic | have := put $h <;> apply take)
 
 open Lean Elab Tactic Meta in
