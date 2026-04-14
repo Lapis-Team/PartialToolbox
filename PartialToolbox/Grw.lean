@@ -34,7 +34,7 @@ where `h` contains an arbitrary number of binders by deriving the required
 instance `∀ n, @Copy α R e₁ e₂ (h n)`.
 -/
 open Lean Elab Tactic Meta in
-local elab "put" h:term : tactic => do
+local elab "put" h:term : tactic => withMainContext do
   let rec collectBindersAsTerms : Expr -> List (TSyntax `term)
     | .forallE n _ body _ => mkIdent n :: collectBindersAsTerms body
     | _                   => []
