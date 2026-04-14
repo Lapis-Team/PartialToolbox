@@ -1,13 +1,21 @@
-import PartialSetoid.ForwardBackward
-import PartialSetoid.Partial
-import PartialSetoid.PartialOption
+import PartialToolbox.ForwardBackward
+import PartialToolbox.Partial
+import PartialToolbox.PartialOption
 
+namespace Playground
 open Partial
+
+-- Put your own code here
+
+
+end Playground
+
 
 -------------------- Axiomatic approach for obtaining ℕ⊥ --------------------
 
 namespace AxiomNat
 
+open Partial
 axiom NatBot : Type
 notation "ℕ⊥" => NatBot
 axiom zero : ℕ⊥
@@ -111,7 +119,7 @@ example {x y: Nat}
 
 end GeneralizedRewriting
 
--------------------- SIMPLE EXAMPLE LIFTING --------------------
+-------------------- Simple example Lifting --------------------
 
 namespace Lifting
 

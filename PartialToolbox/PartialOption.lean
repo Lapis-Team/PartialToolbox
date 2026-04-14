@@ -9,6 +9,7 @@ instance partialOption : Partial (Option α) where
   | .none => False
   | .some _ => True
 
+-- The `[@coe]` attribute is specified so that the infoview displays `↑x` instead of `.some x`
 @[coe]
 abbrev inj (x : α) := (.some x : Option α)
 instance : Coe α (Option α) := ⟨inj⟩
@@ -17,6 +18,15 @@ def isdef_option_elim {P: Option α -> Sort u} {h : ∀ x, P (.some x)} : x↓ -
  match x with
   | .some _ => fun _ => h _
   | .none => False.elim
+
+-------------------- Lifting Predicates --------------------
+
+/-
+Defining lifting on unary and binary predicates. A lifted predicates is always strict
+as by definition of strictness on predicates. In the case of binary predicates, if the
+term is defined, and the relation is reflexive, then also the lifted oriented predicates
+are reflexive.
+-/
 
 def liftPred₁ (P: α -> Prop) : Option α -> Prop
  | .some x => P x
@@ -31,7 +41,6 @@ instance strictpred₁_liftpred₁ {P: α -> Prop}: StrictPred₁ (liftPred₁ P
 def liftPred₂ (P: α -> β -> Prop) : Option α -> Option β -> Prop
  | .some x, .some y => P x y
  | _,_ => False
-
 instance strictpred₂_liftpred₂ {P: α -> β -> Prop} : StrictPred₂ (liftPred₂ P) where
  isstrict {x} {y} h :=
   match x,y with
@@ -52,6 +61,15 @@ instance strictpred₂_reflexive_ltor {r : α → α → Prop} [Reflexive r]
 instance strictpred₂_reflexive_rtol {r : α → α → Prop} [Reflexive r]
  : Reflexive (liftPred₂ r)▷ := ⟨strictpred₂_reflexive_ltor.refl⟩
 
+-------------------- Lifting Functions --------------------
+
+/-
+Defining lifting on unary and binary functions by equipping it with a `dom` parameter
+that encodes if the term belongs to the domain. This results in the fact that a lifted 
+function is always strict.
+Since the `dom` parameter models existence conditions for the function, we encode the
+instance of the `Existence` and `Backward` typeclasses.
+-/
 def liftFun₁ (f: α -> β) (dom : Option α → Bool := fun _ => true) : Option α -> Option β
  | .some x => if dom (.some x) then .some (f x) else .none
  | _ => .none
@@ -138,6 +156,8 @@ instance [Trans P Q R] : Trans (liftPred₂ P) (liftPred₂ Q) (liftPred₂ R) w
 
 end Partial.Option
 
+-------------------- Unfoldable Class --------------------
+
 @[class]
 inductive Unfoldable (T : semiOutParam α) : outParam α -> Prop where
  | id: Unfoldable T T
@@ -191,5 +211,3 @@ instance {P P' : α → α → Prop} [u: Unfoldable P P'] [Reflexive P']
 @[simp]
 theorem Partial.Option.liftFun₂_simpl' {f : α → β → γ} [u: Unfoldable g (Partial.Option.liftFun₂ f dom)] : dom (some x) (some y) → g (some x) (some y) = some (f x y) := by
  cases u ; apply Partial.Option.liftFun₂_simpl
-
-variable {x: Nat}

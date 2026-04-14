@@ -63,10 +63,8 @@ theorem def_peq₂ [Partial T] {x y : T} : y↓ -> x = y -> x ≈ y := by
 theorem def_peqrfl {x: T} [Partial T]: x↓ -> x ≈ x :=
  fun a => def_peq₁ a rfl
 
---@[def_lemma_closing]
 theorem peq_def₁ [Partial T] {x y : T} : x ≈ y -> x↓ := And.left
 
---@[def_lemma_closing]
 theorem peq_def₂ [Partial T] {x y : T}: x ≈ y -> y↓ := by
   intro ⟨hl, hr⟩
   rw [<- hr]
@@ -120,31 +118,32 @@ theorem rtol_refl {r : α → α → Prop} [Partial α] (p : ∀ {x}, x↓ -> r 
 instance rtol_peq_refl [Partial α] : Reflexive (. ≈▷ . : α -> α -> Prop) := rtol_refl def_peqrfl
 
 -- Transitivity
-theorem r_trans₁ {r₁ r₂ r₃ : α -> α -> Prop} [Partial α] [StrictPred₂ r₂] [Trans r₁ r₂ r₃]  {x y z : α} :
-  r₁▷ x y -> r₂▷ y z -> r₃▷ x z := by
- intro h₂ h₁ d₁
- have k₁ := h₁ d₁
- have ⟨d₂,_⟩ := StrictPred₂.isstrict k₁
- have k₂ := h₂ d₂
- apply Trans.trans k₂ k₁
+theorem r_trans₁ {r₁ r₂ r₃ : α -> α -> Prop} [Partial α] [StrictPred₂ r₂] 
+  [Trans r₁ r₂ r₃]  {x y z : α} : r₁▷ x y -> r₂▷ y z -> r₃▷ x z := by
+    intro h₂ h₁ d₁
+    have k₁ := h₁ d₁
+    have ⟨d₂,_⟩ := StrictPred₂.isstrict k₁
+    have k₂ := h₂ d₂
+    apply Trans.trans k₂ k₁
 
-theorem r_trans₂ {r₁ r₂ r₃ : α -> α -> Prop} [Partial α] [Trans r₁ r₂ r₃]  {x y z : α} :
-  r₁ x y -> r₂▷ y z -> r₃▷ x z := by
- intro k₂ h₁ d₁
- have k₁ := h₁ d₁
- apply Trans.trans k₂ k₁
+theorem r_trans₂ {r₁ r₂ r₃ : α -> α -> Prop} [Partial α] [Trans r₁ r₂ r₃] 
+  {x y z : α} : r₁ x y -> r₂▷ y z -> r₃▷ x z := by
+    intro k₂ h₁ d₁
+    have k₁ := h₁ d₁
+    apply Trans.trans k₂ k₁
 
-theorem r_trans₃ {r₁ r₂ r₃ : α -> α -> Prop} [Partial α] [StrictPred₂ r₂] [Trans r₁ r₂ r₃]  {x y z : α} :
-  r₁▷ x y -> r₂ y z -> r₃ x z := by
- intro h₂ k₁
- have ⟨d₂,_⟩ := StrictPred₂.isstrict k₁
- have k₂ := h₂ d₂
- apply Trans.trans k₂ k₁
+theorem r_trans₃ {r₁ r₂ r₃ : α -> α -> Prop} [Partial α] [StrictPred₂ r₂] 
+  [Trans r₁ r₂ r₃]  {x y z : α} : r₁▷ x y -> r₂ y z -> r₃ x z := by
+     intro h₂ k₁
+     have ⟨d₂,_⟩ := StrictPred₂.isstrict k₁
+     have k₂ := h₂ d₂
+     apply Trans.trans k₂ k₁
 
-instance (priority := high) {r₁ r₂ r₃ : α -> α -> Prop} [Partial α] [StrictPred₂ r₂] [Trans r₁ r₂ r₃] 
-  : Trans r₁▷ r₂▷ r₃▷ := ⟨ r_trans₁ ⟩
+instance (priority := high) {r₁ r₂ r₃ : α -> α -> Prop} [Partial α] [StrictPred₂ r₂] 
+  [Trans r₁ r₂ r₃] : Trans r₁▷ r₂▷ r₃▷ := ⟨ r_trans₁ ⟩
 instance {r₁ r₂ r₃ : α -> α -> Prop} [Partial α] [Trans r₁ r₂ r₃] : Trans r₁ r₂▷ r₃▷ := ⟨ r_trans₂ ⟩
-instance {r₁ r₂ r₃ : α -> α -> Prop} [Partial α] [StrictPred₂ r₂] [Trans r₁ r₂ r₃] : Trans r₁▷ r₂ r₃ := ⟨ r_trans₃ ⟩
+instance {r₁ r₂ r₃ : α -> α -> Prop} [Partial α] [StrictPred₂ r₂] 
+  [Trans r₁ r₂ r₃] : Trans r₁▷ r₂ r₃ := ⟨ r_trans₃ ⟩
 ------------------------------------------------------
 
 -- LTOR Direction ------------------------------------
@@ -173,39 +172,37 @@ theorem ltor_refl {r : α → α → Prop} [Partial α] (p : ∀ {x}, x↓ -> r 
 instance ltor_peq_refl [Partial α] : Reflexive (· ◁≈ · : α -> α -> Prop) := ltor_refl def_peqrfl
 
 -- Transitivity
-theorem l_trans₁ {r₁ r₂ r₃ : α -> α -> Prop} [Partial α] [StrictPred₂ r₁] [Trans r₁ r₂ r₃]  {x y z : α} :
-  ◁r₁ x y -> ◁r₂ y z -> ◁r₃ x z := by
- intro h₁ h₂ d₁
- have k₁ := h₁ d₁
- have ⟨_,d₂⟩ := StrictPred₂.isstrict k₁
- have k₂ := h₂ d₂
- apply Trans.trans k₁ k₂
+theorem l_trans₁ {r₁ r₂ r₃ : α -> α -> Prop} [Partial α] [StrictPred₂ r₁] [Trans r₁ r₂ r₃]  {x y z : α} 
+  : ◁r₁ x y -> ◁r₂ y z -> ◁r₃ x z := by
+    intro h₁ h₂ d₁
+    have k₁ := h₁ d₁
+    have ⟨_,d₂⟩ := StrictPred₂.isstrict k₁
+    have k₂ := h₂ d₂
+    apply Trans.trans k₁ k₂
 
-theorem l_trans₂ {r₁ r₂ r₃ : α -> α -> Prop} [Partial α] [StrictPred₂ r₁] [Trans r₁ r₂ r₃]  {x y z : α} :
-  r₁ x y -> ◁r₂ y z -> r₃ x z := by
- intro k₁ h₂
- have ⟨_,d₂⟩ := StrictPred₂.isstrict k₁
- have k₂ := h₂ d₂
- apply Trans.trans k₁ k₂
+theorem l_trans₂ {r₁ r₂ r₃ : α -> α -> Prop} [Partial α] [StrictPred₂ r₁] [Trans r₁ r₂ r₃]  {x y z : α} 
+  : r₁ x y -> ◁r₂ y z -> r₃ x z := by
+    intro k₁ h₂
+    have ⟨_,d₂⟩ := StrictPred₂.isstrict k₁
+    have k₂ := h₂ d₂
+    apply Trans.trans k₁ k₂
 
-theorem l_trans₃ {r₁ r₂ r₃ : α -> α -> Prop} [Partial α] [Trans r₁ r₂ r₃]  {x y z : α} :
-  ◁r₁ x y -> r₂ y z -> ◁r₃ x z := by
- intro h₁ k₂ d₁
- have k₁ := h₁ d₁
- apply Trans.trans k₁ k₂
+theorem l_trans₃ {r₁ r₂ r₃ : α -> α -> Prop} [Partial α] [Trans r₁ r₂ r₃]  {x y z : α} 
+  : ◁r₁ x y -> r₂ y z -> ◁r₃ x z := by
+    intro h₁ k₂ d₁
+    have k₁ := h₁ d₁
+    apply Trans.trans k₁ k₂
 
 instance {r₁ r₂ r₃ : α -> α -> Prop} [Partial α] [StrictPred₂ r₁] [Trans r₁ r₂ r₃] : Trans ◁r₁ ◁r₂ ◁r₃ := ⟨ l_trans₁ ⟩
 instance (priority := high) {r₁ r₂ r₃ : α -> α -> Prop} [Partial α] [StrictPred₂ r₁] [Trans r₁ r₂ r₃] : Trans r₁ ◁r₂ r₃ := ⟨ l_trans₂ ⟩
 instance (priority := high + 1) {r₁ r₂ r₃ : α -> α -> Prop} [Partial α] [Trans r₁ r₂ r₃] : Trans ◁r₁ r₂ ◁r₃ := ⟨ l_trans₃ ⟩
 ------------------------------------------------------
 
---- BIDIRECTIONAL RELATION
+-- Bidirectional relation
 infix:60 " ◁≈▷ " => ltor (rtol HasEquiv.Equiv)
 
 -- Reflexivity
 instance [Partial α] : Reflexive (· ◁≈▷ · : α -> α -> Prop) := ltor_refl fun _ => def_peqrfl
-
--- x↓ -> y↓ ∧ (y↓ -> x↓ ∧ x ≈ y)
 
 -- Transitivity
 theorem bidir_trans₁ [Partial α] {r₁ r₂ r₃ : α -> α -> Prop} 
@@ -224,39 +221,48 @@ theorem bidir_trans₂ [Partial α] {r₁ r₂ r₃ : α -> α -> Prop}
   specialize h₂ dy dz
   exact Trans.trans h₁ h₂
 
-instance (priority := high + 2) [Partial α] {r₁ r₂ r₃ : α -> α -> Prop} [StrictPred₂ r₂] [Trans r₁ r₂ r₃] : Trans ◁r₁▷ r₂▷ ◁r₃▷ := ⟨bidir_trans₁⟩
-instance (priority := high + 2) [Partial α] {r₁ r₂ r₃ : α -> α -> Prop} [StrictPred₂ r₁] [Trans r₁ r₂ r₃] : Trans ◁r₁ ◁r₂▷ ◁r₃▷ := ⟨bidir_trans₂⟩
+instance (priority := high + 2) [Partial α] {r₁ r₂ r₃ : α -> α -> Prop} 
+  [StrictPred₂ r₂] [Trans r₁ r₂ r₃] : Trans ◁r₁▷ r₂▷ ◁r₃▷ := ⟨bidir_trans₁⟩
+instance (priority := high + 2) [Partial α] {r₁ r₂ r₃ : α -> α -> Prop} 
+  [StrictPred₂ r₁] [Trans r₁ r₂ r₃] : Trans ◁r₁ ◁r₂▷ ◁r₃▷ := ⟨bidir_trans₂⟩
 
 ------------------------------------------------------
 
-------- GRW for ≈▷ ------
-
-theorem rtolpeq_StrictFun₁ {op : α → β} [Partial α] [Partial β] [StrictFun₁ op] : x ≈▷ x' -> op x ≈▷ op x' := by
-  intro h₁ d₁
-  have d₂ := StrictFun₁.isstrict d₁
-  apply def_peq₂ d₁
-  have hx : x = x' := peq_eq (h₁ d₂)
-  rw [hx]
+theorem rtolpeq_StrictFun₁ {op : α → β} [Partial α] [Partial β] [StrictFun₁ op] 
+  : x ≈▷ x' -> op x ≈▷ op x' := by
+    intro h₁ d₁
+    have d₂ := StrictFun₁.isstrict d₁
+    apply def_peq₂ d₁
+    have hx : x = x' := peq_eq (h₁ d₂)
+    rw [hx]
 
 instance instRtolpeqStrictFun₁
- [Partial α] [Partial β] {op : α → β} [StrictFun₁ op]
- {r₁ : x ≈▷ x'}
- [Copy r₁] : Copy (rtolpeq_StrictFun₁ (op := op) r₁) where
+  [Partial α] [Partial β] {op : α → β} [StrictFun₁ op]
+  {r₁ : x ≈▷ x'}
+  [Copy r₁] : Copy (rtolpeq_StrictFun₁ (op := op) r₁) where
 
-theorem rtolpeq_StrictFun₂ {op : α → β → γ} [Partial α] [Partial β] [Partial γ] [StrictFun₂ op] : x ≈▷ x' -> y ≈▷ y' -> op x y ≈▷ op x' y' := by
-  intro h₁ h₂ d₁
-  have ⟨d₂,d₃⟩ := StrictFun₂.isstrict d₁
-  apply def_peq₂ d₁
-  have hx : x = x' := peq_eq (h₁ d₂)
-  have hy : y = y' := peq_eq (h₂ d₃)
-  rw [hx, hy]
+theorem rtolpeq_StrictFun₂ {op : α → β → γ} [Partial α] [Partial β] [Partial γ] [StrictFun₂ op] 
+  : x ≈▷ x' -> y ≈▷ y' -> op x y ≈▷ op x' y' := by
+    intro h₁ h₂ d₁
+    have ⟨d₂,d₃⟩ := StrictFun₂.isstrict d₁
+    apply def_peq₂ d₁
+    have hx : x = x' := peq_eq (h₁ d₂)
+    have hy : y = y' := peq_eq (h₂ d₃)
+    rw [hx, hy]
 
 instance instRtolpeqStrictFun₂
- [Partial α] [Partial β] [Partial γ] {op : α → β → γ} [StrictFun₂ op]
- {r₁ : x ≈▷ x'} {r₂ : y ≈▷ y'}
- [Copy r₁] [Copy r₂] : Copy (rtolpeq_StrictFun₂ (op := op) r₁ r₂) where
+  [Partial α] [Partial β] [Partial γ] {op : α → β → γ} [StrictFun₂ op]
+  {r₁ : x ≈▷ x'} {r₂ : y ≈▷ y'}
+  [Copy r₁] [Copy r₂] : Copy (rtolpeq_StrictFun₂ (op := op) r₁ r₂) where
 
 ---------------------- Forward isdef ---------------------
+
+/-
+The following instances allow to hide from the API the explicit use of `Forward₁`, so that
+the user may model naturally strictness on functions/predicates and existence conditions
+respectively with the `Strict(Fun|Pred)` and `Existence` typeclasses.
+The `elim` function will then automatically search for these instances when necessary.
+-/
 
 instance isdef_elim_StrictFun₁
  [Partial α] [Partial β] {op : α → β} [s : StrictFun₁ op] [e : Existence (op x) E]
