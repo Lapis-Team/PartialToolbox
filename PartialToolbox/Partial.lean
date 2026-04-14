@@ -226,20 +226,20 @@ instance (priority := high + 2) [Partial α] {r₁ r₂ r₃ : α -> α -> Prop}
 
 ------------------------------------------------------
 
-theorem ltorpeq_StrictPred₁ {op : α → Prop} [Partial α] [StrictPred₁ op]
-  : x ◁≈ x' -> op x ⟶ op x' := by
+theorem ltorpeq_StrictPred₁ {P : α → Prop} [Partial α] [StrictPred₁ P]
+  : x ◁≈ x' -> P x ⟶ P x' := by
     intro h₁ k
     have d₁ := StrictPred₁.isstrict k
     have hx : x = x' := peq_eq (h₁ d₁)
     simpa [←hx]
 
 instance instLtorpeqStrictPred₁
-  [Partial α] {op : α → Prop} [StrictPred₁ op]
+  [Partial α] {P : α → Prop} [StrictPred₁ P]
   {r₁ : x ◁≈ x'}
-  [Copy r₁] : Copy (ltorpeq_StrictPred₁ (op := op) r₁) where
+  [Copy r₁] : Copy (ltorpeq_StrictPred₁ (P := P) r₁) where
 
-theorem ltorpeq_StrictPred₂ {op : α → β → Prop} [Partial α] [Partial β] [StrictPred₂ op]
-  : x ◁≈ x' -> y ◁≈ y' -> op x y ⟶ op x' y' := by
+theorem ltorpeq_StrictPred₂ {P : α → β → Prop} [Partial α] [Partial β] [StrictPred₂ P]
+  : x ◁≈ x' -> y ◁≈ y' -> P x y ⟶ P x' y' := by
     intro h₁ h₂ k
     have d₁ := StrictPred₂.isstrict k
     have hx : x = x' := peq_eq (h₁ d₁.left)
@@ -247,12 +247,12 @@ theorem ltorpeq_StrictPred₂ {op : α → β → Prop} [Partial α] [Partial β
     simpa [←hx, ←hy]
 
 instance instLtorpeqStrictPred₂
-  [Partial α] [Partial β] {op : α → β → Prop} [StrictPred₂ op]
+  [Partial α] [Partial β] {P : α → β → Prop} [StrictPred₂ P]
   {r₁ : x ◁≈ x'} {r₂ : y ◁≈ y'}
-  [Copy r₁] [Copy r₂] : Copy (ltorpeq_StrictPred₂ (op := op) r₁ r₂) where
+  [Copy r₁] [Copy r₂] : Copy (ltorpeq_StrictPred₂ (P := P) r₁ r₂) where
 
-theorem rtolpeq_StrictFun₁ {op : α → β} [Partial α] [Partial β] [StrictFun₁ op]
-  : x ≈▷ x' -> op x ≈▷ op x' := by
+theorem rtolpeq_StrictFun₁ {f : α → β} [Partial α] [Partial β] [StrictFun₁ f]
+  : x ≈▷ x' -> f x ≈▷ f x' := by
     intro h₁ d₁
     have d₂ := StrictFun₁.isstrict d₁
     apply def_peq₂ d₁
@@ -260,12 +260,12 @@ theorem rtolpeq_StrictFun₁ {op : α → β} [Partial α] [Partial β] [StrictF
     rw [hx]
 
 instance instRtolpeqStrictFun₁
-  [Partial α] [Partial β] {op : α → β} [StrictFun₁ op]
+  [Partial α] [Partial β] {f : α → β} [StrictFun₁ f]
   {r₁ : x ≈▷ x'}
-  [Copy r₁] : Copy (rtolpeq_StrictFun₁ (op := op) r₁) where
+  [Copy r₁] : Copy (rtolpeq_StrictFun₁ (f := f) r₁) where
 
-theorem rtolpeq_StrictFun₂ {op : α → β → γ} [Partial α] [Partial β] [Partial γ] [StrictFun₂ op]
-  : x ≈▷ x' -> y ≈▷ y' -> op x y ≈▷ op x' y' := by
+theorem rtolpeq_StrictFun₂ {f : α → β → γ} [Partial α] [Partial β] [Partial γ] [StrictFun₂ f]
+  : x ≈▷ x' -> y ≈▷ y' -> f x y ≈▷ f x' y' := by
     intro h₁ h₂ d₁
     have ⟨d₂,d₃⟩ := StrictFun₂.isstrict d₁
     apply def_peq₂ d₁
@@ -274,9 +274,9 @@ theorem rtolpeq_StrictFun₂ {op : α → β → γ} [Partial α] [Partial β] [
     rw [hx, hy]
 
 instance instRtolpeqStrictFun₂
-  [Partial α] [Partial β] [Partial γ] {op : α → β → γ} [StrictFun₂ op]
+  [Partial α] [Partial β] [Partial γ] {f : α → β → γ} [StrictFun₂ f]
   {r₁ : x ≈▷ x'} {r₂ : y ≈▷ y'}
-  [Copy r₁] [Copy r₂] : Copy (rtolpeq_StrictFun₂ (op := op) r₁ r₂) where
+  [Copy r₁] [Copy r₂] : Copy (rtolpeq_StrictFun₂ (f := f) r₁ r₂) where
 
 ---------------------- Forward isdef ---------------------
 
