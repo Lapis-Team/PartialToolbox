@@ -43,8 +43,6 @@ instance (priority := low) default_existence {x: α} [Partial α] : Existence x 
  cond _ := True.intro
 
 ------------------ Defining PEQ on instances of Partial
-namespace Partial
-
 instance [Partial T] : HasEquiv T where
  Equiv (x y : T) := x↓ ∧ x = y
 
@@ -286,4 +284,41 @@ instance isdef_elim_StrictPred₂
  : Forward₁ (P x y) (x↓ ∧ y↓) where
  elim := s.isstrict
 
-end Partial
+-- Unfoldable instances
+instance {f g : α -> α -> Prop} [Partial α] [u: Unfoldable g f] : Unfoldable g▷ f▷ := by
+ cases u ; exact .id
+
+instance [u: Unfoldable g f] : Unfoldable ◁g ◁f := by
+ cases u ; exact .id
+
+instance [Partial α] [Partial β] {g f : α -> β → Prop} [u: Unfoldable g f] [StrictPred₂ f]
+ : StrictPred₂ g := by
+ cases u ; assumption
+
+instance [Partial α] {g f : α -> Prop} [u: Unfoldable g f] [StrictPred₁ f]
+ : StrictPred₁ g := by
+ cases u ; assumption
+
+instance [Partial α] [Partial β] {g f : α -> β} [u: Unfoldable g f] [StrictFun₁ f]
+ : StrictFun₁ g := by
+ cases u ; assumption
+
+instance [Partial α] [Partial β] [Partial γ] {g f : α -> β → γ} [u: Unfoldable g f] [StrictFun₂ f]
+ : StrictFun₂ g := by
+ cases u ; assumption
+
+instance [Partial α] [Partial β] {g f : α -> β} [u: Unfoldable g f] [Existence (f x) P]
+ : Existence (g x) P := by
+ cases u ; assumption
+
+instance [Partial α] [Partial β] [Partial γ] {g f : α -> β → γ} [u: Unfoldable g f] [Existence (f x y) P]
+ : Existence (g x y) P := by
+ cases u ; assumption
+
+instance [Partial α] [Partial β] {g f : α -> β} [u: Unfoldable g f] [Backward₁ (f x)↓ P]
+ : Backward₁ (g x)↓ P := by
+ cases u ; assumption
+
+instance [Partial α] [Partial β] [Partial γ] {g f : α -> β → γ} [u: Unfoldable g f] [Backward₁ (f x y)↓ P]
+ : Backward₁ (g x y)↓ P := by
+ cases u ; assumption

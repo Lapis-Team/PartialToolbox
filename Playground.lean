@@ -1,6 +1,7 @@
 import PartialToolbox.ForwardBackward
 import PartialToolbox.Partial
 import PartialToolbox.PartialOption
+import PartialToolbox.Unfoldable
 
 namespace Playground
 open Partial
