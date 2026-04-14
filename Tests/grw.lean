@@ -25,10 +25,8 @@ instance hmulm₁ [Copy k₁] [Copy k₂] : Copy (hmul₁ k₁ k₂) where
 axiom hadd₁ : rNatZero x x' -> rNatZero y y' -> rNatZero (x+y) (x'+y')
 instance haddm₁ [Copy k₁] [Copy k₂] : Copy (hadd₁ k₁ k₂) where
 
--- set_option trace.Meta.synthInstance true
--- set_option pp.explicit true
-
 -------------------- Axiomatic examples --------------------
+
 example : ∀ x y : Nat, rNatZero x y -> p x -> p y := by
  intro x y h1 h2
  grw h1
@@ -114,10 +112,12 @@ example (x: Int): x ≤ x' -> -x ≤ y -> -x' ≤ y := by
  grw h1
  apply h2
 
+/-
 -- Instance where grw currently doesn't work.
-example : ∀ x y z : Nat, rNatZero z z -> rNatZero x y -> p ((x+z)* x) -> p ((y+z) * y) := by
- intro x y z k h1 h2
+example : ∀ x y z : Nat, rNatZero z z -> rNatZero x y -> p ((x+z)* x) -> p ((y+z) * y) := by 
+  intro x y z k h1 h2
  --have foo : Proper _ _:= ⟨k⟩
  have goo: ∀r, Proper r z := ?_
  grw h1
- apply h2
+ apply h2 
+-/

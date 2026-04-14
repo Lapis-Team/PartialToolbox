@@ -1,4 +1,5 @@
 import PartialToolbox.PartialOption
+import PartialToolbox.Unfoldable
 open Partial Partial.Option
 
 instance : Reflexive (.≤. : Nat -> Nat -> Prop) := ⟨Nat.le_refl _⟩

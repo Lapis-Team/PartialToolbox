@@ -1,6 +1,10 @@
 name = "PartialToolbox"
 version = "0.1.0"
 defaultTargets = ["PartialToolbox"]
+testDriver = "Tests"
 
 [[lean_lib]]
 name = "PartialToolbox"
+
+[[lean_lib]]
+name = "Tests"
