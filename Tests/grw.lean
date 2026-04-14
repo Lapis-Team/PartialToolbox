@@ -9,7 +9,6 @@ instance pm₁ [Copy k]: Copy (p₁ k) where
 axiom p₂ : rNatEven x y → p x ⟶ p y
 instance pm₂ [Copy k]: Copy (p₂ k) where
 
-
 axiom f: Nat -> Nat
 axiom f₁ : rNatZero x y -> rNatZero (f x) (f y)
 instance fm₁ [Copy k]: Copy (f₁ k) where
@@ -26,19 +25,10 @@ instance hmulm₁ [Copy k₁] [Copy k₂] : Copy (hmul₁ k₁ k₂) where
 axiom hadd₁ : rNatZero x x' -> rNatZero y y' -> rNatZero (x+y) (x'+y')
 instance haddm₁ [Copy k₁] [Copy k₂] : Copy (hadd₁ k₁ k₂) where
 
-axiom le₁ {y': Int}: x ≥ x' -> y ≤ y' → (x ≤ y ⟶ x' ≤ y')
-instance lem₁ [Copy k₁] [Copy k₂]: Copy (le₁ k₁ k₂) where
-instance : @Reflexive Int LE.le where
- refl := @Int.le_refl
-
-axiom minus₁ : x ≥ y -> -x ≤ -y
-instance minusm₁ [Copy k]: Copy (minus₁ k) where
-axiom minus₂ : x ≤ y -> -x ≥ -y
-instance minusm₂ [Copy k]: Copy (minus₂ k) where
-
 -- set_option trace.Meta.synthInstance true
 -- set_option pp.explicit true
 
+-------------------- Axiomatic examples --------------------
 example : ∀ x y : Nat, rNatZero x y -> p x -> p y := by
  intro x y h1 h2
  grw h1
@@ -87,16 +77,21 @@ example : ∀ x y z : Nat, rNatZero (f z) (f z) -> rNatZero x y -> p (g (f z) x)
  grw h1
  apply h2
 
-theorem u : ∀ x y z : Nat, rNatZero z z -> rNatZero x y -> p ((x+z)* x) -> p ((y+z) * y) := by
- intro x y z k h1 h2
- --have foo : Proper _ _:= ⟨k⟩
- have goo: ∀r, Proper r z := ?_
- grw h1
- apply h2
+---------- Examples with coviariance and contravariance ----------
 
-#print u
-CSC: ora basta cercare goo nel proof term e sostituirlo con la
-rel giusta!
+/-
+We show some interesting examples of how the `grw` tactic captures
+contravariant relations.
+-/
+axiom le₁ {y': Int}: x ≥ x' -> y ≤ y' → (x ≤ y ⟶ x' ≤ y')
+instance lem₁ [Copy k₁] [Copy k₂]: Copy (le₁ k₁ k₂) where
+instance : @Reflexive Int LE.le where
+ refl := @Int.le_refl
+
+axiom minus₁ : x ≥ y -> -x ≤ -y
+instance minusm₁ [Copy k]: Copy (minus₁ k) where
+axiom minus₂ : x ≤ y -> -x ≥ -y
+instance minusm₂ [Copy k]: Copy (minus₂ k) where
 
 example (x: Int): y ≤ y' -> x ≤ y -> x ≤ y' := by
  intro h1 h2
@@ -116,5 +111,13 @@ example (x: Int): -x ≥ -x' -> -x ≤ y -> -x' ≤ y := by
 
 example (x: Int): x ≤ x' -> -x ≤ y -> -x' ≤ y := by
  intro h1 h2
+ grw h1
+ apply h2
+
+-- Instance where grw currently doesn't work.
+example : ∀ x y z : Nat, rNatZero z z -> rNatZero x y -> p ((x+z)* x) -> p ((y+z) * y) := by
+ intro x y z k h1 h2
+ --have foo : Proper _ _:= ⟨k⟩
+ have goo: ∀r, Proper r z := ?_
  grw h1
  apply h2

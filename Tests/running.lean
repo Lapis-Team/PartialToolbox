@@ -106,7 +106,7 @@ theorem running {x : ℝ} : |x| < 1 -> geometricSeries x ≈ 1 / (1 - x) := by
   apply elim _ h ; simp ; intro _ _
   calc
         geometricSeries x
-   _ ≈▷ lim (fun n => (1 - x ^ (n+1)) / (1 - x)) := by respects' (step₁ x)
+   _ ≈▷ lim (fun n => (1 - x ^ (n+1)) / (1 - x)) := by respects step₁ x
    _ ≈▷ lim (fun n => (1 - x ^ (n+1))) / (1 - x) := by respects step₂ (1 - x) (fun n => 1 - x ^(n+1))
    _ ≈▷ (1 - lim (fun n => x ^ (n+1))) / (1 - x) := by respects step₃ 1 (fun n => x ^ (n + 1))
    _ ≈▷ (1 - 0) / (1 - x)                        := by respects step₄ h
@@ -137,7 +137,7 @@ theorem running_full { x : ℝ } : |x| < 1 -> (1 - x) * geometricSeries x ≈ 1 
   apply elim _ h ; simp ; intro d₁ d₂
   have hgs := calc
         geometricSeries x
-   _ ≈▷ lim (fun n => (1 - x ^ (n+1)) / (1 - x)) := by respects' step₁ x
+   _ ≈▷ lim (fun n => (1 - x ^ (n+1)) / (1 - x)) := by respects step₁ x
    _ ≈▷ lim (fun n => (1 - x ^ (n+1))) / (1 - x) := by apply step₂ (1 - x) (fun n => 1 - x ^(n+1))
    _ ≈▷ (1 - lim (fun n => x ^ (n+1))) / (1 - x) := by respects step₃ 1 (fun n => x ^ (n + 1))
    _ ≈▷ (1 - 0) / (1 - x)                        := by respects step₄ h
