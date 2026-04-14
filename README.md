@@ -26,3 +26,6 @@ Finally, the `optionNat.lean` file showcases lifting on natural numbers, and sho
 
 ### Playground
 Finally, the `Playground.lean` file contains some sections of minimal examples that are also presented in the paper. The file is also meant to be used for playing around with the library with custom examples in the `Playground` namespace.
+
+## Testing
+To run the tests contained in the `Tests` directory, run the `lake test` command. If you want to add your own tests, add the files in the directory, and then edit the `Tests.lean` file in the root directory by importing your own tests.
