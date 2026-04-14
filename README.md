@@ -4,6 +4,9 @@ Implementation in Lean of the toolbox presented in _A Toolbox for Undefined Term
 ## Repository Organisation
 The library is fully contained in the `PartialToolbox` directory. We suggest the navigation of the repository in the following order.
 
+### Unfoldable
+We want to automate reasoning as much as possible with the use of typeclasses. However, Lean doesn't have any tool for automatically infer if two expressions `e1` and `e2` have the same type up to unfolding. For this reason, we encode the `Unfoldable` type class and instantiate it when necessary.
+
 ### Partial
 The `PartialToolbox/Partial.lean` file contains the definition the `Partial` typeclass together with the implementation of strictness, existence conditions a directed relations.
 
