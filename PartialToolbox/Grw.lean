@@ -3,15 +3,14 @@ import Lean
 
 class Copy {rel: β → β → Prop} {lhs: outParam β} {rhs: β} (out: outParam (rel lhs rhs)) where
 
-def put k : @Copy _ r lhs rhs k where
+def put (k : r lhs rhs) : @Copy _ r lhs rhs k where
 
-def take : [@Copy _ r lhs rhs k] -> r lhs rhs := k
+def take [@Copy _ r lhs rhs k] : r lhs rhs := k
 
 class Reflexive (rel: α -> α -> Prop) where
   refl : rel x x
 
-instance {P P' : α → α → Prop} [u: Unfoldable P P'] [Reflexive P']
- : Reflexive P := by
+instance {P P' : α → α → Prop} [u: Unfoldable P P'] [Reflexive P'] : Reflexive P := by
  cases u ; assumption
 
 class Proper (rel: α -> α -> Prop) (x: α) where
