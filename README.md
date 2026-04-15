@@ -8,7 +8,7 @@ The library is fully contained in the `PartialToolbox` directory. We suggest the
 We want to automate reasoning as much as possible with the use of typeclasses. However, Lean doesn't have any tool for automatically infer if two expressions `e1` and `e2` have the same type up to unfolding. For this reason, we encode the `Unfoldable` type class and instantiate it when necessary.
 
 ### Partial
-The `PartialToolbox/Partial.lean` file contains the definition the `Partial` typeclass together with the implementation of strictness, existence conditions a directed relations.
+The `PartialToolbox/Partial.lean` file contains the definition the `Partial` typeclass together with the implementation of strictness, existence conditions and directed relations.
 
 ### ForwardBackward
 The `PartialToolbox/ForwardBackward.lean` file contains the definition of the typeclasses `Forward` and `Backward` with also their atomic variants.
