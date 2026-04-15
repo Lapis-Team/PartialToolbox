@@ -60,14 +60,14 @@ end
 open Partial.Option in
 theorem mul_le_morphism₀ {x x' y y' : Option Nat} :
  x ≤ x' -> y ≤ y' -> x*y ≤ x'*y' := by
- elim_p x _ x' _ h₁
- elim_p y _ y' _ h₂
+ elim x _ x' _ h₁
+ elim y _ y' _ h₂
  apply Nat.mul_le_mul h₁ h₂
 
 theorem mul_le_morphism {x x' y y' : Option Nat} :
  x ≤▷ x' -> y ≤▷ y' -> x*y ≤▷ x'*y' := by
  intro h₁ h₂
- elim_p d₁ d₂ _
+ elim d₁ d₂ _
  specialize h₁ d₁
  specialize h₂ d₂
  apply mul_le_morphism₀ h₁ h₂
@@ -77,25 +77,25 @@ instance [Copy h₁] [Copy h₂] : Copy (mul_le_morphism h₁ h₂) where
 -----------------------------------
 
 example {x y : Option Nat}:  ((x / y) * y)↓ -> ((y * x * 3) / y)↓ := by
-  elim_p
+  elim
   apply Backward.intro ; try simp ; trivial
 
 open Partial.Option in
 theorem ex₁' {x y : Option Nat} : x↓ -> y↓ -> y ≠ 0 -> (x / y) * y ≤ x := by
- elim_p x _ _
- elim_p y _ _ ec
+ elim x _ _
+ elim y _ _ ec
  simp_all
  apply Nat.div_mul_le_self
 
 theorem ex₁ {x y : Option Nat} : (x / y) * y ◁≤ x := by
-  elim_p
+  elim
   apply ex₁' <;> simpa
 
 open Partial.Option in
 theorem ex₂' {x₁ x₂ y₁ y₂ : Option Nat} :
   x₁ ≤ x₂ → y₁ ≥ y₂ -> y₁ != 0 -> y₂ != 0 -> x₁ / y₁ ≤ x₂ / y₂ := by
- elim_p x₁ _ x₂ _ h₁
- elim_p y₁ _ y₂ _ h₂
+ elim x₁ _ x₂ _ h₁
+ elim y₁ _ y₂ _ h₂
  intro ec₁ ec₂
  simp [ec₁,ec₂]
  apply Nat.div_le_div h₁ h₂
@@ -103,7 +103,7 @@ theorem ex₂' {x₁ x₂ y₁ y₂ : Option Nat} :
 
 open Partial.Option in
 theorem ex₂_aux {x y : Option Nat} : x ≤ y -> x ≠ 0 → y ≠ 0 := by
- elim_p x _ y _ k
+ elim x _ y _ k
  change x ≤ y at k
  intro h i
  injection i ; apply h ; congr
@@ -112,7 +112,7 @@ theorem ex₂_aux {x y : Option Nat} : x ≤ y -> x ≠ 0 → y ≠ 0 := by
 theorem ex₂ {x₁ x₂ y₁ y₂ : Option Nat} :
  x₁ ≤▷ x₂ → y₁ ≥▷ y₂ -> x₁ / y₁ ≤▷ x₂ / y₂ := by
  intro hx hy
- elim_p dx dy ec _
+ elim dx dy ec _
  specialize hx dx
  specialize hy dy
  have := ex₂_aux hy ec
@@ -120,13 +120,13 @@ theorem ex₂ {x₁ x₂ y₁ y₂ : Option Nat} :
 
 open Partial.Option in
 theorem ex₅_aux {y: Option Nat} : 1 ≤ y → y ≠ 0 := by
- elim_p y _ h
+ elim y _ h
  intro k ; rw [k] at h
  contradiction
 
 theorem ex₅ {x y z : Option Nat} : x↓ → w ≥▷ y → z ≤▷ y -> y ≥ 1 -> (x / w) * z ≤ x := by
  intro d₁ h₁ h₂
- elim_p d₂ _ h₃
+ elim d₂ _ h₃
  calc
        (x / w) * z
   _ ≤▷ (x / w) * y := by respects h₂

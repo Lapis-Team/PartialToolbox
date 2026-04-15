@@ -74,22 +74,22 @@ instance instRtolpeqLim [forall n, Copy (r n)] : Copy (rtolpeq_lim r) where
 -------------- Backward/Forward examples -----------------------------
 
 example {x y z : ℝ} : (x / y - y / z)↓ -> (y / y * x * z)↓ := by
- elim_p
+ elim
  apply Backward.intro
  trivial
 
 example {a b : ℕ} {x : ℝ} : (Σ[a, b] (fun n => x / n))↓ -> (Σ[a, b*a] (fun n => n / n))↓ := by
- elim_p
+ elim
  apply Backward.intro
  simp_all
 
 macro "gen" h:ident : tactic => `(tactic|apply (fun $h => _) $h)
 
 example {x : ℝ} : (lim (fun n => n / x))↓ -> x ≠ 0 := by
- elim_p h ; simp_all [eventually₁] ;
+ elim h ; simp_all [eventually₁] ;
  have ⟨N,h⟩ := h
  specialize h N (by simp)
- gen h ; elim_p
+ gen h ; elim
  assumption
 
 ----------------- running example ---------------------------------------
@@ -104,7 +104,7 @@ axiom step₆ : |x| < y -> y - x ≠ 0
 noncomputable def geometricSeries (x: ℝ) := lim (fun n => Σ[0, n-1] fun i => x ^ i)
 
 theorem running {x : ℝ} : |x| < 1 -> geometricSeries x ≈ 1 / (1 - x) := by
-  elim_p _ _ h
+  elim _ _ h
   calc
         geometricSeries x
    _ ≈▷ lim (fun n => (1 - x ^ (n+1)) / (1 - x)) := by respects step₁ x
@@ -122,7 +122,7 @@ axiom step₇ (x y : ℝ) : (x * (y / x)) ◁≈ y
 
 -- running example 2
 theorem running₂ { x : ℝ } : |x| < 1 -> (1 - x) * geometricSeries x ≈ 1 := by
-  elim_p _ _ h
+  elim _ _ h
   calc
          (1 - x) * geometricSeries x
     _ ≈▷ (1 - x) * (1 / (1 - x))    := by respects peq_rtolpeq (running h)
@@ -133,7 +133,7 @@ theorem running₂ { x : ℝ } : |x| < 1 -> (1 - x) * geometricSeries x ≈ 1 :=
     _ ◁≈ 1                          := by respects step₇ (1 - x) 1
 
 theorem running_full { x : ℝ } : |x| < 1 -> (1 - x) * geometricSeries x ≈ 1 := by
-  elim_p _ _ h
+  elim _ _ h
   have hgs := calc
         geometricSeries x
    _ ≈▷ lim (fun n => (1 - x ^ (n+1)) / (1 - x)) := by respects step₁ x
