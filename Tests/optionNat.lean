@@ -81,15 +81,15 @@ example {x y : Option Nat}:  ((x / y) * y)↓ -> ((y * x * 3) / y)↓ := by
   apply Backward.intro ; try simp ; trivial
 
 open Partial.Option in
-theorem ex₁' {x y : Option Nat} : x↓ -> y↓ -> y ≠ 0 -> (x / y) * y ≤ x := by
+theorem div_mul_le_self {x y : Option Nat} : x↓ -> y↓ -> y ≠ 0 -> (x / y) * y ≤ x := by
  elim x _ _
  elim y _ _ ec
  simp_all
  apply Nat.div_mul_le_self
 
-theorem ex₁ {x y : Option Nat} : (x / y) * y ◁≤ x := by
+theorem div_mul_le_self_dir {x y : Option Nat} : (x / y) * y ◁≤ x := by
   elim
-  apply ex₁' <;> simpa
+  apply div_mul_le_self <;> simpa
 
 open Partial.Option in
 theorem ex₂' {x₁ x₂ y₁ y₂ : Option Nat} :
@@ -135,7 +135,7 @@ theorem ex₅ {x y z : Option Nat} : x↓ → w ≥▷ y → z ≤▷ y -> y ≥
                        apply def_peqrfl
                        apply Backward.intro <;> and_intros <;> try trivial
                        simp ; exact ex₅_aux h₃
-  _ ◁≤ x           := ex₁
+  _ ◁≤ x           := div_mul_le_self_dir
 
   -----------------------------------------------
 /-
