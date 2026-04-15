@@ -52,8 +52,13 @@ instance [h: Forward₁ P Q] [k : Forward Q R] : Forward P R where
 
 --------------------------------------------
 
-def elim [f : Forward P Q] : (Q -> R) -> P -> R :=
- fun h p => h (f.elim p)
+--def elim [f : Forward P Q] : (Q -> R) -> P -> R :=
+ --fun h p => h (f.elim p)
 
 def elim' [f : Forward P Q] : (Q -> P -> R) -> P -> R :=
  fun h p => h (f.elim p) p
+
+syntax "elim_p" (ppSpace colGt (ident <|> hole))* : tactic
+
+macro_rules
+ | `(tactic|elim_p $l*) => `(tactic|apply elim' <;> try simp <;> intros $l* <;> subst_vars)

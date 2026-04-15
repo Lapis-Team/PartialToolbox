@@ -19,6 +19,10 @@ def isdef_option_elim {P: Option α -> Sort u} {h : ∀ x, P (.some x)} : x↓ -
   | .some _ => fun _ => h _
   | .none => False.elim
 
+-- namespace Foo
+scoped instance {x: Option α}: Forward (x↓) (∃y, x = some y) where
+ elim := by apply isdef_option_elim ; simp
+-- end Foo
 -------------------- Lifting Predicates --------------------
 
 /-
@@ -84,7 +88,7 @@ instance [Trans P Q R] : Trans (liftPred₂ P) (liftPred₂ Q) (liftPred₂ R) w
 
 /-
 Defining lifting on unary and binary functions by equipping it with a `dom` parameter
-that encodes if the term belongs to the domain. This results in the fact that a lifted 
+that encodes if the term belongs to the domain. This results in the fact that a lifted
 function is always strict.
 Since the `dom` parameter models existence conditions for the function, we encode the
 instance of the `Existence` and `Backward` typeclasses.
