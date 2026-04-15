@@ -81,8 +81,7 @@ theorem ex₂' {x₁ x₂ y₁ y₂ : Option Nat} :
  elim_p₂ x₁ x₂ h₁
  elim_p₂ y₁ y₂ h₂
  intro ec₁ ec₂
- rw [liftFun₂_simpl' (g := (./. : Option Nat -> _ -> _)) (by simpa)]
- rw [liftFun₂_simpl' (g := (./. : Option Nat -> _ -> _)) (by simpa)]
+ simp [ec₁,ec₂]
  apply Nat.div_le_div h₁ h₂
  intro a ; apply ec₂ ; congr
 
