@@ -128,6 +128,30 @@ instance backward_liftfun₁ {f: α → β} : Backward₁ (liftFun₁ f dom x)�
   . contradiction
 
 @[simp]
+theorem liftPred₁_simpl : liftPred₁ p (some x) ↔ p x := iff_of_eq (.refl _)
+
+@[simp]
+theorem liftPred₁_simpl' {p : α → Prop} [u: Unfoldable g (liftPred₁ p)] : g (some x) ↔ (p x) := by
+ cases u ; apply liftPred₁_simpl
+
+@[simp]
+theorem liftPred₂_simpl : liftPred₂ p (some x) (some y) ↔ p x y := iff_of_eq (.refl _)
+
+@[simp]
+theorem liftPred₂_simpl' {p : α → β → Prop} [u: Unfoldable g (liftPred₂ p)] : g (some x) (some y) ↔ (p x y) := by
+ cases u ; apply liftPred₂_simpl
+
+@[simp]
+theorem liftFun₁_simpl : dom (some x) → liftFun₁ f dom (some x) = some (f x) := by
+ intro h
+ change (if dom (some x) then some (f x) else none) = some (f x)
+ simpa
+
+@[simp]
+theorem liftFun₁_simpl' {f : α → β} [u: Unfoldable g (liftFun₁ f dom)] : dom (some x) → g (some x) = some (f x) := by
+ cases u ; apply liftFun₁_simpl
+
+@[simp]
 theorem liftFun₂_simpl : dom (some x) (some y) → liftFun₂ f dom (some x) (some y) = some (f x y) := by
  intro h
  change (if dom (some x) (some y) then some (f x y) else none) = some (f x y)
