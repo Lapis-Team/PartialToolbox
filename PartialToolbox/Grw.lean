@@ -81,6 +81,6 @@ macro "grw" h:term : tactic => `(tactic | put $h <;> apply (take : _ ⟶ _))
 
 /--
 `respects h` where `h : R e₁ e₂` rewrites `e₁` instead of `e₂` in the goal `R lhs rhs`
-if `rhs` is definitionally equal to `rhs[e₁/e₂]` and solves it.
+if `rhs` is equal to `rhs[e₁/e₂]` and solves it.
 -/
 macro "respects" h:term : tactic => `(tactic | put $h <;> exact take)

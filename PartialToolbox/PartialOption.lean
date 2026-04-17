@@ -1,5 +1,13 @@
 import PartialToolbox.Partial
 
+/-
+This file contains the implementation for lifting over `Partial` types.
+We chose to represent `Partial` types by registering an instance over the `Option` monad,
+so that the `isdef` predicate is `False` for `None` values.
+Following is a section about implementing lifting on unary and binary predicates, with 
+all the useful theorems and instances.
+-/
+
 namespace Partial.Option
 
 open Partial
@@ -19,10 +27,9 @@ def isdef_option_elim {P: Option α -> Sort u} {h : ∀ x, P (.some x)} : x↓ -
   | .some _ => fun _ => h _
   | .none => False.elim
 
--- namespace Foo
 scoped instance {x: Option α}: Forward (x↓) (∃y, x = some y) where
  elim := by apply isdef_option_elim ; simp
--- end Foo
+
 -------------------- Lifting Predicates --------------------
 
 /-

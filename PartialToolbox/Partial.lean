@@ -21,20 +21,39 @@ postfix:1024 "↓ " => Partial.isdef
 instance (priority := low) default_partial : Partial α where
  isdef _ := True
 
+/-- 
+`StrictPred₁ P` implements strictness on unary predicates. 
+If the predicate is true over some value, then the value is defined
+-/
 class StrictPred₁ [Partial α] (P : α -> Prop) where
  isstrict : P x -> x↓
 
+/-- 
+`StrictPred₂ P` implements strictness on binary predicates. 
+If the predicate holds for some values `x`,`y`, then they are both defined.
+-/
 class StrictPred₂ [Partial α] [Partial β] (P : α -> β -> Prop) where
  isstrict : P x y -> x↓ ∧ y↓
 
+/-- 
+`StrictFun₁ f` implements strictness on unary functions. 
+If the result of the function is defined, then also the argument is.
+-/
 class StrictFun₁ [Partial α] [Partial β] (f : α -> β) where
  isstrict : (f x)↓ -> x↓
 
+/-- 
+`StrictFun₂ f` implements strictness on binary functions. 
+If the result of the function is defined, then also the arguments are.
+-/
 class StrictFun₂ [Partial α] [Partial β] [Partial γ] (f : α -> β -> γ) where
  isstrict : (f x y)↓ -> x↓ ∧ y↓
 
 -- Necessary existence condition typeclass
 
+/--
+`Existence x P` allows to assert that if `x` is defined, then `P` must hold.
+-/
 class Existence [Partial α] (x : α) (P: outParam Prop) where
  cond : x↓ → P
 
@@ -309,41 +328,82 @@ instance isdef_elim_StrictPred₂
  : Forward₁ (P x y) (x↓ ∧ y↓) where
  elim := s.isstrict
 
--- Unfoldable instances
+-------------------- Unfoldable instances --------------------
+
+/-- 
+If it is possible to unfold two relations `g` and `f`, then also their `rtol` variants 
+can be unfolded.
+-/
 instance {f g : α -> α -> Prop} [Partial α] [u: Unfoldable g f] : Unfoldable g▷ f▷ := by
  cases u ; exact .id
 
+/-- 
+If it is possible to unfold two relations `g` and `f`, then also their `ltor` variants 
+can be unfolded.
+-/
 instance [u: Unfoldable g f] : Unfoldable ◁g ◁f := by
  cases u ; exact .id
 
+/-- 
+If it is possible to unfold two binary relations `g` and `f` and `f` is strict, then also `g`
+is strict.
+-/
 instance [Partial α] [Partial β] {g f : α -> β → Prop} [u: Unfoldable g f] [StrictPred₂ f]
  : StrictPred₂ g := by
  cases u ; assumption
 
+/-- 
+If it is possible to unfold two unary relations `g` and `f` and `f` is strict, then also `g`
+is strict.
+-/
 instance [Partial α] {g f : α -> Prop} [u: Unfoldable g f] [StrictPred₁ f]
  : StrictPred₁ g := by
  cases u ; assumption
 
+/-- 
+If it is possible to unfold two unary functions `g` and `f` and `f` is strict, then also `g`
+is strict.
+-/
 instance [Partial α] [Partial β] {g f : α -> β} [u: Unfoldable g f] [StrictFun₁ f]
  : StrictFun₁ g := by
  cases u ; assumption
 
+/-- 
+If it is possible to unfold two binary functions `g` and `f` and `f` is strict, then also `g`
+is strict.
+-/
 instance [Partial α] [Partial β] [Partial γ] {g f : α -> β → γ} [u: Unfoldable g f] [StrictFun₂ f]
  : StrictFun₂ g := by
  cases u ; assumption
 
+/-- 
+If it is possible to unfold two unary functions `g` and `f` and `f` has some existence conditions,
+then `g` is subject to the same conditions.
+-/
 instance [Partial α] [Partial β] {g f : α -> β} [u: Unfoldable g f] [Existence (f x) P]
  : Existence (g x) P := by
  cases u ; assumption
 
+/-- 
+If it is possible to unfold two binary functions `g` and `f` and `f` has some existence conditions,
+then `g` is subject to the same conditions.
+-/
 instance [Partial α] [Partial β] [Partial γ] {g f : α -> β → γ} [u: Unfoldable g f] [Existence (f x y) P]
  : Existence (g x y) P := by
  cases u ; assumption
 
+/-- 
+If it is possible to unfold two unary functions `g` and `f` and `f` is subject to some backward
+implication, the also `g` is.
+-/
 instance [Partial α] [Partial β] {g f : α -> β} [u: Unfoldable g f] [Backward₁ (f x)↓ P]
  : Backward₁ (g x)↓ P := by
  cases u ; assumption
 
+/-- 
+If it is possible to unfold two binary functions `g` and `f` and `f` is subject to some backward
+implication, the also `g` is.
+-/
 instance [Partial α] [Partial β] [Partial γ] {g f : α -> β → γ} [u: Unfoldable g f] [Backward₁ (f x y)↓ P]
  : Backward₁ (g x y)↓ P := by
  cases u ; assumption
