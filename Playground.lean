@@ -8,19 +8,6 @@ open Partial
 
 -- Put your own code here
 
-axiom le₁ {y': Nat}: x ≥ x' -> y ≤ y' → (x ≤ y ⟶ x' ≤ y')
-instance lem₁ [Copy k₁] [Copy k₂]: Copy (le₁ k₁ k₂) where
-instance : @Reflexive Nat LE.le where
- refl := @Nat.le_refl
-
-axiom a {x y x' y' : Nat} : x ≤ y -> x' ≤ y' -> x + x' ≤ y + y'
-instance [Copy k₁] [Copy k₂] : Copy (a k₁ k₂) where
-
-example {z: Nat} : y ≥ x -> y ≤ z + z -> x ≤ z + z := by
-  intro h h₂
-  grw h
-  assumption
-
 end Playground
 
 
