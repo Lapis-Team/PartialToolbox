@@ -83,6 +83,7 @@ instance [Std.Symm P] : Std.Symm (liftPred₂ P) where
   | .none, _ => False.elim
   | .some _, .none => False.elim
 
+/-- Lifting preserves transitivity -/
 instance [Trans P Q R] : Trans (liftPred₂ P) (liftPred₂ Q) (liftPred₂ R) where
  trans {x y z} :=
   match x,y,z with
