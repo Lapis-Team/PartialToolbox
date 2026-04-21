@@ -5,9 +5,9 @@ import Lean
 This file contains the typeclasses used for implementing generalized rewriting in
 a λProlog style using the `copy` algorithm.
 - The `Copy` class captures predicates that allow rewriting.
-- The `put` and `take` respectively turn a proof of `R lhs rhs` into the corresponding `Copy` instance and back. 
+- The `put` and `take` respectively turn a proof of `R lhs rhs` into the corresponding `Copy` instance and back.
 - The `Reflexive` and `Proper` classes allow to reason about terms we don't want to rewrite, i.e. terms that
-    are proper w.r.t. the relation we are rewriting. 
+    are proper w.r.t. the relation we are rewriting.
     For example, rewriting 0 ≤ 1 in 1 ≤ 1 + 2 yields the goal 0 ≤ 0 + 2 without needing to rewrite (in the generalized rewriting sense) 2.
 - The `grw` and `respects` tactics allow to use generalized rewriting in proofs.
 -/
@@ -21,10 +21,11 @@ instance will use the `rhs` parameter to determine the previous parameters.
 -/
 class Copy {rel: β → β → Prop} {lhs: outParam β} {rhs: β} (out: outParam (rel lhs rhs)) where
 
-/-- 
-The `put` function takes in input a parameter `k` and synthesizes an instance of `Copy k`. 
+/--
+The `put` function takes in input a parameter `k` and synthesizes an instance of `Copy k`.
 It is the dual of the `take` function.
 -/
+@[reducible]
 def put (k : r lhs rhs) : @Copy _ r lhs rhs k where
 
 /--
