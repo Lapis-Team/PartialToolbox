@@ -4,6 +4,17 @@ import PartialToolbox.Partial
 This file contains the implementation for lifting over `Partial` types.
 We chose to represent `Partial` types by registering an instance over the `Option` monad,
 so that the `isdef` predicate is `False` for `None` values.
+The library contains the implementation for lifting unary and binary predicates/functions.
+
+We show that lifted predicates are strict and that they preserve reflexivity, symmetry and transitivty.
+Moreover, we define and annotate with `@[simp]` some lemmas that are used by the `simp` tactic.
+
+Then we show that lifted functions are strict if we equip them with an optional `dom` parameter, modelling
+the existence conditions for the function. This also allows to prove instances for the `Backward` and
+`Existence` typeclasses, that are used respectively in the backward and forward chaining.
+As for predicates, we also define and annotate with `@[simp]` some lemmas, so that the `simp` tactic can
+use them for simplifying the expressions.
+
 Following is a section about implementing lifting on unary and binary predicates, with 
 all the useful theorems and instances.
 -/
@@ -29,6 +40,7 @@ def isdef_option_elim {P: Option α -> Sort u} {h : ∀ x, P (.some x)} : x↓ -
 
 scoped instance {x: Option α}: Forward (x↓) (∃y, x = some y) where
  elim := by apply isdef_option_elim ; simp
+
 
 -------------------- Lifting Predicates --------------------
 
@@ -92,6 +104,20 @@ instance [Trans P Q R] : Trans (liftPred₂ P) (liftPred₂ Q) (liftPred₂ R) w
   | .some _, .none, _ => False.elim
   | .some _, .some _, .none => fun _ => False.elim
 
+@[simp]
+theorem liftPred₁_simpl : liftPred₁ p (some x) ↔ p x := iff_of_eq (.refl _)
+
+@[simp]
+theorem liftPred₁_simpl' {p : α → Prop} [u: Unfoldable g (liftPred₁ p)] : g (some x) ↔ (p x) := by
+ cases u ; apply liftPred₁_simpl
+
+@[simp]
+theorem liftPred₂_simpl : liftPred₂ p (some x) (some y) ↔ p x y := iff_of_eq (.refl _)
+
+@[simp]
+theorem liftPred₂_simpl' {p : α → β → Prop} [u: Unfoldable g (liftPred₂ p)] : g (some x) (some y) ↔ (p x y) := by
+ cases u ; apply liftPred₂_simpl
+
 -------------------- Lifting Functions --------------------
 
 /-
@@ -134,20 +160,6 @@ instance backward_liftfun₁ {f: α → β} : Backward₁ (liftFun₁ f dom x)�
   split
   . apply True.intro
   . contradiction
-
-@[simp]
-theorem liftPred₁_simpl : liftPred₁ p (some x) ↔ p x := iff_of_eq (.refl _)
-
-@[simp]
-theorem liftPred₁_simpl' {p : α → Prop} [u: Unfoldable g (liftPred₁ p)] : g (some x) ↔ (p x) := by
- cases u ; apply liftPred₁_simpl
-
-@[simp]
-theorem liftPred₂_simpl : liftPred₂ p (some x) (some y) ↔ p x y := iff_of_eq (.refl _)
-
-@[simp]
-theorem liftPred₂_simpl' {p : α → β → Prop} [u: Unfoldable g (liftPred₂ p)] : g (some x) (some y) ↔ (p x y) := by
- cases u ; apply liftPred₂_simpl
 
 @[simp]
 theorem liftFun₁_simpl : dom (some x) → liftFun₁ f dom (some x) = some (f x) := by
