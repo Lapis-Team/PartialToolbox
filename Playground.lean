@@ -102,6 +102,7 @@ example (h : R x y) : P (x + x) → P (y + y) := by
   grw h
   assumption
 
+@[reducible]
 def proper (h : x ≠ 0) : Proper R x := ⟨⟨h, rfl⟩⟩
 example (h : R x y) (hz : z ≠ 0): P (x + z) → P (y + z) := by
   intros
