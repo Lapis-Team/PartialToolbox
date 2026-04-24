@@ -12,16 +12,16 @@ Forward reasoning allows to extract the necessary conditions for the
 -/
 
 -- [h : Backward₁ P Q] means Q -> P in an invertible way ; apply h.intro reduces P to Q
--- [h : Backward  P Q] backchains over Backward₁s to reduce P to Q without backtracking;
---   that's why all Backward₁ rules are supposed to be invertible
---   P must be made of conjunctions, universal quantifications and predicates
-
 class Backward₁ (P: Prop) (Q : outParam Prop) where
  intro : Q -> P
 
+-- [h : Backward  P Q] backchains over Backward₁s to reduce P to Q without backtracking;
+--   that's why all Backward₁ rules are supposed to be invertible
+--   P must be made of conjunctions, universal quantifications and predicates
 class Backward (P : Prop) (Q: outParam Prop) where
  intro: Q → P
 
+-- Default reflexive instance `P → P` for stopping the backward chains 
 @[default_instance]
 instance (priority := low) : Backward P P where
  intro h := h
@@ -41,15 +41,15 @@ instance [h: Backward₁ P Q] [k : Backward Q R] : Backward P R where
 -----------------------------------------
 
 -- [h : Forward₁ P Q] means h.elim : P -> Q
--- [h : Forward  P Q] repeatedly chains Forward₁s to obtain Q from P
---   P must be made of conjunctions, universal quantifications and predicates
-
 class Forward₁ (P: Prop) (Q : outParam Prop) where
  elim : P -> Q
 
+-- [h : Forward  P Q] repeatedly chains Forward₁s to obtain Q from P
+--   P must be made of conjunctions, universal quantifications and predicates
 class Forward (P : Prop) (Q: outParam Prop) where
  elim: P → Q
 
+-- Default reflexive instance `P → P` for stopping the forward chains 
 @[default_instance]
 instance (priority := low) : Forward P P where
  elim h := h
