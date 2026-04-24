@@ -60,7 +60,9 @@ class Existence [Partial α] (x : α) (P: outParam Prop) where
 instance (priority := low) default_existence {x: α} [Partial α] : Existence x True where
  cond _ := True.intro
 
------------------- Defining PEQ on instances of Partial
+/-----------------------------------------------------------
+            Defining PEQ on instances of Partial
+-----------------------------------------------------------/
 
 instance [Partial T] : HasEquiv T where
  Equiv (x y : T) := x↓ ∧ x = y
@@ -89,7 +91,9 @@ theorem peq_def₂ [Partial T] {x y : T}: x ≈ y -> y↓ := by
 
 theorem peq_eq [Partial T] {x y : T} : x ≈ y -> x = y := And.right
 
---- PEQ Transitivity
+/-----------------------------------------------------------
+                      PEQ Transitivity
+-----------------------------------------------------------/
 theorem peq_trans₁ {x y z : α} {r : α -> α -> Prop} [Partial α] : x ≈ y -> r y z -> r x z := by
   intro ⟨_, k₁⟩ h
   rw [k₁]
@@ -104,7 +108,10 @@ theorem peq_trans₂ {x y z : α} {r : α -> α -> Prop} [Partial α] : r x y ->
 
 instance (priority := low) { r : α -> α -> Prop } [Partial α] : Trans r (.≈.) r := ⟨peq_trans₂⟩
 
--- RTOL Direction ------------------------------------
+/-----------------------------------------------------------
+                       RTOL Relations
+-----------------------------------------------------------/
+
 def rtol [Partial T] (op: T -> T -> Prop) : T -> T -> Prop :=
  fun x y => y↓ -> op x y
 
@@ -123,7 +130,7 @@ theorem def_rtol_def {r: α → α → Prop} [Partial α] [StrictPred₂ r] : y�
  intro h h'
  apply (StrictPred₂.isstrict (h' h)).left
 
--- Reflexivity
+-- RTOL relations preserve reflexivity
 instance {r : α → α → Prop} [Partial α] [Reflexive r] : Reflexive r▷ where
   refl _ := Reflexive.refl
 
@@ -131,7 +138,7 @@ theorem rtol_refl {r : α → α → Prop} [Partial α] (p : ∀ {x}, x↓ -> r 
 
 instance rtol_peq_refl [Partial α] : Reflexive (. ≈▷ . : α -> α -> Prop) := rtol_refl def_peqrfl
 
--- Transitivity
+-- RTOL relations preserve transitivity
 theorem r_trans₁ {r₁ r₂ r₃ : α -> α -> Prop} [Partial α] [StrictPred₂ r₂]
   [Trans r₁ r₂ r₃]  {x y z : α} : r₁▷ x y -> r₂▷ y z -> r₃▷ x z := by
     intro h₂ h₁ d₁
@@ -158,114 +165,6 @@ instance (priority := high) {r₁ r₂ r₃ : α -> α -> Prop} [Partial α] [St
 instance {r₁ r₂ r₃ : α -> α -> Prop} [Partial α] [Trans r₁ r₂ r₃] : Trans r₁ r₂▷ r₃▷ := ⟨ r_trans₂ ⟩
 instance {r₁ r₂ r₃ : α -> α -> Prop} [Partial α] [StrictPred₂ r₂]
   [Trans r₁ r₂ r₃] : Trans r₁▷ r₂ r₃ := ⟨ r_trans₃ ⟩
-------------------------------------------------------
-
--- LTOR Direction ------------------------------------
-
-def ltor [Partial T] (op: T -> T -> Prop) : T -> T -> Prop :=
- fun x y => x↓ -> op x y
-
-infix:60 " ◁≈ " => ltor HasEquiv.Equiv
-@[app_unexpander ltor]
-meta def ltor.unexpander_peqq : Lean.PrettyPrinter.Unexpander
-  | `($_ HasEquiv.Equiv $a $b) => `($a ◁≈ $b)
-  | _ => throw ()
-
-prefix:1024 " ◁" => ltor
-
-theorem def_ltor_def {r: α → α → Prop} [Partial α] [StrictPred₂ r] : x↓ → ◁r x y → y↓ := by
- intro h h'
- apply (StrictPred₂.isstrict (h' h)).right
-
--- Reflexivity
-instance {r : α → α → Prop} [Partial α] [Reflexive r] : Reflexive ◁r where
-  refl _ := Reflexive.refl
-
-theorem ltor_refl {r : α → α → Prop} [Partial α] (p : ∀ {x}, x↓ -> r x x) : Reflexive ◁r := ⟨p⟩
-
-instance ltor_peq_refl [Partial α] : Reflexive (· ◁≈ · : α -> α -> Prop) := ltor_refl def_peqrfl
-
--- Transitivity
-theorem l_trans₁ {r₁ r₂ r₃ : α -> α -> Prop} [Partial α] [StrictPred₂ r₁] [Trans r₁ r₂ r₃]  {x y z : α}
-  : ◁r₁ x y -> ◁r₂ y z -> ◁r₃ x z := by
-    intro h₁ h₂ d₁
-    have k₁ := h₁ d₁
-    have ⟨_,d₂⟩ := StrictPred₂.isstrict k₁
-    have k₂ := h₂ d₂
-    apply Trans.trans k₁ k₂
-
-theorem l_trans₂ {r₁ r₂ r₃ : α -> α -> Prop} [Partial α] [StrictPred₂ r₁] [Trans r₁ r₂ r₃]  {x y z : α}
-  : r₁ x y -> ◁r₂ y z -> r₃ x z := by
-    intro k₁ h₂
-    have ⟨_,d₂⟩ := StrictPred₂.isstrict k₁
-    have k₂ := h₂ d₂
-    apply Trans.trans k₁ k₂
-
-theorem l_trans₃ {r₁ r₂ r₃ : α -> α -> Prop} [Partial α] [Trans r₁ r₂ r₃]  {x y z : α}
-  : ◁r₁ x y -> r₂ y z -> ◁r₃ x z := by
-    intro h₁ k₂ d₁
-    have k₁ := h₁ d₁
-    apply Trans.trans k₁ k₂
-
-instance {r₁ r₂ r₃ : α -> α -> Prop} [Partial α] [StrictPred₂ r₁] [Trans r₁ r₂ r₃] : Trans ◁r₁ ◁r₂ ◁r₃ := ⟨ l_trans₁ ⟩
-instance (priority := high) {r₁ r₂ r₃ : α -> α -> Prop} [Partial α] [StrictPred₂ r₁] [Trans r₁ r₂ r₃] : Trans r₁ ◁r₂ r₃ := ⟨ l_trans₂ ⟩
-instance (priority := high + 1) {r₁ r₂ r₃ : α -> α -> Prop} [Partial α] [Trans r₁ r₂ r₃] : Trans ◁r₁ r₂ ◁r₃ := ⟨ l_trans₃ ⟩
-------------------------------------------------------
-
--- Bidirectional relation
-infix:60 " ◁≈▷ " => ltor (rtol HasEquiv.Equiv)
-
--- Reflexivity
-instance [Partial α] : Reflexive (· ◁≈▷ · : α -> α -> Prop) := ltor_refl fun _ => def_peqrfl
-
--- Transitivity
-theorem bidir_trans₁ [Partial α] {r₁ r₂ r₃ : α -> α -> Prop}
-  [StrictPred₂ r₂] [Trans r₁ r₂ r₃] : ◁r₁▷ x y -> r₂▷ y z -> ◁r₃▷ x z := by
-  intro h₁ h₂ dx dz
-  specialize h₂ dz
-  have ⟨dy, _⟩ := StrictPred₂.isstrict h₂
-  specialize h₁ dx dy
-  exact Trans.trans h₁ h₂
-
-theorem bidir_trans₂ [Partial α] {r₁ r₂ r₃ : α -> α -> Prop}
-  [StrictPred₂ r₁] [Trans r₁ r₂ r₃] : ◁r₁ x y -> ◁r₂▷ y z -> ◁r₃▷ x z := by
-  intro h₁ h₂ dx dz
-  specialize h₁ dx
-  have ⟨_, dy⟩ := StrictPred₂.isstrict h₁
-  specialize h₂ dy dz
-  exact Trans.trans h₁ h₂
-
-instance (priority := high + 2) [Partial α] {r₁ r₂ r₃ : α -> α -> Prop}
-  [StrictPred₂ r₂] [Trans r₁ r₂ r₃] : Trans ◁r₁▷ r₂▷ ◁r₃▷ := ⟨bidir_trans₁⟩
-instance (priority := high + 2) [Partial α] {r₁ r₂ r₃ : α -> α -> Prop}
-  [StrictPred₂ r₁] [Trans r₁ r₂ r₃] : Trans ◁r₁ ◁r₂▷ ◁r₃▷ := ⟨bidir_trans₂⟩
-
-------------------------------------------------------
-
-theorem ltorpeq_StrictPred₁ {P : α → Prop} [Partial α] [StrictPred₁ P]
-  : x ◁≈ x' -> P x ⟶ P x' := by
-    intro h₁ k
-    have d₁ := StrictPred₁.isstrict k
-    have hx : x = x' := peq_eq (h₁ d₁)
-    simpa [←hx]
-
-instance instLtorpeqStrictPred₁
-  [Partial α] {P : α → Prop} [StrictPred₁ P]
-  {r₁ : x ◁≈ x'}
-  [Copy r₁] : Copy (ltorpeq_StrictPred₁ (P := P) r₁) where
-
-theorem ltorpeq_StrictPred₂ {P : α → β → Prop} [Partial α] [Partial β] [StrictPred₂ P]
-  : x ◁≈ x' -> y ◁≈ y' -> P x y ⟶ P x' y' := by
-    intro h₁ h₂ k
-    have d₁ := StrictPred₂.isstrict k
-    have hx : x = x' := peq_eq (h₁ d₁.left)
-    have hy : y = y' := peq_eq (h₂ d₁.right)
-    simpa [←hx, ←hy]
-
-instance instLtorpeqStrictPred₂
-  [Partial α] [Partial β] {P : α → β → Prop} [StrictPred₂ P]
-  {r₁ : x ◁≈ x'} {r₂ : y ◁≈ y'}
-  [Copy r₁] [Copy r₂] : Copy (ltorpeq_StrictPred₂ (P := P) r₁ r₂) where
 
 theorem rtolpeq_StrictFun₁ {f : α → β} [Partial α] [Partial β] [StrictFun₁ f]
   : x ≈▷ x' -> f x ≈▷ f x' := by
@@ -294,7 +193,121 @@ instance instRtolpeqStrictFun₂
   {r₁ : x ≈▷ x'} {r₂ : y ≈▷ y'}
   [Copy r₁] [Copy r₂] : Copy (rtolpeq_StrictFun₂ (f := f) r₁ r₂) where
 
----------------------- Forward isdef ---------------------
+/-----------------------------------------------------------
+                       LTOR Relations
+-----------------------------------------------------------/
+
+def ltor [Partial T] (op: T -> T -> Prop) : T -> T -> Prop :=
+ fun x y => x↓ -> op x y
+
+infix:60 " ◁≈ " => ltor HasEquiv.Equiv
+@[app_unexpander ltor]
+meta def ltor.unexpander_peqq : Lean.PrettyPrinter.Unexpander
+  | `($_ HasEquiv.Equiv $a $b) => `($a ◁≈ $b)
+  | _ => throw ()
+
+prefix:1024 " ◁" => ltor
+
+theorem def_ltor_def {r: α → α → Prop} [Partial α] [StrictPred₂ r] : x↓ → ◁r x y → y↓ := by
+ intro h h'
+ apply (StrictPred₂.isstrict (h' h)).right
+
+-- LTOR relations preserve reflexivity
+instance {r : α → α → Prop} [Partial α] [Reflexive r] : Reflexive ◁r where
+  refl _ := Reflexive.refl
+
+theorem ltor_refl {r : α → α → Prop} [Partial α] (p : ∀ {x}, x↓ -> r x x) : Reflexive ◁r := ⟨p⟩
+
+instance ltor_peq_refl [Partial α] : Reflexive (· ◁≈ · : α -> α -> Prop) := ltor_refl def_peqrfl
+
+-- LTOR relations preserve transitivity 
+theorem l_trans₁ {r₁ r₂ r₃ : α -> α -> Prop} [Partial α] [StrictPred₂ r₁] [Trans r₁ r₂ r₃]  {x y z : α}
+  : ◁r₁ x y -> ◁r₂ y z -> ◁r₃ x z := by
+    intro h₁ h₂ d₁
+    have k₁ := h₁ d₁
+    have ⟨_,d₂⟩ := StrictPred₂.isstrict k₁
+    have k₂ := h₂ d₂
+    apply Trans.trans k₁ k₂
+
+theorem l_trans₂ {r₁ r₂ r₃ : α -> α -> Prop} [Partial α] [StrictPred₂ r₁] [Trans r₁ r₂ r₃]  {x y z : α}
+  : r₁ x y -> ◁r₂ y z -> r₃ x z := by
+    intro k₁ h₂
+    have ⟨_,d₂⟩ := StrictPred₂.isstrict k₁
+    have k₂ := h₂ d₂
+    apply Trans.trans k₁ k₂
+
+theorem l_trans₃ {r₁ r₂ r₃ : α -> α -> Prop} [Partial α] [Trans r₁ r₂ r₃]  {x y z : α}
+  : ◁r₁ x y -> r₂ y z -> ◁r₃ x z := by
+    intro h₁ k₂ d₁
+    have k₁ := h₁ d₁
+    apply Trans.trans k₁ k₂
+
+instance {r₁ r₂ r₃ : α -> α -> Prop} [Partial α] [StrictPred₂ r₁] [Trans r₁ r₂ r₃] : Trans ◁r₁ ◁r₂ ◁r₃ := ⟨ l_trans₁ ⟩
+instance (priority := high) {r₁ r₂ r₃ : α -> α -> Prop} [Partial α] [StrictPred₂ r₁] [Trans r₁ r₂ r₃] : Trans r₁ ◁r₂ r₃ := ⟨ l_trans₂ ⟩
+instance (priority := high + 1) {r₁ r₂ r₃ : α -> α -> Prop} [Partial α] [Trans r₁ r₂ r₃] : Trans ◁r₁ r₂ ◁r₃ := ⟨ l_trans₃ ⟩
+
+theorem ltorpeq_StrictPred₁ {P : α → Prop} [Partial α] [StrictPred₁ P]
+  : x ◁≈ x' -> P x ⟶ P x' := by
+    intro h₁ k
+    have d₁ := StrictPred₁.isstrict k
+    have hx : x = x' := peq_eq (h₁ d₁)
+    simpa [←hx]
+
+instance instLtorpeqStrictPred₁
+  [Partial α] {P : α → Prop} [StrictPred₁ P]
+  {r₁ : x ◁≈ x'}
+  [Copy r₁] : Copy (ltorpeq_StrictPred₁ (P := P) r₁) where
+
+theorem ltorpeq_StrictPred₂ {P : α → β → Prop} [Partial α] [Partial β] [StrictPred₂ P]
+  : x ◁≈ x' -> y ◁≈ y' -> P x y ⟶ P x' y' := by
+    intro h₁ h₂ k
+    have d₁ := StrictPred₂.isstrict k
+    have hx : x = x' := peq_eq (h₁ d₁.left)
+    have hy : y = y' := peq_eq (h₂ d₁.right)
+    simpa [←hx, ←hy]
+
+instance instLtorpeqStrictPred₂
+  [Partial α] [Partial β] {P : α → β → Prop} [StrictPred₂ P]
+  {r₁ : x ◁≈ x'} {r₂ : y ◁≈ y'}
+  [Copy r₁] [Copy r₂] : Copy (ltorpeq_StrictPred₂ (P := P) r₁ r₂) where
+
+/-----------------------------------------------------------
+                   Bidirectional Relations
+-----------------------------------------------------------/
+
+-- We only need to define the bidirectional partial equality, as the use of prefix/postfix
+-- operators for `rtol` and `ltor` already allows for the notation ◁r▷.
+infix:60 " ◁≈▷ " => ltor (rtol HasEquiv.Equiv)
+
+
+-- Bidirectional partial equality preserves reflexivity
+instance [Partial α] : Reflexive (· ◁≈▷ · : α -> α -> Prop) := ltor_refl fun _ => def_peqrfl
+
+-- Bidirectional partial equality preserves transitivity
+theorem bidir_trans₁ [Partial α] {r₁ r₂ r₃ : α -> α -> Prop}
+  [StrictPred₂ r₂] [Trans r₁ r₂ r₃] : ◁r₁▷ x y -> r₂▷ y z -> ◁r₃▷ x z := by
+  intro h₁ h₂ dx dz
+  specialize h₂ dz
+  have ⟨dy, _⟩ := StrictPred₂.isstrict h₂
+  specialize h₁ dx dy
+  exact Trans.trans h₁ h₂
+
+theorem bidir_trans₂ [Partial α] {r₁ r₂ r₃ : α -> α -> Prop}
+  [StrictPred₂ r₁] [Trans r₁ r₂ r₃] : ◁r₁ x y -> ◁r₂▷ y z -> ◁r₃▷ x z := by
+  intro h₁ h₂ dx dz
+  specialize h₁ dx
+  have ⟨_, dy⟩ := StrictPred₂.isstrict h₁
+  specialize h₂ dy dz
+  exact Trans.trans h₁ h₂
+
+instance (priority := high + 2) [Partial α] {r₁ r₂ r₃ : α -> α -> Prop}
+  [StrictPred₂ r₂] [Trans r₁ r₂ r₃] : Trans ◁r₁▷ r₂▷ ◁r₃▷ := ⟨bidir_trans₁⟩
+instance (priority := high + 2) [Partial α] {r₁ r₂ r₃ : α -> α -> Prop}
+  [StrictPred₂ r₁] [Trans r₁ r₂ r₃] : Trans ◁r₁ ◁r₂▷ ◁r₃▷ := ⟨bidir_trans₂⟩
+
+------------------------------------------------------------
+--                    Forward instances
+------------------------------------------------------------
 
 /-
 The following instances allow to hide from the API the explicit use of `Forward₁`, so that
@@ -320,7 +333,9 @@ instance [Partial α] [Partial β] {P : α → β -> Prop} [s : StrictPred₂ P]
  : Forward₁ (P x y) (x↓ ∧ y↓) where
  elim := s.isstrict
 
--------------------- Unfoldable instances --------------------
+------------------------------------------------------------
+--                    Unfoldable instances 
+------------------------------------------------------------
 
 /-- 
 If it is possible to unfold two relations `g` and `f`, then also their `rtol` variants 
