@@ -156,26 +156,6 @@ instance backward_liftfun₁ {f: α → β} : Backward₁ (liftFun₁ f dom x)�
   . apply True.intro
   . contradiction
 
-@[simp]
-theorem liftFun₁_simpl : dom (some x) → liftFun₁ f dom (some x) = some (f x) := by
- intro h
- change (if dom (some x) then some (f x) else none) = some (f x)
- simpa
-
-@[simp]
-theorem liftFun₁_simpl' {f : α → β} [u: Unfoldable g (liftFun₁ f dom)] : dom (some x) → g (some x) = some (f x) := by
- cases u ; apply liftFun₁_simpl
-
-@[simp]
-theorem liftFun₂_simpl : dom (some x) (some y) → liftFun₂ f dom (some x) (some y) = some (f x y) := by
- intro h
- change (if dom (some x) (some y) then some (f x y) else none) = some (f x y)
- simpa
-
-@[simp]
-theorem liftFun₂_simpl' {f : α → β → γ} [u: Unfoldable g (liftFun₂ f dom)] : dom (some x) (some y) → g (some x) (some y) = some (f x y) := by
- cases u ; apply liftFun₂_simpl
-
 instance strictfun₂_liftfun₂ {f: α -> β → γ} : StrictFun₂ (liftFun₂ f dom) where
  isstrict {x} {y} h :=
   match x, y with
@@ -202,5 +182,25 @@ instance backward_liftfun₂ {f: α → β → γ} : Backward₁ (liftFun₂ f d
   split
   . apply True.intro
   . contradiction
+
+@[simp]
+theorem liftFun₁_simpl : dom (some x) → liftFun₁ f dom (some x) = some (f x) := by
+ intro h
+ change (if dom (some x) then some (f x) else none) = some (f x)
+ simpa
+
+@[simp]
+theorem liftFun₁_simpl' {f : α → β} [u: Unfoldable g (liftFun₁ f dom)] : dom (some x) → g (some x) = some (f x) := by
+ cases u ; apply liftFun₁_simpl
+
+@[simp]
+theorem liftFun₂_simpl : dom (some x) (some y) → liftFun₂ f dom (some x) (some y) = some (f x y) := by
+ intro h
+ change (if dom (some x) (some y) then some (f x y) else none) = some (f x y)
+ simpa
+
+@[simp]
+theorem liftFun₂_simpl' {f : α → β → γ} [u: Unfoldable g (liftFun₂ f dom)] : dom (some x) (some y) → g (some x) (some y) = some (f x y) := by
+ cases u ; apply liftFun₂_simpl
 
 end Partial.Option
