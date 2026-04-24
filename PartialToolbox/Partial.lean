@@ -1,16 +1,17 @@
 import PartialToolbox.Grw
 import PartialToolbox.ForwardBackward
 import Lean
--- Partial types are types equipped with a unary isdef predicate
--- Strict unary and binary functions are defined
--- Strict unary and binary predicates are defined so that they
---   hold only on defined elements
---
--- Option types are shown to be partial types and
---  functions and predicates over base types are automatically
---  lifted to strict functions and predicates
--- Lifted predicates preserve symmetry and transitivity, while
---  reflexivity is preserved only for defined elements
+
+/- 
+Partial types are types equipped with a unary isdef predicate.
+Strict unary and binary functions are defined.
+Strict unary and binary predicates are defined so that they
+  hold only on defined elements.
+Left-to-right (`ltor`), right-to-left (`rtol`) and bidirectional (`bidir`)
+  variants for relations are shown. The transitivities that hold 
+  for combinations of such directions are also shown.
+  Directed relations are shown to also preserve reflexivity and transitivity.
+-/
 
 class Partial α where
  isdef : α -> Prop
@@ -49,8 +50,6 @@ If the result of the function is defined, then also the arguments are.
 class StrictFun₂ [Partial α] [Partial β] [Partial γ] (f : α -> β -> γ) where
  isstrict : (f x y)↓ -> x↓ ∧ y↓
 
--- Necessary existence condition typeclass
-
 /--
 `Existence x P` allows to assert that if `x` is defined, then `P` must hold.
 -/
@@ -62,6 +61,7 @@ instance (priority := low) default_existence {x: α} [Partial α] : Existence x 
  cond _ := True.intro
 
 ------------------ Defining PEQ on instances of Partial
+
 instance [Partial T] : HasEquiv T where
  Equiv (x y : T) := x↓ ∧ x = y
 
@@ -88,8 +88,6 @@ theorem peq_def₂ [Partial T] {x y : T}: x ≈ y -> y↓ := by
   apply hl
 
 theorem peq_eq [Partial T] {x y : T} : x ≈ y -> x = y := And.right
-
--- PEQ Reflexivity does not hold
 
 --- PEQ Transitivity
 theorem peq_trans₁ {x y z : α} {r : α -> α -> Prop} [Partial α] : x ≈ y -> r y z -> r x z := by
@@ -118,7 +116,6 @@ meta def rtol.unexpander_peqq : Lean.PrettyPrinter.Unexpander
   | `($_ HasEquiv.Equiv $a $b) => `($a ≈▷ $b)
   | _ => throw ()
 
--- CSC: generalizzare
 def peq_rtolpeq [Partial T] {x y : T} : x ≈ y -> x ≈▷ y := by
   intro h ; exact fun _ => h
 
@@ -306,25 +303,20 @@ respectively with the `Strict(Fun|Pred)` and `Existence` typeclasses.
 The `elim` function will then automatically search for these instances when necessary.
 -/
 
-instance isdef_elim_StrictFun₁
- [Partial α] [Partial β] {op : α → β} [s : StrictFun₁ op] [e : Existence (op x) E]
+instance [Partial α] [Partial β] {op : α → β} [s : StrictFun₁ op] [e : Existence (op x) E]
  : Forward₁ (op x)↓ (x↓ ∧ E) where
  elim d := ⟨s.isstrict d, e.cond d⟩
 
-instance isdef_elim_StrictFun₂
- [Partial α] [Partial β] [Partial γ] {op : α → β → γ} [s : StrictFun₂ op] [e : Existence (op x y) E]
+instance [Partial α] [Partial β] [Partial γ] {op : α → β → γ} [s : StrictFun₂ op] [e : Existence (op x y) E]
  : Forward₁ (op x y)↓ (x↓ ∧ y↓ ∧ E) where
   elim d :=
    let ⟨d₁,d₂⟩ := s.isstrict d
    ⟨d₁, d₂, e.cond d⟩
 
-instance isdef_elim_StrictPred₁
- [Partial α] {P : α → Prop} [s : StrictPred₁ P]
- : Forward₁ (P x) x↓ where
+instance [Partial α] {P : α → Prop} [s : StrictPred₁ P] : Forward₁ (P x) x↓ where
  elim := s.isstrict
 
-instance isdef_elim_StrictPred₂
- [Partial α] [Partial β] {P : α → β -> Prop} [s : StrictPred₂ P]
+instance [Partial α] [Partial β] {P : α → β -> Prop} [s : StrictPred₂ P]
  : Forward₁ (P x y) (x↓ ∧ y↓) where
  elim := s.isstrict
 
