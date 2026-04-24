@@ -2,10 +2,10 @@ import PartialToolbox.Partial
 
 /-
 This file contains the implementation for lifting over `Partial` types.
-We chose to represent `Partial` types by registering an instance over the `Option` monad,
-  so that the `isdef` predicate is `False` for `None` values.
+Option types are shown to be partial types and functions and predicates over base 
+  types are automatically lifted to strict functions and predicates
 
-Lifted predicates are shownt to be strict; moreover, they preserve reflexivity, symmetry and transitivty.
+Lifted predicates are shown to be strict; moreover, they preserve reflexivity, symmetry and transitivty.
   Moreover, we define and annotate with `@[simp]` some lemmas that are used by the `simp` tactic.
 
 Lifted functions are shown to be strict by equpping them with an optional `dom` parameter, modelling
