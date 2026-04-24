@@ -54,12 +54,14 @@ def liftPred₂ (P: α -> β -> Prop) : Option α -> Option β -> Prop
  | .some x, .some y => P x y
  | _,_ => False
 
+-- A lifted unary predicate is strict
 instance strictpred₁_liftpred₁ {P: α -> Prop}: StrictPred₁ (liftPred₁ P) where
  isstrict {x} h :=
   match x with
   | .some _ => .intro
   | .none => h.elim
 
+-- A lifted binary predicate is strict
 instance strictpred₂_liftpred₂ {P: α -> β -> Prop} : StrictPred₂ (liftPred₂ P) where
  isstrict {x} {y} h :=
   match x,y with
@@ -80,17 +82,19 @@ instance strictpred₂_reflexive_ltor {r : α → α → Prop} [Reflexive r]
 instance strictpred₂_reflexive_rtol {r : α → α → Prop} [Reflexive r]
  : Reflexive (liftPred₂ r)▷ := ⟨strictpred₂_reflexive_ltor.refl⟩
 
+-- Lifting preserves reflexivity
 theorem lift_def_refl [Std.Refl P] : x↓ -> liftPred₂ P x x := by
  apply isdef_option_elim
  apply Std.Refl.refl
 
+-- Lifting preserves symmetry
 instance [Std.Symm P] : Std.Symm (liftPred₂ P) where
  symm
   | .some _, .some _ => Std.Symm.symm (r := P) _ _
   | .none, _ => False.elim
   | .some _, .none => False.elim
 
-/-- Lifting preserves transitivity -/
+-- Lifting preserves transitivity
 instance [Trans P Q R] : Trans (liftPred₂ P) (liftPred₂ Q) (liftPred₂ R) where
  trans {x y z} :=
   match x,y,z with
@@ -132,12 +136,14 @@ def liftFun₂ (f: α -> β → γ) (dom : Option α → Option β → Bool := f
     if dom (.some x) (.some y) then .some (f x y) else .none
  | _, _ => .none
 
+-- A lifted unary function is strict
 instance {f: α -> β}: StrictFun₁ (liftFun₁ f) where
  isstrict {x} h :=
   match x with
   | .some _ => .intro
   | .none => h.elim
 
+-- The `dom` parameter of a lifted function models its existence conditions
 instance existence_liftfun₁ {f: α -> β} : Existence (liftFun₁ f dom x) (dom x) where
  cond h :=
   match x with
@@ -156,6 +162,7 @@ instance backward_liftfun₁ {f: α → β} : Backward₁ (liftFun₁ f dom x)�
   . apply True.intro
   . contradiction
 
+-- A lifted binary function is strict
 instance strictfun₂_liftfun₂ {f: α -> β → γ} : StrictFun₂ (liftFun₂ f dom) where
  isstrict {x} {y} h :=
   match x, y with
@@ -163,6 +170,7 @@ instance strictfun₂_liftfun₂ {f: α -> β → γ} : StrictFun₂ (liftFun₂
   | .none, _ => h.elim
   | .some _, .none => h.elim
 
+-- The `dom` parameter of a lifted function models its existence conditions
 instance existence_liftfun₂ {f: α -> β → γ} : Existence (liftFun₂ f dom x y) (dom x y) where
  cond h :=
   match x, y with
