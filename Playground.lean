@@ -131,12 +131,9 @@ instance : Mul (Option Nat) := ⟨liftFun₂ Mul.mul⟩
 instance : LT (Option Nat) := ⟨liftPred₂ LT.lt⟩
 instance : Unfoldable (· < · : Option Nat → _ → _) (liftPred₂ LT.lt) := .id
 
-macro "elim₁" x:ident h:ident : tactic => 
-  `(tactic| apply elim' <;> simp <;> intro _ <;> apply isdef_option_elim <;> intro $x:ident $h:ident)
-
 theorem mul_gt_zero {x y : Option Nat} : 0 < x → 0 < y → 0 < x * y := by 
-  elim₁ x h₁
-  elim₁ y h₂
+  elim _ _ x _ h₁
+  elim _ _ y _ h₂
   exact Nat.mul_pos h₁ h₂
 
 end Lifting
