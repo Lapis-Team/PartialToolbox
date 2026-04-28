@@ -1,6 +1,13 @@
 # PartialToolbox
 
-Implementation in Lean of the toolbox presented in _A Toolbox for Undefined Terms in Type Theory_.
+Implementation in Lean of a toolbox for undefined terms. 
+
+## Setup
+To correctly setup the project you first need to install. The instructions to do so are well-documented on the [website](https://lean-lang.org/install/).
+After installing Lean, you only need to open the directory on your own editor (the suggested one as per the Lean website is VS Code) and navigate the code.
+
+If you want to build the entire project, you need to open a terminal inside the directory and run the `lake build` command.
+
 ## Repository Organisation
 The library is fully contained in the `PartialToolbox` directory. We suggest the navigation of the repository in the following order.
 
