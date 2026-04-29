@@ -1,7 +1,10 @@
 /-
+This file contains the type-class for unfolding equal terms during type-class resolution.
+
 - Since type-class resolution in Lean does not handle terms up-to unfolding, we introduce
-    the `Unfoldable` type class to handle two equivalent terms likewise. Notice that this
+    the `Unfoldable` type-class to handle two equivalent terms likewise. Notice that this
     mechanism is logically equivalent to propositional equality.
+    Unfolding is also shown to be transitive.
 
 - Example usage
     By declaring an instance `Unfoldable P Q` the user is able to handle `P` as `Q` during

@@ -2,17 +2,27 @@ import PartialToolbox.Partial
 
 /-
 This file contains the implementation for lifting over `Partial` types.
-Option types are shown to be partial types and functions and predicates over base 
-  types are automatically lifted to strict functions and predicates
 
-Lifted predicates are shown to be strict; moreover, they preserve reflexivity, symmetry and transitivty.
-  Moreover, we define and annotate with `@[simp]` some lemmas that are used by the `simp` tactic.
+- Option types are shown to be partial types and functions and predicates over base 
+    types are automatically lifted to strict functions and predicates
 
-Lifted functions are shown to be strict by equpping them with an optional `dom` parameter, modelling
-  the existence conditions for the function. This also allows to prove instances for the `Backward` and
-  `Existence` typeclasses, that are used respectively in the backward and forward chaining.
-  As for predicates, we also define and annotate with `@[simp]` some lemmas, so that the `simp` tactic can
-  use them for simplifying the expressions.
+- Lifted predicates are shown to be strict; moreover, they preserve reflexivity, symmetry and transitivty.
+    Moreover, we define and annotate with `@[simp]` some lemmas that are used by the `simp` tactic.
+
+- Lifted functions are shown to be strict by equpping them with an optional `dom` parameter, modelling
+    the existence conditions for the function. This also allows to prove instances for the `Backward` and
+    `Existence` typeclasses, that are used respectively in the backward and forward chaining.
+    As for predicates, we also define and annotate with `@[simp]` some lemmas, so that the `simp` tactic can
+    use them for simplifying the expressions.
+
+- Example usage
+  To lift a binary predicate `P`, one only needs to define the lifted predicate as `liftPred₂ P`.
+    As an example, consider lifting the predicate `LE.le` from `Nat` to `Option Nat`.
+    The lifted predicate is then obtained as follows
+    `def lifted : LE.le Option Nat -> Option Nat -> Prop := liftPred₂ LE.le`
+    Lifting unary predicates, unary functions and binary functions can be achieved analogously.
+
+  A more elaborate example for lifting can be found in `Tests/optionNat.lean`.
 -/
 
 namespace Partial.Option

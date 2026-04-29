@@ -1,11 +1,15 @@
 /-
 This file contains the typeclasses used for implementing generalized rewriting in
 a λProlog style using the `copy` algorithm.
+
 - The `Copy` class captures predicates that allow rewriting.
+
 - The `put` and `take` respectively turn a proof of `R lhs rhs` into the corresponding `Copy` instance and back.
+
 - The `Reflexive` and `Proper` classes allow to reason about terms we don't want to rewrite, i.e. terms that
     are proper w.r.t. the relation we are rewriting.
     For example, rewriting 0 ≤ 1 in 1 ≤ 1 + 2 yields the goal 0 ≤ 0 + 2 without needing to rewrite (in the generalized rewriting sense) 2.
+
 - The `grw` and `respects` tactics allow to use generalized rewriting in proofs.
 
 - Usage examples
