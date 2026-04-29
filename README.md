@@ -35,8 +35,8 @@ The `PartialToolbox/PartialOption.lean` file contains the implementation of lift
 
 ### Tests
 
-The `Tests` directory contains some files with example usage of the library. 
-In particular, you will find the running example presented in the paper in the `running.lean` file; as the name suggests, the `grw.lean` file contains some usage examples of the `grw`. 
+The `Tests` directory contains some files with example usage of the library.
+In particular, you will find the running example presented in the paper in the `running.lean` file; as the name suggests, the `grw.lean` file contains some usage examples of the `grw`.
 Finally, the `optionNat.lean` file showcases lifting on natural numbers, and shows some final examples where also generalized rewriting (in the form of the `respects` tactic) is used.
 
 ### Playground
