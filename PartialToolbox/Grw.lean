@@ -1,6 +1,3 @@
-import PartialToolbox.Unfoldable
-import Lean
-
 /-
 This file contains the typeclasses used for implementing generalized rewriting in
 a λProlog style using the `copy` algorithm.
@@ -10,8 +7,34 @@ a λProlog style using the `copy` algorithm.
     are proper w.r.t. the relation we are rewriting.
     For example, rewriting 0 ≤ 1 in 1 ≤ 1 + 2 yields the goal 0 ≤ 0 + 2 without needing to rewrite (in the generalized rewriting sense) 2.
 - The `grw` and `respects` tactics allow to use generalized rewriting in proofs.
+
+- Usage examples
+  To use the `grw` and `respects` tactcics we first need to register a `Copy` instance for
+  the relation we want to rewrite. For example, if we have
+  `axiom R : Nat -> Nat -> Prop`
+  `axiom P : Nat -> Prop`
+  `axiom P' : R x y -> (P x ⟶ P y)`
+  we need to register an instance for the predicate `P'`
+  `instance [Copy k] : Copy (P' k)`
+
+  The `grw` tactic may then be used in the following statement to replace the goal `P y` with the goal `P x`
+  `example R x y -> P x -> P y := by intro h₁ _ ; grw h₁ ; assumption `
+
+  On the other side, the `respects` tactic is used to solve the goal. Suppose we have a function
+  `axiom f : Nat -> Nat`
+  and that we know that it preserves the relation `R` previously described
+  `axiom f' : R x y -> R (f x) (f y)`
+  After registering the `Copy` instance, the `respects` tactic can solve a goal of the form
+  `R (f x) (f y)` where e₁ = C⟨x⟩ and e₂ = C⟨y⟩ for some context C.
+  `instance {r₁ : R x y} [Copy r₁] : Copy (f' r₁) where`
+  `example : R x y -> R (f x) (f y)  := by intro h ; respects h`
+
+  You can find more elaborate usage examples for the `grw` tactic in `Tests/grw.lean`, while
+  more complex examples for the usage of the `respects` tactic are presented in the `Tests/running.lean` file.
 -/
 
+import PartialToolbox.Unfoldable
+import Lean
 
 /--
 The `Copy` class captures the predicate `rel lhs rhs`.
