@@ -1,44 +1,50 @@
 /-
-This file contains the typeclasses for defining Forward and Backward chains during proof search,
-  together with instances of such type-classes.
+This file contains the typeclasses for automatically computing Forward and Backward reasoning 
+  chains during proof search.
 
-- Given a goal in the form `E↓`, backward reasoning allows to reason about the necessary
-    and sufficient conditions for the definedness of `E`. With this mechanism we capture
-    both necessary and sufficient conditions, as we do not use any form of backtracking.
-    The `Backward` type-class indeed allows to model backward reasoning. We also define
-    the atomic variant `Backward₁` for representing atomic steps of the chain.
+- Given a goal in the form `E↓`, backward reasoning allows to reduce the goal to
+    necessary and sufficient conditions for the definedness of `E`. Since this is based on
+    instance-search that does not allow backtracking, the sufficient conditions must also
+    be necessary to avoid reducing to a false statement.
+
+    The `Backward` type-class allows to model backward reasoning, generalising it on any
+    possible predicate, not only definedness. We also define the atomic variant `Backward₁` 
+    for representing atomic steps of the chain.
     An instance of `Backward₁ P Q` means `Q → P` in an invertible way.
     An instance of `Backward P Q` chains over `Backward₁` steps to reduce `P` to `Q` without
-    using backtracking. `P` must be made of conjunctions, univesal quantifications and predicates.
+    using backtracking. `P` must be made of conjunctions, universal quantifications and predicates.
 
 - Forward reasoning allows to extract the necessary conditions for the definedness of a 
-    term in the hypothesis. The `Forward` type-class allows, together with its atomic
-    variant `Forward₁`, extracts the necessary conditions using the `elim` function.
+    term in the hypothesis. 
+
+    The `Forward` type-class allows, together with its atomic variant `Forward₁`, to model
+    forward reasoning, generalising it to any predicate, not only definedness. 
     An instance of `Forward₁ P Q` means `P → Q`.
     An instance of `Forward P Q` chains the atomic `Forward₁` steps, obtaining `Q` from `P`.
-    Also in this case, P must be made of conjunctions, universal quantifications and predicates
+    Also in this case, `P` must be made of conjunctions, universal quantifications and predicates
     We define the `elim` macro to trigger forward reasoning during a proof.
 
 - Example usage
   To trigger Backward reasoning one needs to register an instance for some atomic steps `Backward₁`
-    and then invoke the `Backward.intro` function inside a tactic.
-    As an example, consider sum over natural numbers. The sum of two numbers is defined if 
-    both numbers are defined, thus we register the instance 
-    `instance {x y : Nat} : Backward₁ (x+y)↓ (x↓ ∧ y↓) := ... -- complete the proof`
+    and then invoke the tactcic `apply Backward.intro`.
+    As an example, consider sum over natural numbers. The sum of two numbers is defined 
+    if and only if both numbers are defined, thus we register the instance 
+    `instance {x y : Nat} : Backward₁ (x+y)↓ (x↓ ∧ y↓) := ...`
     We can now trigger backward reasoning inside a proof by invoking the `Backward.intro` function
-    `example {x y: Nat} : x↓ → y↓ → (x + y)↓ := by intro h₁ h₂ ; apply Backward.intro ; exact ⟨h₁, h₂⟩`
+    `example {x y z : Nat} : x↓ → y↓ → z↓ → (x + y + z)↓ := by intro h₁ h₂ h₃ ; apply Backward.intro ; exact ⟨⟨h₁, h₂⟩, h₃⟩`
+    The `apply Backward.intro` in the example reduces the goal `(x + y + z)↓` to the goal `(x↓ ∧ y↓) ∧ z↓`
 
   To trigger Forward reasoning one needs to register an instance for some atomic steps `Forward₁`
     and then invoke the `elim` tactic.
     As an example, consider the previous example of sum over natural numbers. We are now
     interested in the fact that if the sum of two numbers is defined, then both numbers are
     defined, thus we register the following instance
-    `instance {x y : Nat} : Forward₁ (x+y)↓ (x↓ ∧ y↓) := ... -- complete the proof`
+    `instance {x y : Nat} : Forward₁ (x+y)↓ (x↓ ∧ y↓) := ...`
     We can now trigger forward reasoning inside a proof by invoking the `elim` tactic, thus
     extracting the necessary conditions `x↓` and `y↓` from the hypothesis `(x+y)↓`.
-    `example {x y: Nat} : (x + y)↓ → x↓ ∧ y↓ := by elim h₁ h₂ h₃ ; exact ⟨h₁, h₂⟩`
+    `example {x y z : Nat} : (x + y + z)↓ → x↓ ∧ y↓ ∧ z↓ := by elim h₁ h₂ h₃ h ; exact ⟨h₁, h₂, h₃⟩`
     Notice that by invoking the `elim` tactic we introduce the atomic hyptheses `h₁ : x↓`,
-    `h₂ : y↓` along with the hypothesis `h₃ : (x + y)↓`.
+    `h₂ : y↓`, `h₃ : z↓`, along with the hypothesis `h : (x + y)↓`.
 
   More usage examples for Backward and Forward reasoning are shown in `Tests/running.lean`,
   `PartialToolbox/PartialOption.lean`, `PartialToolbox/Partial.lean` and the `Playground.lean` files.

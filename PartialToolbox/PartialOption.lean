@@ -9,9 +9,9 @@ This file contains the implementation for lifting over `Partial` types.
 - Lifted predicates are shown to be strict; moreover, they preserve reflexivity, symmetry and transitivty.
     Moreover, we define and annotate with `@[simp]` some lemmas that are used by the `simp` tactic.
 
-- Lifted functions are shown to be strict by equpping them with an optional `dom` parameter, modelling
-    the existence conditions for the function. This also allows to prove instances for the `Backward` and
-    `Existence` typeclasses, that are used respectively in the backward and forward chaining.
+- Lifted functions are shown to be strict; moreover we equip them with an optional `dom` parameter, modelling
+    the existence conditions for the function. Instances for the `Backward` and `Existence` type-classes, that 
+    are used respectively for backward and forward reasoning, are automatically derived.
     As for predicates, we also define and annotate with `@[simp]` some lemmas, so that the `simp` tactic can
     use them for simplifying the expressions.
 
@@ -19,7 +19,7 @@ This file contains the implementation for lifting over `Partial` types.
   To lift a binary predicate `P`, one only needs to define the lifted predicate as `liftPred₂ P`.
     As an example, consider lifting the predicate `LE.le` from `Nat` to `Option Nat`.
     The lifted predicate is then obtained as follows
-    `def lifted : LE.le Option Nat -> Option Nat -> Prop := liftPred₂ LE.le`
+    `def liftedLE : Option Nat → Option Nat → Prop := liftPred₂ LE.le`
     Lifting unary predicates, unary functions and binary functions can be achieved analogously.
 
   A more elaborate example for lifting can be found in `Tests/optionNat.lean`.

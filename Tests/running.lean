@@ -1,8 +1,8 @@
 /-
 In this file we formalise the running example presented in the paper "A Toolbox for Undefined Terms in Type Theory"
-  written by Pizzo and Sacerdoti Coen. The axiomatizes the type for Real numbers to be self-contained,
-  thus avoiding to import the Mathlib library. We then proceed by defining instances for the operators
-  we need, namely subtraction, division, multiplication, power, absolute values, limits and sums.
+  written by Pizzo and Sacerdoti Coen. To avoid dependency from the Mathlib library we axiomatize a type for Real numbers.
+  We then proceed by defining instances for the operators we need, namely subtraction, division, multiplication, 
+  power, absolute values, limits and sums.
   Finally, we formalise the example about convergence of geometric series.
 -/
 import PartialToolbox.Partial

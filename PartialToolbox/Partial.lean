@@ -7,31 +7,30 @@
     then `t` is defined.
 
 - Existence conditions are defined by means of the `Existence` type-class.
-  An instance in the form `Existence t P` allows to assert that if the term `t` is defined
+  An instance in the form `Existence t P` asserts that if the term `t` is defined
   then the predicate `P` must hold.
 
-- Directed relations are relations over partial types where either one or
-    both the left-hand-side and the right-hand-side must be defined. 
-    We define the left-to-right (`ltor`), right-to-left (`rtol`) and 
-    bidirectional (`bidir`) variants. The transitivities that hold for combinations 
-    of such directions are also shown. Directed relations are shown to also preserve 
-    reflexivity and transitivity.
+- Given a relation `R`, the directed relations built starting from `R` ensure that `R`
+    holds if one or both the terms are defined. In particular we define the 
+    left-to-right (`ltor`), right-to-left (`rtol`) and bidirectional (`bidir`) variants. 
+    The transitivities that hold for combinations of such directions are also shown. 
+    Directed relations are shown to also preserve reflexivity and transitivity.
 
 - Example usage
   To register partiality over a type we need to instantiate the `Partial` type-class.
     As an example, one way to instantiate the `Option α` type as `Partial` is the following
-    `instance : Partial (Option α) := ⟨λx => x.isSome⟩`
+    `instance : Partial (Option α) where isdef x := x.isSome`
 
   To declare that a function `f` is strict we need to instantiate the proper `StrictFun` class.
     For example, suppose we defined partiality over `Option α` as before and that we want
     to register addition over partial natural numbers. First, we instance addition on such type
     `instance : Add (Option Nat) where ...`
     We can then register the `Add.add` as a strict binary function as follows
-    `instance : StrictFun₂ (· + · : NatBot → _ → _) := ⟨sorry⟩`
+    `instance : StrictFun₂ (· + · : NatBot → _ → _) := ... `
     One can similarly instantiate unary functions and both unary and binary predicates
 
   To declare existence conditions for a term `t` we need to register the proper `Existence` instance.
-    For example, we may declare that if a division is defined then the denominator must be different from 0 as follows
+    For example, we may declare that if the expression `x / y` is defined then the denominator must be different from 0 as follows
     `Existence (x / y) (y ≠ 0)`
 -/
 

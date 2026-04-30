@@ -2,18 +2,13 @@
 This file contains the typeclasses used for implementing generalized rewriting in
 a λProlog style using the `copy` algorithm.
 
-- The `Copy` class captures predicates that allow rewriting.
-
-- The `put` and `take` respectively turn a proof of `R lhs rhs` into the corresponding `Copy` instance and back.
-
-- The `Reflexive` and `Proper` classes allow to reason about terms we don't want to rewrite, i.e. terms that
-    are proper w.r.t. the relation we are rewriting.
-    For example, rewriting 0 ≤ 1 in 1 ≤ 1 + 2 yields the goal 0 ≤ 0 + 2 without needing to rewrite (in the generalized rewriting sense) 2.
-
 - The `grw` and `respects` tactics allow to use generalized rewriting in proofs.
+    Generalized rewiritng allows to rewrite a term with another in some context when they
+    are related by some relation `R` that is a congruence for the context. For example, if
+    `e₁ ≤ e₂` then `2 × e₁ ≤ 2 × e₂` since `2 × ·` is a monotone function.
 
 - Usage examples
-  To use the `grw` and `respects` tactcics we first need to register a `Copy` instance for
+  To use the `grw` and `respects` tactics we first need to register a `Copy` instance for
   the relation we want to rewrite. For example, if we have
   `axiom R : Nat -> Nat -> Prop`
   `axiom P : Nat -> Prop`
@@ -35,6 +30,17 @@ a λProlog style using the `copy` algorithm.
 
   You can find more elaborate usage examples for the `grw` tactic in `Tests/grw.lean`, while
   more complex examples for the usage of the `respects` tactic are presented in the `Tests/running.lean` file.
+
+- The `Copy` class asserts that the left-hand-side is related to the right-hand-side by some 
+    relation. When registering an instance only the right-hand-side and the relation are given
+    as input parameters, thus instance-search computes the left-hand-side and a proof that
+    the lhs is related to the rhs. The name "copy" comes from the fact that the lhs expression
+    is recursively copied to the rhs unless the lhs matches exactly the term to be written.
+
+- The `Reflexive` and `Proper` classes allow to reason about terms we do not want to rewrite,
+    i.e. terms that are proper w.r.t. the relation we are rewriting.
+    For example, rewriting 0 ≤ 1 in 1 ≤ 1 + 2 yields the goal 0 ≤ 0 + 2, exploiting the
+    fact that 2 ≤ 2.
 -/
 
 import PartialToolbox.Unfoldable

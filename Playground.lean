@@ -21,7 +21,7 @@ open Partial
 end Playground
 
 
--------------------- Axiomatic approach for obtaining ℕ⊥ --------------------
+-------------------- An axiomatization of arithmetic over ℕ⊥ --------------------
 
 namespace AxiomNat
 
@@ -130,7 +130,7 @@ example {x y: Nat}
 
 end GeneralizedRewriting
 
--------------------- Simple example Lifting --------------------
+-------------------- Lifting Example --------------------
 
 namespace Lifting
 
@@ -148,5 +148,3 @@ theorem mul_gt_zero {x y : Option Nat} : 0 < x → 0 < y → 0 < x * y := by
   exact Nat.mul_pos h₁ h₂
 
 end Lifting
-
-----------------------------------------------------------------
