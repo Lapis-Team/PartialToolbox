@@ -1,3 +1,11 @@
+/-
+In this file we showcase how to use lifting over natural numbers. We start by lifting some predicates
+  and functions; we also show how the `Unfoldable` type-class may be used during type-class resolution
+  for the lifted functions and predicates. Then we define the directed variants for the `LE.le`
+  and `GE.ge` predicates. Finally, we show some examples where we can easily use theorems
+  proved over `Nat` types also for the lifted type `ℕ⊥`.
+-/
+
 import PartialToolbox.PartialOption
 import PartialToolbox.Unfoldable
 open Partial -- Partial.Option

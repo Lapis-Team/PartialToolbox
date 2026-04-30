@@ -1,3 +1,13 @@
+/-
+This file contains a number of minimal examples that can be found in the paper 
+"A Toolbox for Undefined Terms in Type Theory" written by Pizzo and Sacerdoti Coen.
+
+- The examples are isolated in proper namespaces, as to enusre self-containment.
+
+- We expose an empty namespace `Playground`, so that anyone who wants to try the toolbox
+    over some custom examples can easily do so.
+
+-/
 import PartialToolbox.ForwardBackward
 import PartialToolbox.Partial
 import PartialToolbox.PartialOption

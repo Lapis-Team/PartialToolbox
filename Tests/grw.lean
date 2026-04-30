@@ -1,3 +1,8 @@
+/-
+This file contains elaborate examples about using the `grw` tactic defined in `PartialToolbox/Grw.lean`.
+  In particular, we show both an axiomatic approach over predicates, as well as some concrete examples
+  where we also showcase how to handle contravariant relations with the `grw` tactic.
+-/
 import PartialToolbox.Grw
 
 def rNatZero x y := x ≠ 0 ∧ x = y
