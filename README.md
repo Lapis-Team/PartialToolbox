@@ -15,7 +15,15 @@ The repository contains some usage examples in the [`Playground.lean`](Playgroun
 
 The implementation of the toolbox, on the other side, is fully contained in the `PartialToolbox` directory.
 
-We suggest the navigation of the repository in the following order.
+### Tests
+
+The `Tests` directory contains some files with example usage of the library.
+In particular, you will find the running example presented in the paper in the [`running.lean`](Tests/running.lean) file; as the name suggests, the [`grw.lean`](Tests/grw.lean) file contains some usage examples of the `grw` tactic.
+Finally, the [`optionNat.lean`](Tests/optionNat.lean) file showcases lifting on natural numbers, and shows some final examples where also generalized rewriting (in the form of the `respects` tactic) is used.
+
+### Playground
+
+The [`Playground.lean`](Playground.lean) file contains some sections of minimal examples that are also presented in the paper. The file is also meant to be used for playing around with the library with custom examples in the `Playground` namespace.
 
 ### Unfoldable
 
@@ -36,16 +44,6 @@ The [`Grw.lean`](PartialToolbox/Grw.lean) file contains the implementation of th
 ### Partial Option
 
 The [`PartialOption.lean`](PartialToolbox/PartialOption.lean) file contains the implementation of lifting by instancing the `Partial` with the `Option` monad. In this file, you will find the implementation for lifting both functions and predicates, together with all the properties lifting ensures.
-
-### Tests
-
-The `Tests` directory contains some files with example usage of the library.
-In particular, you will find the running example presented in the paper in the [`running.lean`](Tests/running.lean) file; as the name suggests, the [`grw.lean`](Tests/grw.lean) file contains some usage examples of the `grw`.
-Finally, the [`optionNat.lean`](Tests/optionNat.lean) file showcases lifting on natural numbers, and shows some final examples where also generalized rewriting (in the form of the `respects` tactic) is used.
-
-### Playground
-
-Finally, the [`Playground.lean`](Playground.lean) file contains some sections of minimal examples that are also presented in the paper. The file is also meant to be used for playing around with the library with custom examples in the `Playground` namespace.
 
 ## Testing
 
