@@ -1,6 +1,6 @@
 # PartialToolbox
 
-Implementation in Lean of a toolbox for undefined terms, supporting the content of the paper _A Toolbox for Undefined Terms in Type Theory_ written by Nicol\`o Pizzo and Claudio Sacerdoti Coen.
+Implementation in Lean of a toolbox for undefined terms, supporting the content of the paper _A Toolbox for Undefined Terms in Type Theory_ written by Nicolò Pizzo and Claudio Sacerdoti Coen.
 
 ## Setup
 
