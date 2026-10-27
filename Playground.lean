@@ -27,7 +27,7 @@ namespace AxiomNat
 
 open Partial
 axiom NatBot : Type
-notation "ℕ⊥" => NatBot
+scoped notation "ℕ⊥" => NatBot
 axiom zero : ℕ⊥
 @[instance] axiom partialNatBot : Partial ℕ⊥
 @[instance] axiom instLEOfNatBot : LE ℕ⊥
@@ -112,8 +112,7 @@ example (h : R x y) : P (x + x) → P (y + y) := by
   grw h
   assumption
 
-@[reducible]
-def proper (h : x ≠ 0) : Proper R x := ⟨⟨h, rfl⟩⟩
+theorem proper (h : x ≠ 0) : Proper R x := ⟨⟨h, rfl⟩⟩
 example (h : R x y) (hz : z ≠ 0): P (x + z) → P (y + z) := by
   intros
   have := proper hz
@@ -136,15 +135,70 @@ namespace Lifting
 
 open Partial Option
 
-instance : OfNat (Option Nat) n := ⟨n⟩
+scoped notation "ℕ" => Nat
+scoped notation "ℕ⊥" => Option Nat
 
-instance : Mul (Option Nat) := ⟨liftFun₂ Mul.mul⟩
-instance : LT (Option Nat) := ⟨liftPred₂ LT.lt⟩
-instance : Unfoldable (· < · : Option Nat → _ → _) (liftPred₂ LT.lt) := .id
+/-
+instance : Partial (Option α) where
+ isdef
+  | .none => False
+  | .some _ => True
+-/
 
-theorem mul_gt_zero {x y : Option Nat} : 0 < x → 0 < y → 0 < x * y := by 
+instance : OfNat ℕ⊥ n := ⟨n⟩
+
+-- Function lifting
+instance : Mul ℕ⊥ := ⟨liftFun₂ Mul.mul⟩
+instance : Div ℕ⊥ := ⟨liftFun₂ Div.div (dom := fun _ y => y != 0)⟩
+
+-- Predicate lifting
+instance : LT ℕ⊥ := ⟨liftPred₂ LT.lt⟩
+
+instance : Unfoldable (· < · : ℕ⊥ → _ → _) (liftPred₂ LT.lt) := .id
+instance : Unfoldable (./. : ℕ⊥ → ℕ⊥ → ℕ⊥) (liftFun₂ HDiv.hDiv (dom := fun _ y => y != 0)) := .id
+instance : Unfoldable (.*. : ℕ⊥ → ℕ⊥ → ℕ⊥) (liftFun₂ HMul.hMul) := .id
+
+#check Nat.mul_pos
+theorem mul_pos {x y : ℕ⊥} : 0 < x → 0 < y → 0 < x * y := by 
   elim _ _ x _ h₁
   elim _ _ y _ h₂
   exact Nat.mul_pos h₁ h₂
+
+#check Nat.div_mul_le_self
+theorem div_mul_le_self {m n : ℕ⊥} : m↓ -> n↓ -> n ≠ 0 -> (m / n) * n ≤ m := by
+ elim m _ _
+ elim n _ _ ec
+ simp_all
+ apply Nat.div_mul_le_self
+
+-- Lifting example over ℚ
+
+scoped notation "ℚ" => Rat
+scoped notation "ℚ⊥" => Option Rat
+instance : OfNat ℚ⊥ n := ⟨(n : ℚ)⟩
+
+-- Function lifting
+instance : Mul ℚ⊥ := ⟨liftFun₂ Mul.mul⟩
+instance : Div ℚ⊥ := ⟨liftFun₂ Div.div (dom := fun _ y => y ≠ 0)⟩
+
+-- Predicate lifting
+instance : LT ℚ⊥ := ⟨liftPred₂ LT.lt⟩
+
+instance : Unfoldable (./. : ℚ⊥ → ℚ⊥ → ℚ⊥) (liftFun₂ HDiv.hDiv (dom := fun _ y => y ≠ 0)) := .id
+instance : Unfoldable (.*. : ℚ⊥ → ℚ⊥ → ℚ⊥) (liftFun₂ HMul.hMul) := .id
+
+-- Numerals in ℚ⊥ are the injections of numerals in ℚ
+@[simp] theorem ofNat_some : (OfNat.ofNat n : ℚ⊥) = some (OfNat.ofNat n : ℚ) := rfl
+
+example {x y : ℚ} : y ≠ 0 → (x / y) * y = x := by 
+  exact Rat.div_mul_cancel
+
+example {x y : ℚ⊥} : x↓ → y↓ → y ≠ 0 → (x / y) * y = x := by 
+  elim x _ h₁
+  elim y _ h₂
+  elim ec
+  simp_all
+  apply Rat.div_mul_cancel ec
+
 
 end Lifting
