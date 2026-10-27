@@ -171,6 +171,36 @@ theorem div_mul_le_self {m n : ℕ⊥} : m↓ -> n↓ -> n ≠ 0 -> (m / n) * n 
  simp_all
  apply Nat.div_mul_le_self
 
+scoped notation "ℤ" => Int
+scoped notation "ℤ⊥" => Option Int
+instance : OfNat ℤ⊥ n := ⟨(n : ℤ)⟩
+
+-- Function lifting ℤ
+instance : Mul ℤ⊥ := ⟨liftFun₂ Mul.mul⟩
+instance : Div ℤ⊥ := ⟨liftFun₂ Div.div (dom := fun _ y => y != 0)⟩
+
+-- Predicate lifting
+instance : LT ℤ⊥ := ⟨liftPred₂ LT.lt⟩
+
+instance : Unfoldable (· < · : ℤ⊥ → _ → _) (liftPred₂ LT.lt) := .id
+instance : Unfoldable (./. : ℤ⊥ → ℤ⊥ → ℤ⊥) (liftFun₂ HDiv.hDiv (dom := fun _ y => y != 0)) := .id
+
+-- Numerals in ℤ⊥ are the injections of numerals in ℤ
+@[simp] theorem ofNat_some_int : (OfNat.ofNat n : ℤ⊥) = some (OfNat.ofNat n : ℤ) := rfl
+
+#check Int.mul_pos
+theorem int_mul_pos {x y : ℤ⊥} : 0 < x → 0 < y → 0 < x * y := by
+  elim x _ h₁
+  elim y _ h₂
+  exact Int.mul_pos h₁ h₂
+
+#check Int.ediv_mul_le
+theorem int_div_mul_le_self {m n : ℤ⊥} : m↓ -> n↓ -> n ≠ 0 -> (m / n) * n ≤ m := by
+ elim m _ _
+ elim n _ _ ec
+ simp_all
+ apply Int.ediv_mul_le _ ec
+
 -- Lifting example over ℚ
 
 scoped notation "ℚ" => Rat
