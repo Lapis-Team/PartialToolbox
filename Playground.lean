@@ -138,18 +138,11 @@ open Partial Option
 scoped notation "ℕ" => Nat
 scoped notation "ℕ⊥" => Option Nat
 
-/-
-instance : Partial (Option α) where
- isdef
-  | .none => False
-  | .some _ => True
--/
-
 instance : OfNat ℕ⊥ n := ⟨n⟩
 
 -- Function lifting
 instance : Mul ℕ⊥ := ⟨liftFun₂ Mul.mul⟩
-instance : Div ℕ⊥ := ⟨liftFun₂ Div.div (dom := fun _ y => y != 0)⟩
+instance : Div ℕ⊥ := ⟨liftFun₂ Div.div (dom := fun n d => d != 0)⟩
 
 -- Predicate lifting
 instance : LT ℕ⊥ := ⟨liftPred₂ LT.lt⟩
@@ -175,7 +168,7 @@ scoped notation "ℤ" => Int
 scoped notation "ℤ⊥" => Option Int
 instance : OfNat ℤ⊥ n := ⟨(n : ℤ)⟩
 
--- Function lifting ℤ
+-- Function lifting
 instance : Mul ℤ⊥ := ⟨liftFun₂ Mul.mul⟩
 instance : Div ℤ⊥ := ⟨liftFun₂ Div.div (dom := fun _ y => y != 0)⟩
 
@@ -184,6 +177,7 @@ instance : LT ℤ⊥ := ⟨liftPred₂ LT.lt⟩
 
 instance : Unfoldable (· < · : ℤ⊥ → _ → _) (liftPred₂ LT.lt) := .id
 instance : Unfoldable (./. : ℤ⊥ → ℤ⊥ → ℤ⊥) (liftFun₂ HDiv.hDiv (dom := fun _ y => y != 0)) := .id
+instance : Unfoldable (.*. : ℤ⊥ → ℤ⊥ → ℤ⊥) (liftFun₂ HMul.hMul) := .id
 
 -- Numerals in ℤ⊥ are the injections of numerals in ℤ
 @[simp] theorem ofNat_some_int : (OfNat.ofNat n : ℤ⊥) = some (OfNat.ofNat n : ℤ) := rfl
@@ -199,7 +193,7 @@ theorem int_div_mul_le_self {m n : ℤ⊥} : m↓ -> n↓ -> n ≠ 0 -> (m / n) 
  elim m _ _
  elim n _ _ ec
  simp_all
- apply Int.ediv_mul_le _ ec
+ apply Int.ediv_mul_le m ec
 
 -- Lifting example over ℚ
 
@@ -224,9 +218,8 @@ example {x y : ℚ} : y ≠ 0 → (x / y) * y = x := by
   exact Rat.div_mul_cancel
 
 example {x y : ℚ⊥} : x↓ → y↓ → y ≠ 0 → (x / y) * y = x := by 
-  elim x _ h₁
-  elim y _ h₂
-  elim ec
+  elim x _ _
+  elim y _ _ ec
   simp_all
   apply Rat.div_mul_cancel ec
 
